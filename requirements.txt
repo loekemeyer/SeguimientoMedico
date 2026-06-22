@@ -11,13 +11,13 @@ python-multipart>=0.0.9
 # --- Base de datos ---
 psycopg2-binary>=2.9          # driver PostgreSQL
 
-# --- Integraciones externas (opcionales; imports perezosos) ---
-# Descomentar según el proveedor que se use en cada despliegue.
-# twilio>=9.0                 # WhatsApp Business / Media Streams
-# openai>=1.30               # Realtime API (audio-to-audio)
-# langchain>=0.2             # Function calling / agentes
-# langchain-openai>=0.1
-# langgraph>=0.1             # Orquestación de agentes (Proyecto 1)
+# --- Integraciones externas (necesarias para las llamadas de voz reales) ---
+twilio>=9.0                   # WhatsApp Business / Programmable Voice / Media Streams
+openai>=1.30                  # Realtime API (audio-to-audio)
+websockets>=12.0             # WebSocket cliente hacia la Realtime API
+
+# --- Orquestación de agentes (opcional; hay fallback secuencial sin ella) ---
+# langgraph>=0.1
 
 # --- Desarrollo / testing ---
 pytest>=8.0
