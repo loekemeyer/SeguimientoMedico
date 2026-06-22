@@ -36,7 +36,19 @@ def send_whatsapp_message(to: str, body: str, *, media_url: str | None = None) -
     kwargs = {"from_": s.twilio_whatsapp_from, "to": _wa(to), "body": body}
     if media_url:
         kwargs["media_url"] = [media_url]
-    msg = client.messages.create(**kwargs)
+    try:
+        msg = client.messages.create(**kwargs)
+    except Exception as exc:  # incluye TwilioRestException
+        code = getattr(exc, "code", None)
+        if code == 21654 or code == 63016:
+            logger.error(
+                "WhatsApp a %s NO enviado: la ventana de 24h está cerrada. "
+                "Ese número debe escribir 'join <código>' al sandbox y reintentar "
+                "(en producción se requiere una plantilla aprobada).", to
+            )
+        else:
+            logger.error("WhatsApp a %s NO enviado (Twilio code=%s): %s", to, code, exc)
+        return False
     logger.info("WhatsApp enviado a %s (sid=%s)", to, msg.sid)
     return True
 
