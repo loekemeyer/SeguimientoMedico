@@ -46,6 +46,19 @@ docker compose up -d db       # PostgreSQL local (opcional)
 pytest                        # corre la suite de lógica de negocio
 ```
 
+### Demo sin servicios pagos
+
+Para ver el flujo completo de una llamada (extracción → triaje → alertas →
+guardado en la HCE) **sin Twilio, sin OpenAI y sin red**, corré:
+
+```bash
+python scripts/demo_local.py
+```
+
+Usa SQLite local y una clave de cifrado generada al vuelo. Simula tres llamadas
+(Verde / Amarilla / Roja) y muestra el triaje, las alertas (en modo degradado se
+loguean en vez de enviarse) y el bundle FHIR resultante.
+
 ### Correr el servicio
 
 ```bash
