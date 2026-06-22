@@ -37,14 +37,16 @@ def main() -> None:
 
     # Usa TU plantilla (TWILIO_CONTENT_SID del .env) si está configurada;
     # si no, prueba con la plantilla de muestra de Twilio.
-    content_sid = s.twilio_content_sid or "HXb5b62575e6e4ff6129ad7c8efe1f983e"
-    origen = "tu plantilla (.env)" if s.twilio_content_sid else "plantilla de muestra"
-    print(f"Enviando con {origen}: {content_sid}")
-    enviado = send_whatsapp_message(
-        destino,
-        content_sid=content_sid,
-        content_variables={"1": "12/1", "2": "3pm"},
-    )
+    if s.twilio_content_sid:
+        content_sid = s.twilio_content_sid
+        # Tu plantilla debe tener UNA variable {{1}}.
+        variables = {"1": "Prueba de SeguimientoMedico ✅"}
+        print(f"Enviando con tu plantilla (.env): {content_sid}")
+    else:
+        content_sid = "HXb5b62575e6e4ff6129ad7c8efe1f983e"
+        variables = {"1": "12/1", "2": "3pm"}
+        print(f"Enviando con plantilla de muestra: {content_sid}")
+    enviado = send_whatsapp_message(destino, content_sid=content_sid, content_variables=variables)
 
     if enviado:
         print("✓ Mensaje enviado. Revisá el WhatsApp del número de destino.")
