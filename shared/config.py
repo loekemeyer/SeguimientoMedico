@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_whatsapp_from: str = "whatsapp:+14155238886"
+    twilio_content_sid: str = ""  # plantilla aprobada para mensajes proactivos
     public_base_url: str = ""
 
     # Cerebro de IA
