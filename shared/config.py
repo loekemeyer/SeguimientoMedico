@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Cerebro de IA
     realtime_provider: str = "openai"  # openai | gemini
     openai_api_key: str = ""
-    openai_realtime_model: str = "gpt-4o-realtime-preview"
+    openai_realtime_model: str = "gpt-realtime-mini"
     gemini_api_key: str = ""
     gemini_realtime_model: str = "gemini-2.0-flash-live"
 
