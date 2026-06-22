@@ -61,12 +61,12 @@ def seed_paciente(db) -> int:
 
     paciente = Paciente(
         hce_id="DEMO-001",
-        nombre_enc=cipher.encrypt("Rosa"),
-        telefono_whatsapp_enc=cipher.encrypt("+5491133334444"),
-        familiares_enc=[cipher.encrypt("+5491155556666")],  # hija a cargo
+        nombre_enc=cipher.encrypt("Alejandro Damián Loekemeyer"),
+        telefono_whatsapp_enc=cipher.encrypt("+5491131181594"),
+        familiares_enc=[cipher.encrypt("+5491162521635")],  # Thomas (hijo) a cargo
         consentimiento_firmado=True,
         consentimiento_fecha=datetime.now(timezone.utc),
-        consentimiento_apoderado_enc=cipher.encrypt("María (hija) DNI 12.345.678"),
+        consentimiento_apoderado_enc=cipher.encrypt("Thomas Loekemeyer (hijo)"),
     )
     paciente.ficha = FichaClinica(
         limites={"sistolica_max": 140, "sistolica_min": 100, "glucemia_max": 180},
