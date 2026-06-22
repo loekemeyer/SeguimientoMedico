@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SeguimientoMedico — Acompañamiento de tus seres queridos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ PANTALLA DE ACCESO (login / registro) ============ -->
+  <section id="auth-view" class="auth">
+    <div class="auth__brandside">
+      <div class="auth__brandinner">
+        <div class="brand">
+          <span class="brand__logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 5 4-12 2 7h6"/></svg>
+          </span>
+          <span class="brand__name">Seguimiento<span>Medico</span></span>
+        </div>
+        <h1 class="auth__headline">Cuidamos a quienes más querés,<br/>aunque no estés cerca.</h1>
+        <p class="auth__sub">Un acompañamiento cálido por teléfono todos los días, y avisos a la familia cuando algo necesita atención.</p>
+        <ul class="auth__bullets">
+          <li><i></i> Llamadas de seguimiento programadas</li>
+          <li><i></i> Alertas automáticas a la familia</li>
+          <li><i></i> Historial claro de cada día</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="auth__formside">
+      <div class="card auth__card">
+        <div class="tabs" role="tablist">
+          <button class="tabs__btn is-active" data-tab="login">Iniciar sesión</button>
+          <button class="tabs__btn" data-tab="register">Crear cuenta</button>
+        </div>
+
+        <form id="form-login" class="form">
+          <h2 class="form__title">Hola de nuevo 👋</h2>
+          <label class="field"><span>Email</span>
+            <input type="email" name="email" placeholder="tu@email.com" required />
+          </label>
+          <label class="field"><span>Contraseña</span>
+            <input type="password" name="password" placeholder="••••••••" required />
+          </label>
+          <button class="btn btn--primary btn--block" type="submit">Entrar</button>
+          <p class="form__error" data-error></p>
+        </form>
+
+        <form id="form-register" class="form is-hidden">
+          <h2 class="form__title">Empecemos 🌱</h2>
+          <label class="field"><span>Tu nombre</span>
+            <input type="text" name="nombre" placeholder="Nombre y apellido" />
+          </label>
+          <label class="field"><span>Email</span>
+            <input type="email" name="email" placeholder="tu@email.com" required />
+          </label>
+          <label class="field"><span>Contraseña</span>
+            <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+          </label>
+          <button class="btn btn--primary btn--block" type="submit">Crear mi cuenta</button>
+          <p class="form__error" data-error></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APLICACIÓN (después de entrar) ============ -->
+  <div id="app-view" class="app is-hidden">
+    <header class="topbar">
+      <div class="brand brand--sm">
+        <span class="brand__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 5 4-12 2 7h6"/></svg>
+        </span>
+        <span class="brand__name">Seguimiento<span>Medico</span></span>
+      </div>
+      <div class="topbar__right">
+        <span class="plan-chip" id="plan-chip">Plan trial</span>
+        <div class="avatar" id="avatar" title="Tu cuenta">U</div>
+        <button class="btn btn--ghost btn--sm" id="btn-logout">Salir</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- LISTA DE PERSONAS -->
+      <section id="page-list" class="page">
+        <div class="page__head">
+          <div>
+            <h1 class="page__title">Personas a tu cuidado</h1>
+            <p class="page__subtitle" id="list-subtitle">Cargá a tu familiar para empezar el seguimiento.</p>
+          </div>
+          <button class="btn btn--primary" id="btn-add">＋ Agregar persona</button>
+        </div>
+        <div id="patient-grid" class="grid"></div>
+      </section>
+
+      <!-- DETALLE DE UNA PERSONA -->
+      <section id="page-detail" class="page is-hidden">
+        <button class="link-back" id="btn-back">← Volver</button>
+        <div class="detail__head">
+          <div class="avatar avatar--lg" id="detail-avatar">A</div>
+          <div>
+            <h1 class="page__title" id="detail-name">—</h1>
+            <p class="page__subtitle" id="detail-meta">—</p>
+          </div>
+          <span class="badge" id="detail-status">—</span>
+        </div>
+
+        <div class="detail__cards">
+          <div class="card info-card">
+            <h3 class="card__title">📞 Programación de llamadas</h3>
+            <div id="detail-schedule" class="kv"></div>
+          </div>
+          <div class="card info-card">
+            <h3 class="card__title">👥 Contactos de emergencia</h3>
+            <div id="detail-contacts" class="stacklist"></div>
+          </div>
+          <div class="card info-card">
+            <h3 class="card__title">💊 Medicación</h3>
+            <div id="detail-meds" class="stacklist"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">🗓️ Historial de seguimientos</h3>
+          <div id="detail-history" class="timeline"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============ MODAL: agregar persona ============ -->
+  <div id="modal" class="modal is-hidden">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel card">
+      <h2 class="form__title">Agregar persona a cuidar</h2>
+      <form id="form-patient" class="form">
+        <div class="form__row">
+          <label class="field"><span>Nombre completo</span>
+            <input type="text" name="nombre" placeholder="Ej: Rosa Pérez" required />
+          </label>
+          <label class="field"><span>WhatsApp del paciente</span>
+            <input type="text" name="telefono_whatsapp" placeholder="+54911..." required />
+          </label>
+        </div>
+        <label class="field"><span>Enfermedades / patologías (separadas por coma)</span>
+          <input type="text" name="patologias" placeholder="Hipertensión, diabetes" />
+        </label>
+        <div class="form__row">
+          <label class="field"><span>Hora de llamada</span>
+            <input type="time" name="llamada_hora" value="10:00" />
+          </label>
+          <label class="field field--check">
+            <input type="checkbox" name="consentimiento_firmado" />
+            <span>Tengo el consentimiento del apoderado legal</span>
+          </label>
+        </div>
+        <h3 class="form__section">Contacto de emergencia</h3>
+        <div class="form__row">
+          <label class="field"><span>Nombre del familiar</span>
+            <input type="text" name="contacto_nombre" placeholder="Ej: Thomas (hijo)" />
+          </label>
+          <label class="field"><span>WhatsApp del familiar</span>
+            <input type="text" name="contacto_telefono" placeholder="+54911..." />
+          </label>
+        </div>
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
+          <button type="submit" class="btn btn--primary">Guardar persona</button>
+        </div>
+        <p class="form__error" data-error></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

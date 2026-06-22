@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from health_monitor import __version__
@@ -45,6 +47,13 @@ app.include_router(patients_routes.router)
 def health() -> dict:
     """Healthcheck con la versión en curso para confirmar el build desplegado."""
     return {"status": "ok", "service": "health_monitor", "version": __version__}
+
+
+# Frontend (app web para los familiares). Se monta al final para que las rutas
+# de la API tengan prioridad; el resto sirve los archivos estáticos.
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="frontend")
 
 
 @app.post("/calls/{paciente_id}/initiate")
