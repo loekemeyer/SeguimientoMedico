@@ -1,0 +1,23 @@
+# --- Núcleo (requerido para correr el backend y los tests) ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+pydantic-settings>=2.2
+sqlalchemy>=2.0
+cryptography>=41.0
+httpx>=0.27
+python-multipart>=0.0.9
+
+# --- Base de datos ---
+psycopg2-binary>=2.9          # driver PostgreSQL
+
+# --- Integraciones externas (opcionales; imports perezosos) ---
+# Descomentar según el proveedor que se use en cada despliegue.
+# twilio>=9.0                 # WhatsApp Business / Media Streams
+# openai>=1.30               # Realtime API (audio-to-audio)
+# langchain>=0.2             # Function calling / agentes
+# langchain-openai>=0.1
+# langgraph>=0.1             # Orquestación de agentes (Proyecto 1)
+
+# --- Desarrollo / testing ---
+pytest>=8.0

@@ -1,0 +1,153 @@
+"""Puente de audio bidireccional: Twilio Media Streams <-> Realtime API.
+
+Flujo (latencia < 1s, sin pasar por texto intermedio):
+
+    WhatsApp ──audio mulaw/8000──▶ Twilio ──WS──▶ FastAPI (este puente)
+                                                      │
+                                                      ├──▶ Realtime API (OpenAI/Gemini)
+                                                      │     audio-to-audio nativo
+                                                      ◀── audio mulaw/8000 ──┘
+    WhatsApp ◀──audio──── Twilio ◀──WS──── FastAPI
+
+El puente reenvía frames de audio en ambas direcciones y, en paralelo, acumula
+la transcripción que emite la Realtime API para alimentar al Agente Clínico y
+al Supervisor (chequeo crítico en vivo → posible interrupción).
+
+Twilio Media Streams envía mensajes JSON con eventos:
+  - "start"  : metadata del stream (streamSid, callSid, custom parameters)
+  - "media"  : { payload: base64(mulaw) }
+  - "stop"   : fin del stream
+
+La Realtime API de OpenAI espera/produce frames como eventos JSON
+(`input_audio_buffer.append`, `response.audio.delta`, etc.).
+"""
+from __future__ import annotations
+
+import asyncio
+import base64
+import json
+import logging
+
+from health_monitor.agents import orchestrator
+from health_monitor.agents.companion import build_realtime_session_config, opening_line
+from shared.config import get_settings
+
+logger = logging.getLogger(__name__)
+
+OPENAI_REALTIME_URL = "wss://api.openai.com/v1/realtime?model={model}"
+
+
+class MediaStreamBridge:
+    """Conecta un WebSocket de Twilio con la sesión Realtime de OpenAI.
+
+    `twilio_ws` es el WebSocket (FastAPI/Starlette) hacia Twilio.
+    `state` es el CallState de la llamada (para el chequeo crítico en vivo).
+    """
+
+    def __init__(self, twilio_ws, state: orchestrator.CallState, *, nombre: str | None = None):
+        self.twilio_ws = twilio_ws
+        self.state = state
+        self.nombre = nombre
+        self.stream_sid: str | None = None
+        self.transcript_parts: list[str] = []
+        self._openai_ws = None
+
+    async def run(self) -> None:
+        """Orquesta las dos corrutinas de reenvío hasta que la llamada termina."""
+        settings = get_settings()
+        if not settings.openai_api_key:
+            logger.error("OPENAI_API_KEY ausente; no se puede abrir la sesión Realtime.")
+            return
+        try:
+            import websockets  # import perezoso
+        except ImportError:
+            logger.error("Paquete 'websockets' no instalado; puente no disponible.")
+            return
+
+        url = OPENAI_REALTIME_URL.format(model=settings.openai_realtime_model)
+        headers = {
+            "Authorization": f"Bearer {settings.openai_api_key}",
+            "OpenAI-Beta": "realtime=v1",
+        }
+        async with websockets.connect(url, additional_headers=headers) as openai_ws:
+            self._openai_ws = openai_ws
+            await openai_ws.send(json.dumps(build_realtime_session_config()))
+            await self._send_opening_line()
+            await asyncio.gather(
+                self._twilio_to_openai(),
+                self._openai_to_twilio(),
+            )
+
+    async def _send_opening_line(self) -> None:
+        """Indica al modelo que abra la conversación con el saludo del contenedor."""
+        await self._openai_ws.send(json.dumps({
+            "type": "response.create",
+            "response": {
+                "modalities": ["audio", "text"],
+                "instructions": f"Abrí la llamada diciendo: {opening_line(self.nombre)}",
+            },
+        }))
+
+    async def _twilio_to_openai(self) -> None:
+        """Reenvía el audio entrante del paciente hacia la Realtime API."""
+        async for raw in self.twilio_ws.iter_text():
+            msg = json.loads(raw)
+            event = msg.get("event")
+            if event == "start":
+                self.stream_sid = msg["start"]["streamSid"]
+            elif event == "media":
+                await self._openai_ws.send(json.dumps({
+                    "type": "input_audio_buffer.append",
+                    "audio": msg["media"]["payload"],  # ya viene base64(mulaw)
+                }))
+            elif event == "stop":
+                break
+
+    async def _openai_to_twilio(self) -> None:
+        """Reenvía el audio del modelo a Twilio y acumula la transcripción."""
+        async for raw in self._openai_ws:
+            evt = json.loads(raw)
+            etype = evt.get("type")
+
+            if etype == "response.audio.delta":
+                await self.twilio_ws.send_text(json.dumps({
+                    "event": "media",
+                    "streamSid": self.stream_sid,
+                    "media": {"payload": evt["delta"]},
+                }))
+
+            elif etype in (
+                "conversation.item.input_audio_transcription.completed",
+                "response.audio_transcript.done",
+            ):
+                text = evt.get("transcript", "")
+                if text:
+                    self.transcript_parts.append(text)
+                    await self._maybe_interrupt()
+
+    async def _maybe_interrupt(self) -> None:
+        """Chequeo crítico en vivo: si el supervisor marca ROJA, interrumpe."""
+        partial = " ".join(self.transcript_parts)
+        # El chequeo es síncrono y liviano; se corre en un thread para no bloquear.
+        critical = await asyncio.to_thread(
+            orchestrator.live_critical_check, self.state, partial
+        )
+        if critical and not self.state.interrupted:
+            self.state.interrupted = True
+            logger.warning("Evento crítico en vivo (paciente %s): interrumpiendo.",
+                           self.state.paciente_id)
+            await self._openai_ws.send(json.dumps({
+                "type": "response.create",
+                "response": {
+                    "modalities": ["audio"],
+                    "instructions": (
+                        "Con calma y contención, decile que notaste algo importante "
+                        "y que vas a avisar ahora mismo a quien puede ayudarlo. "
+                        "Despedite con calidez."
+                    ),
+                },
+            }))
+
+    @property
+    def full_transcript(self) -> str:
+        return " ".join(self.transcript_parts)
