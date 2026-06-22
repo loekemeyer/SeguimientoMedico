@@ -38,7 +38,7 @@ from health_monitor.db.models import (  # noqa: E402
     Paciente,
     Usuario,
 )
-from health_monitor.db.session import create_all, get_session  # noqa: E402
+from health_monitor.db.session import get_session, recreate_all  # noqa: E402
 from health_monitor.schemas.fhir import readout_to_fhir_bundle  # noqa: E402
 from health_monitor.services import build_call_state, persist_evolucion  # noqa: E402
 from shared.auth import hash_password  # noqa: E402
@@ -131,7 +131,7 @@ def correr_llamada(db, paciente_id: int, nivel: str, transcript: str) -> None:
 
 def main() -> None:
     print("Inicializando base de datos local (SQLite: demo.db)...")
-    create_all()
+    recreate_all()  # tablas frescas, evita choques de esquema entre versiones
     db = next(get_session())
     try:
         paciente_id = seed_paciente(db)

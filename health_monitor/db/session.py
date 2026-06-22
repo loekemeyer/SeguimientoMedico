@@ -26,6 +26,13 @@ def create_all() -> None:
     Base.metadata.create_all(_engine)
 
 
+def recreate_all() -> None:
+    """Borra y recrea todas las tablas (para demos / entornos descartables)."""
+    _init()
+    Base.metadata.drop_all(_engine)
+    Base.metadata.create_all(_engine)
+
+
 def get_session() -> Iterator[Session]:
     """Dependencia FastAPI que entrega una sesión y la cierra al terminar."""
     _init()
