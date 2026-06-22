@@ -28,6 +28,7 @@ from health_monitor.schemas.api import (
     MedicacionOut,
     PacienteIn,
     PacienteOut,
+    ProgramacionLlamada,
 )
 from shared.config import get_settings
 from shared.security import FieldCipher
@@ -56,8 +57,21 @@ def _to_out(p: Paciente, cipher: FieldCipher) -> PacienteOut:
         consentimiento_fecha=p.consentimiento_fecha,
         patologias=p.ficha.patologias if p.ficha else [],
         limites=p.ficha.limites if p.ficha else {},
+        programacion=ProgramacionLlamada(
+            llamada_activa=p.llamada_activa,
+            llamada_hora=p.llamada_hora,
+            llamada_zona=p.llamada_zona,
+            llamada_dias=p.llamada_dias or [],
+        ),
         activo=p.activo,
     )
+
+
+def _apply_programacion(p: Paciente, prog: ProgramacionLlamada) -> None:
+    p.llamada_activa = prog.llamada_activa
+    p.llamada_hora = prog.llamada_hora
+    p.llamada_zona = prog.llamada_zona
+    p.llamada_dias = prog.llamada_dias
 
 
 # --- Pacientes ---
@@ -82,6 +96,7 @@ def crear_paciente(
         ),
     )
     p.ficha = FichaClinica(limites=data.limites, patologias=data.patologias)
+    _apply_programacion(p, data.programacion)
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -125,6 +140,7 @@ def actualizar_paciente(
         p.ficha = FichaClinica()
     p.ficha.limites = data.limites
     p.ficha.patologias = data.patologias
+    _apply_programacion(p, data.programacion)
     db.commit()
     db.refresh(p)
     return _to_out(p, cipher)

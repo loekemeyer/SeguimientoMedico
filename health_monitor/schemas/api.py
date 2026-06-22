@@ -45,6 +45,25 @@ class UsuarioOut(BaseModel):
 
 # --- Pacientes ---
 
+class ProgramacionLlamada(BaseModel):
+    """Cuándo llamar al paciente (lo configura el usuario que contrata)."""
+
+    llamada_activa: bool = True
+    llamada_hora: str = "10:00"  # "HH:MM" hora local
+    llamada_zona: str = "America/Argentina/Buenos_Aires"
+    llamada_dias: list[int] = Field(default_factory=list)  # 0=lun..6=dom; vacío=todos
+
+    @field_validator("llamada_hora")
+    @classmethod
+    def _valid_hora(cls, v: str) -> str:
+        try:
+            hh, mm = (int(x) for x in v.split(":"))
+            assert 0 <= hh <= 23 and 0 <= mm <= 59
+        except Exception:
+            raise ValueError("Hora inválida; usá formato HH:MM (00:00 a 23:59)")
+        return f"{hh:02d}:{mm:02d}"
+
+
 class PacienteIn(BaseModel):
     nombre: str
     telefono_whatsapp: str
@@ -52,6 +71,7 @@ class PacienteIn(BaseModel):
     consentimiento_apoderado: str | None = None
     patologias: list[str] = Field(default_factory=list)
     limites: dict = Field(default_factory=dict)
+    programacion: ProgramacionLlamada = Field(default_factory=ProgramacionLlamada)
 
 
 class PacienteOut(BaseModel):
@@ -62,6 +82,7 @@ class PacienteOut(BaseModel):
     consentimiento_fecha: datetime | None = None
     patologias: list[str] = Field(default_factory=list)
     limites: dict = Field(default_factory=dict)
+    programacion: ProgramacionLlamada = Field(default_factory=ProgramacionLlamada)
     activo: bool = True
 
 

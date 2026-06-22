@@ -76,6 +76,15 @@ class Paciente(Base):
     consentimiento_fecha: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     consentimiento_apoderado_enc: Mapped[str | None] = mapped_column(Text)
 
+    # Programación de la llamada de seguimiento (la define el usuario que contrata).
+    llamada_activa: Mapped[bool] = mapped_column(Boolean, default=True)
+    llamada_hora: Mapped[str] = mapped_column(String(5), default="10:00")  # "HH:MM" local
+    llamada_zona: Mapped[str] = mapped_column(
+        String(64), default="America/Argentina/Buenos_Aires"
+    )
+    # Días de la semana a llamar (0=lunes ... 6=domingo). Vacío = todos los días.
+    llamada_dias: Mapped[list] = mapped_column(JSON, default=list)
+
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 

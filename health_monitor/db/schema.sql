@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS pacientes (
     consentimiento_firmado      BOOLEAN NOT NULL DEFAULT FALSE,
     consentimiento_fecha        TIMESTAMPTZ,
     consentimiento_apoderado_enc TEXT,
+    llamada_activa              BOOLEAN NOT NULL DEFAULT TRUE,
+    llamada_hora                VARCHAR(5) NOT NULL DEFAULT '10:00',
+    llamada_zona                VARCHAR(64) NOT NULL DEFAULT 'America/Argentina/Buenos_Aires',
+    llamada_dias                JSONB NOT NULL DEFAULT '[]',
     activo                      BOOLEAN NOT NULL DEFAULT TRUE,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
