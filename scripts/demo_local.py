@@ -69,7 +69,13 @@ def seed_paciente(db) -> int:
         consentimiento_apoderado_enc=cipher.encrypt("Thomas Loekemeyer (hijo)"),
     )
     paciente.ficha = FichaClinica(
-        limites={"sistolica_max": 140, "sistolica_min": 100, "glucemia_max": 180},
+        # Hipertensión + seguimiento general de adulto mayor: foco en presión.
+        limites={
+            "sistolica_max": 140, "sistolica_min": 100,
+            "sistolica_critica_max": 180, "sistolica_critica_min": 90,
+            "diastolica_max": 90, "diastolica_min": 60,
+            "diastolica_critica_max": 120,
+        },
         medicacion_enc=[cipher.encrypt("Losartán 50mg - 1 por día")],
         patologias=["I10"],  # hipertensión esencial (CIE-10)
     )

@@ -37,31 +37,37 @@ def dispatch_alerts(
     *,
     familiares: list[str],
     ficha_resumen: str,
+    paciente_nombre: str = "",
     emergencia_webhook: str | None = None,
 ) -> dict:
     """Ejecuta el protocolo de notificación según el nivel. Devuelve qué se hizo.
 
-    `familiares` y `ficha_resumen` ya deben venir descifrados por la capa de
-    servicio. No se loguea PII en claro.
+    `familiares`, `ficha_resumen` y `paciente_nombre` ya deben venir descifrados
+    por la capa de servicio. No se loguea PII en claro.
     """
     actions: dict[str, list[str]] = {"webhooks": [], "whatsapp": []}
+    # Nombre de pila para los mensajes (más cálido y claro para la familia).
+    quien = paciente_nombre.split()[0] if paciente_nombre else "el paciente"
 
     if result.level == AlertLevel.ROJA:
         payload = {
             "tipo": "alerta_roja",
             "paciente_id": result.paciente_id,
+            "paciente_nombre": paciente_nombre,
             "motivos": result.reasons,
             "ficha_resumen": ficha_resumen,
         }
         url = emergencia_webhook or get_settings().emergency_webhook  # central emergencias
         if fire_webhook(url, payload):
             actions["webhooks"].append("emergencias")
+        motivo = result.reasons[0] if result.reasons else "ver ficha clínica"
         for fam in familiares:
             if send_whatsapp_message(
                 fam,
-                "🔴 URGENTE: detectamos un parámetro crítico en el seguimiento. "
-                "Ya avisamos al servicio de emergencias. "
-                f"Motivo: {result.reasons[0] if result.reasons else 'ver ficha'}.",
+                f"🔴 URGENTE — {quien}: en la llamada de seguimiento de hoy "
+                f"detectamos un signo de alarma ({motivo}). "
+                "Ya dimos aviso al servicio de emergencias. "
+                f"Por favor, comunicate con {quien} o con emergencias cuanto antes.",
             ):
                 actions["whatsapp"].append(fam)
 
@@ -70,8 +76,9 @@ def dispatch_alerts(
         for fam in familiares:
             if send_whatsapp_message(
                 fam,
-                "🟡 Aviso preventivo del seguimiento de hoy: "
-                f"{resumen}. No es una emergencia, pero conviene estar atentos.",
+                f"🟡 Seguimiento de {quien} — aviso preventivo de hoy: {resumen}. "
+                "No es una urgencia, pero conviene estar atentos y, si podés, "
+                f"pasar a ver a {quien} o llamarlo.",
             ):
                 actions["whatsapp"].append(fam)
 

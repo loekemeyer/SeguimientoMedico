@@ -63,6 +63,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     state = CallState(
         paciente_id=paciente_id,
         limits=limits,
+        paciente_nombre=nombre or "",
         familiares=familiares,
         ficha_resumen=ficha_resumen,
     )

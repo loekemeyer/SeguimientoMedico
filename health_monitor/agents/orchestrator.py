@@ -28,6 +28,7 @@ class CallState:
 
     paciente_id: int
     limits: ClinicalLimits
+    paciente_nombre: str = ""
     familiares: list[str] = field(default_factory=list)
     ficha_resumen: str = ""
 
@@ -63,6 +64,7 @@ def node_dispatch(state: CallState) -> CallState:
         state.triage,
         familiares=state.familiares,
         ficha_resumen=state.ficha_resumen,
+        paciente_nombre=state.paciente_nombre,
     )
     state.finished = True
     return state
