@@ -43,6 +43,16 @@ app.include_router(auth_routes.router)
 app.include_router(patients_routes.router)
 
 
+@app.on_event("startup")
+def _startup() -> None:
+    """Crea las tablas si no existen (cómodo en dev; en prod usar migraciones)."""
+    try:
+        from health_monitor.db.session import create_all
+        create_all()
+    except Exception as exc:  # la app igual sirve el frontend aunque la DB no esté
+        logger.warning("No se pudieron crear/verificar las tablas al iniciar: %s", exc)
+
+
 @app.get("/health")
 def health() -> dict:
     """Healthcheck con la versión en curso para confirmar el build desplegado."""
