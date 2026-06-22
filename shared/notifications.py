@@ -14,10 +14,20 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
-def send_whatsapp_message(to: str, body: str, *, media_url: str | None = None) -> bool:
+def send_whatsapp_message(
+    to: str,
+    body: str | None = None,
+    *,
+    media_url: str | None = None,
+    content_sid: str | None = None,
+    content_variables: dict | None = None,
+) -> bool:
     """Envía un mensaje de WhatsApp vía Twilio.
 
-    Devuelve True si se envió, False si no hay credenciales (modo degradado).
+    - `content_sid`: ID de una plantilla aprobada (mensajes iniciados por el
+      negocio, como las alertas, requieren plantilla fuera de la ventana de 24h).
+    - `body`: texto libre (solo válido dentro de la ventana de 24h de sesión).
+    Devuelve True si se envió, False si no hay credenciales o falla.
     """
     from shared.config import get_settings
 
@@ -33,7 +43,13 @@ def send_whatsapp_message(to: str, body: str, *, media_url: str | None = None) -
         return False
 
     client = Client(s.twilio_account_sid, s.twilio_auth_token)
-    kwargs = {"from_": s.twilio_whatsapp_from, "to": _wa(to), "body": body}
+    kwargs = {"from_": s.twilio_whatsapp_from, "to": _wa(to)}
+    if content_sid:
+        kwargs["content_sid"] = content_sid
+        if content_variables:
+            kwargs["content_variables"] = json.dumps(content_variables)
+    elif body:
+        kwargs["body"] = body
     if media_url:
         kwargs["media_url"] = [media_url]
     try:
