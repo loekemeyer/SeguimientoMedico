@@ -35,18 +35,19 @@ def main() -> None:
     print(f"  Twilio SID     : {'OK' if s.twilio_account_sid else 'FALTA'}")
     print()
 
-    # Usa TU plantilla (TWILIO_CONTENT_SID del .env) si está configurada;
-    # si no, prueba con la plantilla de muestra de Twilio.
-    if s.twilio_content_sid:
-        content_sid = s.twilio_content_sid
-        # Tu plantilla debe tener UNA variable {{1}}.
-        variables = {"1": "Prueba de SeguimientoMedico ✅"}
-        print(f"Enviando con tu plantilla (.env): {content_sid}")
-    else:
-        content_sid = "HXb5b62575e6e4ff6129ad7c8efe1f983e"
-        variables = {"1": "12/1", "2": "3pm"}
-        print(f"Enviando con plantilla de muestra: {content_sid}")
-    enviado = send_whatsapp_message(destino, content_sid=content_sid, content_variables=variables)
+    # Intento 1: texto libre (funciona si la ventana de 24h está abierta).
+    mensaje = "Aviso de SeguimientoMedico: prueba de conexión ✅"
+    print("\nIntento 1 — texto libre (requiere ventana de 24h abierta)...")
+    enviado = send_whatsapp_message(destino, body=mensaje)
+
+    # Intento 2: plantilla aprobada (si hay TWILIO_CONTENT_SID).
+    if not enviado and s.twilio_content_sid:
+        print("\nIntento 2 — plantilla (TWILIO_CONTENT_SID)...")
+        enviado = send_whatsapp_message(
+            destino,
+            content_sid=s.twilio_content_sid,
+            content_variables={"1": "Prueba de SeguimientoMedico ✅"},
+        )
 
     if enviado:
         print("✓ Mensaje enviado. Revisá el WhatsApp del número de destino.")
