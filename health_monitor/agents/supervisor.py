@@ -38,7 +38,8 @@ def build_resumen(
     readout: ClinicalReadout, result: TriageResult, paciente_nombre: str = ""
 ) -> str:
     """Arma un resumen legible de la llamada para que lo lea el familiar."""
-    quien = paciente_nombre.split()[0] if paciente_nombre else "El paciente"
+    # Usa el nombre tal cual lo guardó el admin (puede ser "Papá", "Abuela Rosa", etc.).
+    quien = paciente_nombre.strip() if paciente_nombre.strip() else "El paciente"
     partes: list[str] = []
 
     if readout.presion_sistolica and readout.presion_diastolica:
@@ -85,7 +86,7 @@ def dispatch_alerts(
     `contactos` es una lista de dicts: {telefono, label, recibe_alertas}.
     Cada elemento del resultado: {canal, nivel, destino, destino_label, contenido, enviado}.
     """
-    quien = paciente_nombre.split()[0] if paciente_nombre else "el paciente"
+    quien = paciente_nombre.strip() if paciente_nombre.strip() else "el paciente"
     nivel = result.level.name
     registros: list[dict] = []
 

@@ -88,13 +88,17 @@ class PacienteOut(BaseModel):
 
 # --- Medicación ---
 
-class MedicacionIn(BaseModel):
-    nombre: str  # droga + dosis, ej "Losartán 50mg"
+class RutinaItemIn(BaseModel):
+    # medicamento | ejercicio | presion | despertar | acostar | otro
+    tipo: str = "otro"
+    nombre: str  # descripción, ej "Losartán 50mg" / "Caminar 20 min" / "Tomar presión"
     frecuencia: str = ""
+    horario: str = ""
+    dias: list[int] = Field(default_factory=list)  # 0=lun..6=dom; vacío = todos
     activa: bool = True
 
 
-class MedicacionOut(MedicacionIn):
+class RutinaItemOut(RutinaItemIn):
     id: int
 
 

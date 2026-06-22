@@ -107,6 +107,10 @@
             <p class="page__subtitle" id="detail-meta">—</p>
           </div>
           <span class="badge" id="detail-status">—</span>
+          <div class="detail__actions">
+            <button class="btn btn--ghost btn--sm" id="btn-edit">✏️ Editar</button>
+            <button class="btn btn--primary" id="btn-call-now">📞 Llamar ahora</button>
+          </div>
         </div>
 
         <div class="detail__cards">
@@ -118,10 +122,42 @@
             <h3 class="card__title">👥 Contactos de emergencia</h3>
             <div id="detail-contacts" class="stacklist"></div>
           </div>
-          <div class="card info-card">
-            <h3 class="card__title">💊 Medicación</h3>
-            <div id="detail-meds" class="stacklist"></div>
-          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">🔁 Rutina diaria</h3>
+          <p class="hint">Cargá <strong>todo lo posible</strong>: medicamentos, ejercicios, tomas de
+            presión y horarios de despertarse/acostarse. Cuanto más completa esté la rutina,
+            mejor acompaña el sistema — las llamadas y los avisos se accionan en base a esto.</p>
+          <div id="detail-rutina" class="stacklist"></div>
+          <form id="form-rutina" class="addform">
+            <div class="addform__row">
+              <select name="tipo" class="select">
+                <option value="medicamento">💊 Medicamento</option>
+                <option value="presion">🩺 Toma de presión</option>
+                <option value="ejercicio">🏃 Ejercicio</option>
+                <option value="despertar">☀️ Despertarse</option>
+                <option value="acostar">🌙 Acostarse</option>
+                <option value="otro">📌 Otro</option>
+              </select>
+              <input name="nombre" placeholder="Descripción (ej: Losartán 50mg / Caminar 20 min)" required />
+            </div>
+            <div class="addform__row">
+              <input name="frecuencia" placeholder="Frecuencia (ej: 1 vez al día)" />
+              <input name="horario" type="time" />
+            </div>
+            <div class="days" id="rutina-days">
+              <span class="days__label">Días:</span>
+              <label><input type="checkbox" value="0" checked> Lun</label>
+              <label><input type="checkbox" value="1" checked> Mar</label>
+              <label><input type="checkbox" value="2" checked> Mié</label>
+              <label><input type="checkbox" value="3" checked> Jue</label>
+              <label><input type="checkbox" value="4" checked> Vie</label>
+              <label><input type="checkbox" value="5" checked> Sáb</label>
+              <label><input type="checkbox" value="6" checked> Dom</label>
+            </div>
+            <button class="btn btn--primary btn--sm btn--block" type="submit">＋ Agregar a la rutina</button>
+          </form>
         </div>
 
         <div class="card">
@@ -136,11 +172,11 @@
   <div id="modal" class="modal is-hidden">
     <div class="modal__backdrop" data-close></div>
     <div class="modal__panel card">
-      <h2 class="form__title">Agregar persona a cuidar</h2>
+      <h2 class="form__title" id="modal-title">Agregar persona a cuidar</h2>
       <form id="form-patient" class="form">
         <div class="form__row">
-          <label class="field"><span>Nombre completo</span>
-            <input type="text" name="nombre" placeholder="Ej: Rosa Pérez" required />
+          <label class="field"><span>Nombre (el que vos quieras: real o cariñoso)</span>
+            <input type="text" name="nombre" placeholder="Ej: Papá, Abuela Rosa, Rosa Pérez…" required />
           </label>
           <label class="field"><span>WhatsApp del paciente</span>
             <input type="text" name="telefono_whatsapp" placeholder="+54911..." required />
@@ -158,14 +194,16 @@
             <span>Tengo el consentimiento del apoderado legal</span>
           </label>
         </div>
-        <h3 class="form__section">Contacto de emergencia</h3>
-        <div class="form__row">
-          <label class="field"><span>Nombre del familiar</span>
-            <input type="text" name="contacto_nombre" placeholder="Ej: Thomas (hijo)" />
-          </label>
-          <label class="field"><span>WhatsApp del familiar</span>
-            <input type="text" name="contacto_telefono" placeholder="+54911..." />
-          </label>
+        <div id="contacto-section">
+          <h3 class="form__section">Contacto de emergencia</h3>
+          <div class="form__row">
+            <label class="field"><span>Nombre del familiar</span>
+              <input type="text" name="contacto_nombre" placeholder="Ej: Thomas (hijo)" />
+            </label>
+            <label class="field"><span>WhatsApp del familiar</span>
+              <input type="text" name="contacto_telefono" placeholder="+54911..." />
+            </label>
+          </div>
         </div>
         <div class="modal__actions">
           <button type="button" class="btn btn--ghost" data-close>Cancelar</button>

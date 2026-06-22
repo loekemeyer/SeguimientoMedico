@@ -98,16 +98,21 @@ def test_aislamiento_entre_usuarios():
     assert client.get("/pacientes", headers=h2).json() == []
 
 
-def test_medicacion_y_contactos():
+def test_rutina_y_contactos():
     headers = _register("full@test.com")
     pid = client.post("/pacientes", json={
         "nombre": "Con Datos", "telefono_whatsapp": "+5491131181594",
     }, headers=headers).json()["id"]
 
-    med = client.post(f"/pacientes/{pid}/medicacion",
-                      json={"nombre": "Losartán 50mg", "frecuencia": "1 por día"}, headers=headers)
-    assert med.status_code == 201
-    assert client.get(f"/pacientes/{pid}/medicacion", headers=headers).json()[0]["nombre"] == "Losartán 50mg"
+    item = client.post(f"/pacientes/{pid}/rutina",
+                       json={"tipo": "medicamento", "nombre": "Losartán 50mg",
+                             "frecuencia": "1 vez al día", "horario": "08:00", "dias": [0, 2, 4]},
+                       headers=headers)
+    assert item.status_code == 201
+    rutina = client.get(f"/pacientes/{pid}/rutina", headers=headers).json()
+    assert rutina[0]["nombre"] == "Losartán 50mg"
+    assert rutina[0]["tipo"] == "medicamento"
+    assert rutina[0]["dias"] == [0, 2, 4]
 
     con = client.post(f"/pacientes/{pid}/contactos",
                       json={"nombre": "Thomas", "telefono": "+5491162521635", "relacion": "hijo"},

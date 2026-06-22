@@ -14,9 +14,9 @@ from health_monitor.db.models import (
     ContactoEmergencia,
     EvolucionDiaria,
     FichaClinica,
-    Medicacion,
     Notificacion,
     Paciente,
+    RutinaItem,
     Usuario,
 )
 from health_monitor.db.session import get_session
@@ -24,11 +24,11 @@ from health_monitor.schemas.api import (
     ContactoIn,
     ContactoOut,
     EvolucionOut,
-    MedicacionIn,
-    MedicacionOut,
     PacienteIn,
     PacienteOut,
     ProgramacionLlamada,
+    RutinaItemIn,
+    RutinaItemOut,
 )
 from shared.config import get_settings
 from shared.security import FieldCipher
@@ -159,40 +159,46 @@ def baja_paciente(
 
 # --- Medicación ---
 
-@router.post("/{paciente_id}/medicacion", response_model=MedicacionOut, status_code=201)
-def agregar_medicacion(
+def _rutina_out(r: RutinaItem, cipher: FieldCipher) -> RutinaItemOut:
+    return RutinaItemOut(
+        id=r.id, tipo=r.tipo, nombre=cipher.decrypt(r.nombre_enc),
+        frecuencia=r.frecuencia, horario=r.horario, dias=r.dias or [], activa=r.activa,
+    )
+
+
+@router.post("/{paciente_id}/rutina", response_model=RutinaItemOut, status_code=201)
+def agregar_rutina(
     paciente_id: int,
-    data: MedicacionIn,
+    data: RutinaItemIn,
     user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
-) -> MedicacionOut:
+) -> RutinaItemOut:
     _owned_paciente(db, user, paciente_id)
-    m = Medicacion(
+    r = RutinaItem(
         paciente_id=paciente_id,
+        tipo=data.tipo,
         nombre_enc=_cipher().encrypt(data.nombre),
         frecuencia=data.frecuencia,
+        horario=data.horario,
+        dias=data.dias,
         activa=data.activa,
     )
-    db.add(m)
+    db.add(r)
     db.commit()
-    db.refresh(m)
-    return MedicacionOut(id=m.id, nombre=data.nombre, frecuencia=m.frecuencia, activa=m.activa)
+    db.refresh(r)
+    return _rutina_out(r, _cipher())
 
 
-@router.get("/{paciente_id}/medicacion", response_model=list[MedicacionOut])
-def listar_medicacion(
+@router.get("/{paciente_id}/rutina", response_model=list[RutinaItemOut])
+def listar_rutina(
     paciente_id: int,
     user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
-) -> list[MedicacionOut]:
+) -> list[RutinaItemOut]:
     _owned_paciente(db, user, paciente_id)
     cipher = _cipher()
-    rows = db.scalars(select(Medicacion).where(Medicacion.paciente_id == paciente_id)).all()
-    return [
-        MedicacionOut(id=m.id, nombre=cipher.decrypt(m.nombre_enc),
-                      frecuencia=m.frecuencia, activa=m.activa)
-        for m in rows
-    ]
+    rows = db.scalars(select(RutinaItem).where(RutinaItem.paciente_id == paciente_id)).all()
+    return [_rutina_out(r, cipher) for r in rows]
 
 
 # --- Contactos de emergencia ---
@@ -285,3 +291,41 @@ def historial_notificaciones(
         }
         for n in rows
     ]
+
+
+@router.post("/{paciente_id}/llamar")
+def llamar_ahora(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Dispara una llamada de seguimiento inmediata (sin esperar el horario)."""
+    from health_monitor.services import require_consent
+
+    p = _owned_paciente(db, user, paciente_id)
+    require_consent(p)
+
+    s = get_settings()
+    # Sin teléfono saliente / URL pública no se puede hacer la llamada de voz real.
+    if not (s.twilio_account_sid and s.twilio_auth_token and s.public_base_url):
+        return {
+            "status": "no_disponible",
+            "detail": (
+                "La llamada de voz todavía no está configurada (falta el teléfono "
+                "saliente y la URL pública). Cuando se configure, este botón llama "
+                "al instante."
+            ),
+        }
+    try:
+        from twilio.rest import Client  # import perezoso
+
+        to = _cipher().decrypt(p.telefono_whatsapp_enc)
+        client = Client(s.twilio_account_sid, s.twilio_auth_token)
+        call = client.calls.create(
+            to=f"whatsapp:{to}",
+            from_=s.twilio_whatsapp_from,
+            url=f"{s.public_base_url}/twilio/voice?paciente_id={p.id}",
+        )
+        return {"status": "llamando", "detail": "Llamada iniciada.", "call_sid": call.sid}
+    except Exception as exc:
+        return {"status": "error", "detail": f"No se pudo iniciar la llamada: {exc}"}

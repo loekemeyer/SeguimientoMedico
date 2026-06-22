@@ -34,7 +34,7 @@ from health_monitor.agents.orchestrator import CallState, run_post_call  # noqa:
 from health_monitor.db.models import (  # noqa: E402
     ContactoEmergencia,
     FichaClinica,
-    Medicacion,
+    RutinaItem,
     Paciente,
     Usuario,
 )
@@ -95,8 +95,13 @@ def seed_paciente(db) -> int:
         },
         patologias=["I10"],  # hipertensión esencial (CIE-10)
     )
-    paciente.medicaciones = [
-        Medicacion(nombre_enc=cipher.encrypt("Losartán 50mg"), frecuencia="1 por día, a la mañana"),
+    paciente.rutina = [
+        RutinaItem(tipo="medicamento", nombre_enc=cipher.encrypt("Losartán 50mg"),
+                   frecuencia="1 vez al día", horario="08:00"),
+        RutinaItem(tipo="presion", nombre_enc=cipher.encrypt("Tomar la presión"),
+                   frecuencia="1 vez al día", horario="09:00"),
+        RutinaItem(tipo="ejercicio", nombre_enc=cipher.encrypt("Caminar 20 minutos"),
+                   frecuencia="3 veces por semana", horario="17:00", dias=[0, 2, 4]),
     ]
     paciente.contactos = [
         ContactoEmergencia(

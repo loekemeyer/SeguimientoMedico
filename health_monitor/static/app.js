@@ -145,20 +145,70 @@ function patientCard(p) {
 }
 
 /* ---------- detalle ---------- */
+let currentPatient = null;   // paciente abierto en el detalle
+
 async function openDetail(id) {
   showPage("detail");
   try {
-    const [p, contactos, meds, evos] = await Promise.all([
+    const [p, contactos, rutina, evos] = await Promise.all([
       api(`/pacientes/${id}`),
       api(`/pacientes/${id}/contactos`).catch(() => []),
-      api(`/pacientes/${id}/medicacion`).catch(() => []),
+      api(`/pacientes/${id}/rutina`).catch(() => []),
       api(`/pacientes/${id}/evoluciones`).catch(() => []),
     ]);
-    renderDetail(p, contactos, meds, evos);
+    currentPatient = p;
+    renderDetail(p, contactos, rutina, evos);
   } catch (e) { toast(e.message, true); }
 }
 
-function renderDetail(p, contactos, meds, evos) {
+/* ---------- llamar ahora ---------- */
+$("#btn-call-now").addEventListener("click", async () => {
+  if (!currentPatient) return;
+  try {
+    const r = await api(`/pacientes/${currentPatient.id}/llamar`, { method: "POST" });
+    toast(r.detail || "Llamada en curso", r.status === "error" || r.status === "no_disponible");
+  } catch (e) { toast(e.message, true); }
+});
+
+/* ---------- agregar a la rutina ---------- */
+const TIPO_ICON = { medicamento: "💊", presion: "🩺", ejercicio: "🏃", despertar: "☀️", acostar: "🌙", otro: "📌" };
+const DIA_NOMBRE = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+$("#form-rutina").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentPatient) return;
+  const f = new FormData(e.target);
+  const dias = $$("#rutina-days input:checked").map((c) => Number(c.value));
+  try {
+    await api(`/pacientes/${currentPatient.id}/rutina`, {
+      method: "POST",
+      body: {
+        tipo: f.get("tipo"), nombre: f.get("nombre"),
+        frecuencia: f.get("frecuencia") || "", horario: f.get("horario") || "",
+        dias: dias.length === 7 ? [] : dias, activa: true,
+      },
+    });
+    e.target.reset();
+    $$("#rutina-days input").forEach((c) => (c.checked = true));
+    const rutina = await api(`/pacientes/${currentPatient.id}/rutina`).catch(() => []);
+    renderRutina(rutina);
+    toast("Agregado a la rutina ✅");
+  } catch (ex) { toast(ex.message, true); }
+});
+
+function renderRutina(items) {
+  $("#detail-rutina").innerHTML = items.length
+    ? items.map((r) => {
+        const icon = TIPO_ICON[r.tipo] || "📌";
+        const dias = (!r.dias || r.dias.length === 0 || r.dias.length === 7)
+          ? "Todos los días" : r.dias.map((d) => DIA_NOMBRE[d]).join(", ");
+        const det = [r.frecuencia, r.horario, dias].filter(Boolean).join(" · ");
+        return `<div class="stack-item">${icon} <div><div>${escapeHtml(r.nombre || "")}</div><small>${escapeHtml(det)}</small></div></div>`;
+      }).join("")
+    : `<p class="empty">Todavía no cargaste la rutina. Empezá agregando un ítem abajo.</p>`;
+}
+
+function renderDetail(p, contactos, rutina, evos) {
   $("#detail-avatar").textContent = (p.nombre || "?").trim()[0].toUpperCase();
   $("#detail-name").textContent = p.nombre || "—";
   $("#detail-meta").textContent = (p.patologias || []).join(" · ") || "Seguimiento general";
@@ -180,9 +230,7 @@ function renderDetail(p, contactos, meds, evos) {
     ? contactos.map((c) => `<div class="stack-item">👤 <div><div>${escapeHtml(c.nombre || "")}</div><small>${escapeHtml(c.relacion || "")} · ${escapeHtml(c.telefono || "")}</small></div></div>`).join("")
     : `<p class="empty">Sin contactos cargados.</p>`;
 
-  $("#detail-meds").innerHTML = meds.length
-    ? meds.map((m) => `<div class="stack-item">💊 <div><div>${escapeHtml(m.nombre || "")}</div><small>${escapeHtml(m.frecuencia || "")}</small></div></div>`).join("")
-    : `<p class="empty">Sin medicación cargada.</p>`;
+  renderRutina(rutina);
 
   $("#detail-history").innerHTML = evos.length
     ? evos.map(historyRow).join("")
@@ -204,38 +252,73 @@ function historyRow(e) {
 $("#btn-back").addEventListener("click", () => { showPage("list"); loadPatients(); });
 $("#btn-add").addEventListener("click", openModal);
 
-/* ---------- modal alta de paciente ---------- */
-function openModal() { $("#modal").classList.remove("is-hidden"); }
-function closeModal() { $("#modal").classList.add("is-hidden"); $("#form-patient").reset(); $("[data-error]", $("#form-patient")).textContent = ""; }
-$$("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
+/* ---------- modal alta / edición de paciente ---------- */
+let editingId = null;
+const form = $("#form-patient");
 
-$("#form-patient").addEventListener("submit", async (e) => {
+function openModal() {            // alta
+  editingId = null;
+  $("#modal-title").textContent = "Agregar persona a cuidar";
+  $("#contacto-section").classList.remove("is-hidden");
+  form.reset();
+  $("[name=llamada_hora]", form).value = "10:00";
+  $("#modal").classList.remove("is-hidden");
+}
+
+function openEditModal() {        // edición del paciente abierto
+  if (!currentPatient) return;
+  editingId = currentPatient.id;
+  $("#modal-title").textContent = "Editar persona";
+  $("#contacto-section").classList.add("is-hidden");
+  form.reset();
+  $("[name=nombre]", form).value = currentPatient.nombre || "";
+  $("[name=telefono_whatsapp]", form).value = currentPatient.telefono_whatsapp || "";
+  $("[name=patologias]", form).value = (currentPatient.patologias || []).join(", ");
+  $("[name=llamada_hora]", form).value = currentPatient.programacion?.llamada_hora || "10:00";
+  $("[name=consentimiento_firmado]", form).checked = !!currentPatient.consentimiento_firmado;
+  $("#modal").classList.remove("is-hidden");
+}
+
+function closeModal() {
+  $("#modal").classList.add("is-hidden");
+  form.reset();
+  $("[data-error]", form).textContent = "";
+}
+$$("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
+$("#btn-edit").addEventListener("click", openEditModal);
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
   err.textContent = "";
   const f = new FormData(e.target);
   const patologias = (f.get("patologias") || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const body = {
+    nombre: f.get("nombre"),
+    telefono_whatsapp: f.get("telefono_whatsapp"),
+    consentimiento_firmado: f.get("consentimiento_firmado") === "on",
+    patologias,
+    programacion: { ...(currentPatient?.programacion || {}), llamada_hora: f.get("llamada_hora") || "10:00" },
+  };
   try {
-    const p = await api("/pacientes", {
-      method: "POST",
-      body: {
-        nombre: f.get("nombre"),
-        telefono_whatsapp: f.get("telefono_whatsapp"),
-        consentimiento_firmado: f.get("consentimiento_firmado") === "on",
-        patologias,
-        programacion: { llamada_hora: f.get("llamada_hora") || "10:00" },
-      },
-    });
-    // contacto de emergencia (opcional)
-    if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
-      await api(`/pacientes/${p.id}/contactos`, {
-        method: "POST",
-        body: { nombre: f.get("contacto_nombre"), telefono: f.get("contacto_telefono"), relacion: "familiar", prioridad: 1 },
-      }).catch(() => {});
+    if (editingId) {
+      const p = await api(`/pacientes/${editingId}`, { method: "PUT", body });
+      closeModal();
+      toast("Cambios guardados ✅");
+      await openDetail(p.id);
+    } else {
+      body.programacion = { llamada_hora: f.get("llamada_hora") || "10:00" };
+      const p = await api("/pacientes", { method: "POST", body });
+      if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
+        await api(`/pacientes/${p.id}/contactos`, {
+          method: "POST",
+          body: { nombre: f.get("contacto_nombre"), telefono: f.get("contacto_telefono"), relacion: "familiar", prioridad: 1 },
+        }).catch(() => {});
+      }
+      closeModal();
+      toast("Persona agregada ✅");
+      await loadPatients();
     }
-    closeModal();
-    toast("Persona agregada ✅");
-    await loadPatients();
   } catch (ex) { err.textContent = ex.message; }
 });
 

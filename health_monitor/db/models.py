@@ -3,7 +3,7 @@
 Cada `Usuario` (familiar/cuidador que se suscribe) gestiona uno o más
 `Paciente` (la persona monitoreada). Por paciente se cargan:
   - FichaClinica     : límites de control personalizados + patologías
-  - Medicacion       : medicamentos, dosis y frecuencia
+  - RutinaItem       : rutina diaria (medicamentos, ejercicios, presión, horarios)
   - ContactoEmergencia: a quién avisar y en qué orden de escalamiento
   - EvolucionDiaria  : histórico de llamadas con triaje
 
@@ -92,7 +92,7 @@ class Paciente(Base):
     ficha: Mapped["FichaClinica"] = relationship(
         back_populates="paciente", uselist=False, cascade="all, delete-orphan"
     )
-    medicaciones: Mapped[list["Medicacion"]] = relationship(
+    rutina: Mapped[list["RutinaItem"]] = relationship(
         back_populates="paciente", cascade="all, delete-orphan"
     )
     contactos: Mapped[list["ContactoEmergencia"]] = relationship(
@@ -121,20 +121,30 @@ class FichaClinica(Base):
     paciente: Mapped["Paciente"] = relationship(back_populates="ficha")
 
 
-class Medicacion(Base):
-    """Un medicamento del plan del paciente (hábito de medicación)."""
+class RutinaItem(Base):
+    """Un ítem de la rutina diaria del paciente que el sistema acompaña.
 
-    __tablename__ = "medicacion"
+    Engloba todo lo que el admin quiera que el sistema controle/recuerde:
+    medicamentos, ejercicios, tomas de presión, horarios de despertarse/acostarse.
+    El triaje y los mensajes/llamadas se accionan en función de esta rutina.
+    """
+
+    __tablename__ = "rutina_items"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     paciente_id: Mapped[int] = mapped_column(
         ForeignKey("pacientes.id", ondelete="CASCADE"), index=True
     )
-    nombre_enc: Mapped[str] = mapped_column(Text)  # droga + dosis (cifrado)
-    frecuencia: Mapped[str] = mapped_column(String(120), default="")  # ej "1 por día, a la mañana"
+    # medicamento | ejercicio | presion | despertar | acostar | otro
+    tipo: Mapped[str] = mapped_column(String(24), default="otro")
+    nombre_enc: Mapped[str] = mapped_column(Text)  # descripción del ítem (cifrado)
+    frecuencia: Mapped[str] = mapped_column(String(120), default="")  # ej "1 vez al día"
+    horario: Mapped[str] = mapped_column(String(60), default="")      # ej "08:00"
+    # Días en que se repite (0=lunes ... 6=domingo). Vacío = todos los días.
+    dias: Mapped[list] = mapped_column(JSON, default=list)
     activa: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    paciente: Mapped["Paciente"] = relationship(back_populates="medicaciones")
+    paciente: Mapped["Paciente"] = relationship(back_populates="rutina")
 
 
 class ContactoEmergencia(Base):
