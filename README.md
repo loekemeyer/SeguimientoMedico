@@ -5,10 +5,17 @@ correr en la nube. Software de salud proactivo para tercera edad y pacientes
 crónicos: llama por voz al WhatsApp del paciente, mantiene un diálogo empático,
 extrae métricas de salud, actualiza la HCE y dispara alertas jerárquicas.
 
+Pensado como **producto SaaS multi-usuario**: cada usuario (familiar/cuidador) se
+registra, se suscribe y administra a las personas que monitorea, con sus
+patologías, medicación, contactos de emergencia y límites de control. Cada
+llamada guarda un resumen y cada alerta enviada queda registrada para que el
+familiar tenga seguimiento real.
+
 | Componente | Carpeta | Descripción |
 |------------|---------|-------------|
-| **Acompañamiento y Monitoreo Crónico** | [`health_monitor/`](health_monitor) | Llamadas de voz proactivas vía WhatsApp para pacientes crónicos / tercera edad. Tres agentes (Contenedor, Clínico, Supervisor) + triaje jerárquico de alertas. |
-| **Shared** | [`shared/`](shared) | Configuración, cifrado AES-256, notificaciones (WhatsApp / webhooks). |
+| **API SaaS (auth + CRUD)** | [`health_monitor/api/`](health_monitor/api) | Registro/login (tokens), gestión multi-usuario de pacientes, medicación, contactos, historial de llamadas y notificaciones. |
+| **Acompañamiento y Monitoreo Crónico** | [`health_monitor/`](health_monitor) | Llamadas de voz proactivas vía WhatsApp. Tres agentes (Contenedor, Clínico, Supervisor) + triaje jerárquico de alertas. |
+| **Shared** | [`shared/`](shared) | Configuración, cifrado AES-256, autenticación, notificaciones (WhatsApp / webhooks). |
 
 ## Decisiones de arquitectura
 

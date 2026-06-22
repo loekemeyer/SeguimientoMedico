@@ -7,7 +7,9 @@ def _state(transcript: str) -> CallState:
     return CallState(
         paciente_id=1,
         limits=ClinicalLimits(paciente_id=1),
-        familiares=["+5491155550000"],
+        paciente_nombre="Alejandro Loekemeyer",
+        contactos=[{"telefono": "+5491155550000", "label": "Thomas (hijo)",
+                    "recibe_alertas": True}],
         ficha_resumen="Paciente 1. Patologías: hipertensión.",
         transcript=transcript,
     )

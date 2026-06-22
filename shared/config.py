@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     # Seguridad
     encryption_key: str = ""  # AES-256 en base64 (32 bytes)
+    jwt_secret: str = ""  # secreto para firmar tokens de sesión
 
     # Base de datos
     database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/seguimiento"

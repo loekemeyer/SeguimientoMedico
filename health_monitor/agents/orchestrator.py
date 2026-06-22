@@ -29,14 +29,17 @@ class CallState:
     paciente_id: int
     limits: ClinicalLimits
     paciente_nombre: str = ""
-    familiares: list[str] = field(default_factory=list)
+    # Cada contacto: {"telefono": str, "label": str, "recibe_alertas": bool}
+    contactos: list[dict] = field(default_factory=list)
     ficha_resumen: str = ""
 
     transcript: str = ""
     readout: ClinicalReadout | None = None
     triage: TriageResult | None = None
+    resumen: str = ""
     interrupted: bool = False
-    alerts_dispatched: dict | None = None
+    # Lista de registros de notificación enviados (para persistir y mostrar).
+    alerts_dispatched: list[dict] | None = None
     finished: bool = False
 
 
@@ -58,11 +61,14 @@ def node_supervise(state: CallState) -> CallState:
 
 
 def node_dispatch(state: CallState) -> CallState:
-    """Dispara las alertas según el nivel de triaje."""
-    assert state.triage is not None
+    """Arma el resumen y dispara las alertas según el nivel de triaje."""
+    assert state.triage is not None and state.readout is not None
+    state.resumen = supervisor.build_resumen(
+        state.readout, state.triage, state.paciente_nombre
+    )
     state.alerts_dispatched = supervisor.dispatch_alerts(
         state.triage,
-        familiares=state.familiares,
+        contactos=state.contactos,
         ficha_resumen=state.ficha_resumen,
         paciente_nombre=state.paciente_nombre,
     )

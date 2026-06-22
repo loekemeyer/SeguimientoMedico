@@ -31,10 +31,17 @@ if not os.environ.get("ENCRYPTION_KEY"):
     os.environ["ENCRYPTION_KEY"] = generate_key()
 
 from health_monitor.agents.orchestrator import CallState, run_post_call  # noqa: E402
-from health_monitor.db.models import FichaClinica, Paciente  # noqa: E402
+from health_monitor.db.models import (  # noqa: E402
+    ContactoEmergencia,
+    FichaClinica,
+    Medicacion,
+    Paciente,
+    Usuario,
+)
 from health_monitor.db.session import create_all, get_session  # noqa: E402
 from health_monitor.schemas.fhir import readout_to_fhir_bundle  # noqa: E402
 from health_monitor.services import build_call_state, persist_evolucion  # noqa: E402
+from shared.auth import hash_password  # noqa: E402
 from shared.config import get_settings  # noqa: E402
 from shared.security import FieldCipher  # noqa: E402
 
@@ -50,20 +57,30 @@ TRANSCRIPCIONES = {
 
 
 def seed_paciente(db) -> int:
-    """Crea un paciente de prueba con consentimiento firmado y ficha clínica."""
+    """Crea un usuario (familiar que se suscribe) con su paciente a cargo."""
     cipher = FieldCipher(get_settings().encryption_key)
 
-    # Limpieza idempotente: borra el paciente demo si ya existe.
-    existente = db.query(Paciente).filter_by(hce_id="DEMO-001").one_or_none()
+    # Limpieza idempotente: borra el usuario demo (cascada borra su paciente).
+    existente = db.query(Usuario).filter_by(email="demo@seguimiento.app").one_or_none()
     if existente:
         db.delete(existente)
         db.commit()
 
+    # El usuario que se registra y administra (en la realidad, un familiar).
+    usuario = Usuario(
+        email="demo@seguimiento.app",
+        password_hash=hash_password("demo1234"),
+        nombre="Thomas Loekemeyer",
+        plan="trial",
+    )
+    db.add(usuario)
+    db.flush()
+
     paciente = Paciente(
+        usuario_id=usuario.id,
         hce_id="DEMO-001",
         nombre_enc=cipher.encrypt("Alejandro Damián Loekemeyer"),
         telefono_whatsapp_enc=cipher.encrypt("+5491131181594"),
-        familiares_enc=[cipher.encrypt("+5491162521635")],  # Thomas (hijo) a cargo
         consentimiento_firmado=True,
         consentimiento_fecha=datetime.now(timezone.utc),
         consentimiento_apoderado_enc=cipher.encrypt("Thomas Loekemeyer (hijo)"),
@@ -76,9 +93,18 @@ def seed_paciente(db) -> int:
             "diastolica_max": 90, "diastolica_min": 60,
             "diastolica_critica_max": 120,
         },
-        medicacion_enc=[cipher.encrypt("Losartán 50mg - 1 por día")],
         patologias=["I10"],  # hipertensión esencial (CIE-10)
     )
+    paciente.medicaciones = [
+        Medicacion(nombre_enc=cipher.encrypt("Losartán 50mg"), frecuencia="1 por día, a la mañana"),
+    ]
+    paciente.contactos = [
+        ContactoEmergencia(
+            nombre_enc=cipher.encrypt("Thomas Loekemeyer"),
+            telefono_enc=cipher.encrypt("+5491162521635"),
+            relacion="hijo", prioridad=1, recibe_alertas=True,
+        ),
+    ]
     db.add(paciente)
     db.commit()
     db.refresh(paciente)

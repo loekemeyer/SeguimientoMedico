@@ -20,7 +20,10 @@ from sqlalchemy.orm import Session
 
 from health_monitor import __version__
 from health_monitor.agents.orchestrator import run_post_call
-from health_monitor.db.models import Paciente
+from health_monitor.api import auth as auth_routes
+from health_monitor.api import patients as patients_routes
+from health_monitor.api.deps import get_current_user
+from health_monitor.db.models import Paciente, Usuario
 from health_monitor.db.session import get_session
 from health_monitor.realtime.media_stream import MediaStreamBridge
 from health_monitor.services import (
@@ -34,6 +37,8 @@ logging.basicConfig(level=get_settings().log_level)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="SeguimientoMedico — Health Monitor", version=__version__)
+app.include_router(auth_routes.router)
+app.include_router(patients_routes.router)
 
 
 @app.get("/health")
@@ -43,13 +48,18 @@ def health() -> dict:
 
 
 @app.post("/calls/{paciente_id}/initiate")
-def initiate_call(paciente_id: int, db: Session = Depends(get_session)) -> JSONResponse:
+def initiate_call(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> JSONResponse:
     """Inicia una llamada saliente de seguimiento hacia el WhatsApp del paciente.
 
-    Verifica el consentimiento informado (Ley 25.326) ANTES de llamar.
+    Requiere usuario autenticado y dueño del paciente. Verifica el consentimiento
+    informado (Ley 25.326) ANTES de llamar.
     """
     paciente = db.get(Paciente, paciente_id)
-    if paciente is None or not paciente.activo:
+    if paciente is None or not paciente.activo or paciente.usuario_id != user.id:
         raise HTTPException(404, "Paciente no encontrado o inactivo")
     require_consent(paciente)
 
