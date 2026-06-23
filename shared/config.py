@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     environment: str = "dev"  # dev | production (en production, JWT_SECRET es obligatorio)
     log_level: str = "INFO"
 
+    # Scheduler de llamadas automáticas. Desactivado por defecto: solo cuando se
+    # prende (y Twilio está configurado) el sistema disca solo en el horario
+    # programado de cada paciente.
+    scheduler_enabled: bool = False
+    scheduler_intervalo_min: int = 5  # cada cuánto revisa la agenda
+
 
 @lru_cache
 def get_settings() -> Settings:

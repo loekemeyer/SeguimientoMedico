@@ -85,6 +85,11 @@ class Paciente(Base):
     )
     # Días de la semana a llamar (0=lunes ... 6=domingo). Vacío = todos los días.
     llamada_dias: Mapped[list] = mapped_column(JSON, default=list)
+    # Última vez que el scheduler disparó una llamada (evita discar dos veces en
+    # ventanas contiguas o tras un reinicio del worker).
+    ultima_llamada_programada: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
     # Insistencia del asistente en la charla: 1=pasivo, 2=recordar, 3=insistir amable.
     nivel_insistencia: Mapped[int] = mapped_column(Integer, default=2)
 

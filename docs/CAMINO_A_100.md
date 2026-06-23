@@ -162,7 +162,11 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
 - ✅ **Endpoint FHIR** `GET /pacientes/{id}/fhir`: exporta la última evolución como
   Bundle FHIR R4 (antes el mapeo existía pero no se exponía) — `api/patients.py`,
   `schemas/fhir.py` (suma peso al bundle).
-- [ ] **Scheduler que dispara las llamadas solo** + manejo de no-respuesta (reintento).
+- ✅ **Scheduler que dispara las llamadas solo**: `calls.disparar_llamadas_pendientes`
+  disca de verdad (antes solo imprimía), con idempotencia (no llama dos veces en
+  ventanas contiguas vía `ultima_llamada_programada`). Worker opt-in en segundo plano
+  (`scheduler_enabled`, default OFF) + `scripts/run_scheduler.py` para cron.
+- [ ] Manejo de **no-respuesta** del paciente (reintento a los X min).
 - [ ] **Reintentos + idempotencia** en alertas y persistencia.
 - [ ] **Auditoría** (trace IDs + tabla de audit log).
 

@@ -61,6 +61,36 @@ def _startup() -> None:
         logger.warning("No se pudieron crear/verificar las tablas al iniciar: %s", exc)
 
 
+@app.on_event("startup")
+async def _scheduler_startup() -> None:
+    """Si está habilitado, dispara las llamadas programadas en segundo plano.
+
+    Desactivado por defecto (`scheduler_enabled=False`): el sistema NO disca solo
+    a menos que se prenda explícitamente y Twilio esté configurado.
+    """
+    settings = get_settings()
+    if not settings.scheduler_enabled:
+        return
+    import asyncio
+
+    from health_monitor.calls import disparar_llamadas_pendientes
+
+    async def _loop() -> None:
+        while True:
+            try:
+                db = next(get_session())
+                try:
+                    await asyncio.to_thread(disparar_llamadas_pendientes, db)
+                finally:
+                    db.close()
+            except Exception as exc:  # un error no debe matar el worker
+                logger.error("Scheduler en segundo plano falló: %s", exc)
+            await asyncio.sleep(max(60, settings.scheduler_intervalo_min * 60))
+
+    asyncio.create_task(_loop())
+    logger.info("Scheduler automático activado (cada %d min).", settings.scheduler_intervalo_min)
+
+
 @app.get("/health")
 def health() -> dict:
     """Healthcheck con la versión en curso para confirmar el build desplegado."""
