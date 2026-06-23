@@ -171,7 +171,7 @@ $("#btn-call-now").addEventListener("click", async () => {
 });
 
 /* ---------- agregar a la rutina ---------- */
-const TIPO_ICON = { medicamento: "💊", presion: "🩺", ejercicio: "🏃", despertar: "☀️", acostar: "🌙", otro: "📌" };
+const TIPO_ICON = { medicamento: "💊", presion: "🩺", ejercicio: "🏃", sueno: "😴", pregunta: "❓", despertar: "☀️", acostar: "🌙", otro: "📌" };
 const DIA_NOMBRE = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 $("#form-rutina").addEventListener("submit", async (e) => {

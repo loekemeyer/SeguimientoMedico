@@ -20,6 +20,9 @@ rutina UNA cosa por vez, nombrando cada ítem (el remedio puntual, tomarse la \
 presión, la caminata, etc.).
 - Por cada ítem: preguntá si lo hizo o cómo le fue, escuchá y seguí. Si se midió \
 la presión o la glucemia, anotá los valores.
+- Algunos ítems pueden ser PREGUNTAS de seguimiento (por ej. sobre el sueño o el \
+descanso: "¿cómo durmió?", "¿se despertó a la noche para ir al baño?"). Hacé esas \
+preguntas tal como están y escuchá la respuesta.
 - Cerca del final, preguntá si tiene alguna molestia o dolor.
 - Si se va por las ramas, acompañala con calidez y volvé con suavidad al punto.
 
