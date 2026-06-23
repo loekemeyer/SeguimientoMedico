@@ -30,3 +30,10 @@ def test_bundle_vacio_sin_metricas():
     readout = ClinicalReadout(paciente_id=1)
     bundle = readout_to_fhir_bundle(readout)
     assert bundle["entry"] == []
+
+
+def test_bundle_incluye_peso():
+    readout = ClinicalReadout(paciente_id=1, peso=80.5)
+    bundle = readout_to_fhir_bundle(readout)
+    codes = {e["resource"]["code"]["coding"][0]["code"] for e in bundle["entry"]}
+    assert "29463-7" in codes  # peso corporal

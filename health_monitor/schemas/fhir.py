@@ -14,6 +14,7 @@ Referencias LOINC:
   - 2339-0   Glucosa en sangre
   - 59408-5  Saturación de oxígeno (SpO2)
   - 8310-5   Temperatura corporal
+  - 29463-7  Peso corporal
 """
 from __future__ import annotations
 
@@ -101,6 +102,11 @@ def readout_to_fhir_bundle(readout: ClinicalReadout) -> dict[str, Any]:
         observations.append(_observation(
             pid, when, "8310-5", "Body temperature",
             readout.temperatura, "Cel", "Cel"))
+
+    if readout.peso is not None:
+        observations.append(_observation(
+            pid, when, "29463-7", "Body weight",
+            readout.peso, "kg", "kg"))
 
     return {
         "resourceType": "Bundle",

@@ -155,6 +155,43 @@ def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
     assert r.status_code == 402, r.text
 
 
+def test_fhir_export_de_la_ultima_evolucion():
+    from health_monitor.db.models import EvolucionDiaria
+    from health_monitor.db.session import get_session
+
+    headers = _register("fhir@test.com")
+    pid = client.post("/pacientes", json={
+        "nombre": "FHIR", "telefono_whatsapp": "+5490000000077",
+    }, headers=headers).json()["id"]
+
+    # Sin evoluciones todavía: 404.
+    assert client.get(f"/pacientes/{pid}/fhir", headers=headers).status_code == 404
+
+    # Insertamos una evolución (la crea el sistema, no la API) con métricas.
+    db = next(get_session())
+    try:
+        db.add(EvolucionDiaria(
+            paciente_id=pid, nivel_alerta="AMARILLA",
+            readout={"paciente_id": pid, "presion_sistolica": 140,
+                     "presion_diastolica": 90, "peso": 80.0},
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+    r = client.get(f"/pacientes/{pid}/fhir", headers=headers)
+    assert r.status_code == 200, r.text
+    bundle = r.json()
+    assert bundle["resourceType"] == "Bundle"
+    codes = {c["code"] for e in bundle["entry"] for c in e["resource"]["code"]["coding"]}
+    assert "85354-9" in codes  # panel de presión
+    assert "29463-7" in codes  # peso
+
+    # Otro usuario no puede exportar este paciente.
+    intruso = _register("fhir_intruso@test.com")
+    assert client.get(f"/pacientes/{pid}/fhir", headers=intruso).status_code == 404
+
+
 def test_twilio_voice_no_lo_tapa_el_frontend():
     """Regresión: el frontend montado en '/' no debe tapar los endpoints de la API.
 

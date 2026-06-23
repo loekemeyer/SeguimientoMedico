@@ -31,6 +31,8 @@ from health_monitor.schemas.api import (
     RutinaItemIn,
     RutinaItemOut,
 )
+from health_monitor.schemas.clinical import ClinicalReadout
+from health_monitor.schemas.fhir import readout_to_fhir_bundle
 from shared.config import get_settings
 from shared.security import FieldCipher
 
@@ -292,6 +294,25 @@ def historial_llamadas(
                      motivos=e.motivos, readout=e.readout, relato=e.relato)
         for e in rows
     ]
+
+
+@router.get("/{paciente_id}/fhir")
+def exportar_fhir(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Exporta la última evolución como Bundle FHIR R4 (interoperable con prepagas/HCE)."""
+    _owned_paciente(db, user, paciente_id)
+    evo = db.scalars(
+        select(EvolucionDiaria)
+        .where(EvolucionDiaria.paciente_id == paciente_id)
+        .order_by(EvolucionDiaria.fecha.desc())
+    ).first()
+    if evo is None or not evo.readout:
+        raise HTTPException(status_code=404, detail="No hay registros clínicos para exportar")
+    readout = ClinicalReadout.model_validate(evo.readout)
+    return readout_to_fhir_bundle(readout)
 
 
 @router.get("/{paciente_id}/notificaciones")
