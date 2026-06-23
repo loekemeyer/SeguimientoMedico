@@ -83,6 +83,11 @@ class ClinicalLimits(BaseModel):
     # significativo que conviene revisar; el adulto mayor suele subreportarlo).
     dolor_max: int = 6
 
+    # Peso (kg): aumento brusco respecto de la última medición (en ≤7 días) que
+    # marca AMARILLA. Un salto rápido suele indicar retención de líquidos /
+    # descompensación cardíaca.
+    peso_delta_amarillo: float = 2.0
+
 
 class TriageResult(BaseModel):
     """Resultado del triaje: nivel global + razones que lo justifican."""
@@ -96,10 +101,18 @@ class TriageResult(BaseModel):
         return self.level.name
 
 
-def evaluate(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
+def evaluate(
+    readout: ClinicalReadout,
+    limits: ClinicalLimits,
+    *,
+    peso_anterior: float | None = None,
+    dias_desde_peso: int | None = None,
+) -> TriageResult:
     """Evalúa un readout clínico contra los límites del paciente.
 
     Acumula todas las razones y devuelve el nivel más grave detectado.
+    `peso_anterior`/`dias_desde_peso` permiten detectar un aumento brusco de peso
+    comparando con la última medición (si se conoce).
     """
     findings: list[tuple[AlertLevel, str]] = []
 
@@ -163,6 +176,16 @@ def evaluate(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
     # --- Caída reportada (riesgo de lesión oculta; alta relevancia en mayores) ---
     if readout.caida_reportada:
         findings.append((AlertLevel.AMARILLA, "Reportó una caída"))
+
+    # --- Peso: aumento brusco vs la última medición (posible retención/ICC) ---
+    if readout.peso is not None and peso_anterior is not None:
+        delta = readout.peso - peso_anterior
+        reciente = dias_desde_peso is None or dias_desde_peso <= 7
+        if delta >= limits.peso_delta_amarillo and reciente:
+            findings.append((
+                AlertLevel.AMARILLA,
+                f"Aumento de peso brusco: +{delta:.1f} kg desde la última medición",
+            ))
 
     # --- Adherencia a la medicación ---
     if readout.adherencia_medicacion == AdherenceState.NO_TOMO:

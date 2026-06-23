@@ -44,6 +44,7 @@ def _fmt_metricas(readout: dict) -> list[str]:
         "saturacion_oxigeno": "Saturación O₂",
         "temperatura": "Temperatura (°C)",
         "dolor": "Dolor (0-10)",
+        "peso": "Peso (kg)",
         "caida_reportada": "🤕 Caída reportada",
         "adherencia_medicacion": "Adherencia a la medicación",
         "estado_animo": "Estado de ánimo",

@@ -151,10 +151,12 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
   `triage/rules.py`.
 - ✅ **Caídas**: detecta que la persona se cayó (distingue "me caí" de "se me cayó
   el vaso") → AMARILLA por riesgo de lesión oculta — `clinical.py`, `triage/rules.py`.
-- [ ] **Peso + tendencia**.
+- ✅ **Peso + cambio brusco**: se extrae el peso y, comparado con la última medición,
+  un aumento ≥ umbral en ≤7 días → AMARILLA (posible retención/ICC) — `clinical.py`,
+  `triage/rules.py`, `services.py` (carga el peso anterior del historial).
 - [ ] **Contexto de medicación** y **reglas por patología** (un diabético no se tría
   como un prediabético).
-- [ ] Detección de **cambios agudos** comparando con el histórico.
+- [ ] Detección de **cambios agudos** del resto de los signos (presión en alza, etc.).
 
 ### Fase 4 — Operación confiable y vendible
 - **Scheduler que dispara las llamadas solo** + manejo de no-respuesta (reintento).

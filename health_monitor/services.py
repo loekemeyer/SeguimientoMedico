@@ -110,6 +110,22 @@ def _load_historial_resumen(db: Session, paciente_id: int) -> str:
     return f"{linea}. {tendencia}" if tendencia else linea
 
 
+def _load_peso_anterior(db: Session, paciente_id: int) -> tuple[float | None, int | None]:
+    """Última medición de peso conocida y su antigüedad en días (para detectar saltos)."""
+    rows = db.scalars(
+        select(EvolucionDiaria)
+        .where(EvolucionDiaria.paciente_id == paciente_id)
+        .order_by(EvolucionDiaria.fecha.desc())
+        .limit(10)
+    ).all()
+    for e in rows:
+        peso = (e.readout or {}).get("peso")
+        if isinstance(peso, (int, float)):
+            fecha = e.fecha if e.fecha.tzinfo else e.fecha.replace(tzinfo=timezone.utc)
+            return float(peso), (datetime.now(timezone.utc) - fecha).days
+    return None, None
+
+
 def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | None]:
     """Prepara el CallState de una llamada: límites, contactos y resumen de ficha."""
     paciente = db.get(Paciente, paciente_id)
@@ -127,6 +143,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     ficha_resumen = f"Paciente {paciente_id}. Patologías: {patologias}."
     rutina_resumen = _load_rutina_resumen(db, paciente_id, cipher)
     historial_resumen = _load_historial_resumen(db, paciente_id)
+    peso_anterior, peso_dias = _load_peso_anterior(db, paciente_id)
 
     state = CallState(
         paciente_id=paciente_id,
@@ -143,6 +160,8 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
         acompanante_nombre=paciente.acompanante_nombre,
         temas_preferidos=paciente.temas_preferidos,
         temas_evitar=paciente.temas_evitar,
+        peso_anterior=peso_anterior,
+        peso_dias=peso_dias,
     )
     return state, nombre
 

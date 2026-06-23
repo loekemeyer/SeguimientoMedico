@@ -104,6 +104,17 @@ def _parse_temperatura(text: str) -> float | None:
     return None
 
 
+def _parse_peso(text: str) -> float | None:
+    """Extrae el peso en kg ("peso 72", "72 kilos", "me pesé 80,5"). Conservador."""
+    m = re.search(r"(?:peso|pes[oeé]|kilos?|kg)\D{0,12}(\d{2,3})(?:[.,](\d))?", text)
+    if not m:
+        m = re.search(r"(\d{2,3})(?:[.,](\d))?\s*(?:kilos?|kg)\b", text)
+    if m:
+        val = float(f"{m.group(1)}.{m.group(2)}") if m.group(2) else float(m.group(1))
+        return val if 20.0 <= val <= 300.0 else None
+    return None
+
+
 def _parse_dolor(text: str) -> int | None:
     """Extrae la intensidad del dolor (0-10) cuando hay una escala explícita.
 
@@ -188,6 +199,11 @@ def _extract_heuristic(paciente_id: int, transcript: str) -> ClinicalReadout:
     dolor = _parse_dolor(text)
     if dolor is not None:
         readout.dolor = dolor
+
+    # Peso "peso 72", "72 kilos".
+    peso = _parse_peso(text)
+    if peso is not None:
+        readout.peso = peso
 
     # Adherencia.
     if re.search(r"no\s+(la|las|lo|los)?\s*tom", text) or "me olvidé" in text:

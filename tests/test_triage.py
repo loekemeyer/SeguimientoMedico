@@ -158,3 +158,23 @@ def test_caida_reportada_es_amarilla():
     result = evaluate(readout, _limits())
     assert result.level == AlertLevel.AMARILLA
     assert any("caída" in r.lower() for r in result.reasons)
+
+
+def test_aumento_brusco_de_peso_es_amarilla():
+    readout = ClinicalReadout(paciente_id=1, peso=83.0)
+    result = evaluate(readout, _limits(), peso_anterior=80.0, dias_desde_peso=3)
+    assert result.level == AlertLevel.AMARILLA
+    assert any("peso" in r.lower() for r in result.reasons)
+
+
+def test_peso_estable_es_verde():
+    readout = ClinicalReadout(paciente_id=1, peso=80.5)
+    result = evaluate(readout, _limits(), peso_anterior=80.0, dias_desde_peso=3)
+    assert result.level == AlertLevel.VERDE
+
+
+def test_aumento_de_peso_lento_no_alarma():
+    # +3 kg pero en 40 días: no es el patrón agudo de retención.
+    readout = ClinicalReadout(paciente_id=1, peso=83.0)
+    result = evaluate(readout, _limits(), peso_anterior=80.0, dias_desde_peso=40)
+    assert result.level == AlertLevel.VERDE

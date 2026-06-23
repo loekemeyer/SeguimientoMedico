@@ -42,6 +42,9 @@ class CallState:
     acompanante_nombre: str = ""
     temas_preferidos: str = ""
     temas_evitar: str = ""
+    # Para detectar aumento brusco de peso: última medición conocida y su antigüedad.
+    peso_anterior: float | None = None
+    peso_dias: int | None = None
 
     transcript: str = ""
     readout: ClinicalReadout | None = None
@@ -66,7 +69,10 @@ def node_extract(state: CallState) -> CallState:
 def node_supervise(state: CallState) -> CallState:
     """Agente 3: triaje + decisión de interrumpir."""
     assert state.readout is not None
-    state.triage = supervisor.assess(state.readout, state.limits)
+    state.triage = supervisor.assess(
+        state.readout, state.limits,
+        peso_anterior=state.peso_anterior, dias_desde_peso=state.peso_dias,
+    )
     if supervisor.should_interrupt_call(state.triage):
         state.interrupted = True
     return state

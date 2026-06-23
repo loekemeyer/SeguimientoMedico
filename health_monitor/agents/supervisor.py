@@ -24,9 +24,18 @@ from shared.notifications import fire_webhook, send_whatsapp_message
 logger = logging.getLogger(__name__)
 
 
-def assess(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
+def assess(
+    readout: ClinicalReadout,
+    limits: ClinicalLimits,
+    *,
+    peso_anterior: float | None = None,
+    dias_desde_peso: int | None = None,
+) -> TriageResult:
     """Evalúa el riesgo (delegado a la lógica determinística de triaje)."""
-    return evaluate(readout, limits)
+    return evaluate(
+        readout, limits,
+        peso_anterior=peso_anterior, dias_desde_peso=dias_desde_peso,
+    )
 
 
 def should_interrupt_call(result: TriageResult) -> bool:
@@ -52,6 +61,8 @@ def build_resumen(
         partes.append(f"temperatura {readout.temperatura} °C")
     if readout.dolor is not None:
         partes.append(f"dolor {readout.dolor}/10")
+    if readout.peso is not None:
+        partes.append(f"peso {readout.peso} kg")
     if readout.caida_reportada:
         partes.append("reportó una caída")
 

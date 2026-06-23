@@ -77,6 +77,17 @@ def test_sin_caida_es_false():
     assert r.caida_reportada is False
 
 
+def test_extrae_peso():
+    r = _extract_heuristic(1, "Me pesé hoy, peso 72 kilos.")
+    assert r.peso == 72.0
+
+
+def test_no_confunde_edad_con_peso():
+    # "80 años" no es peso (no hay anclaje de peso/kilos).
+    r = _extract_heuristic(1, "Tengo 80 años y me siento bien.")
+    assert r.peso is None
+
+
 def test_detecta_no_adherencia():
     r = _extract_heuristic(1, "Uy, me olvidé de tomar la pastilla hoy.")
     assert r.adherencia_medicacion == AdherenceState.NO_TOMO

@@ -97,6 +97,7 @@ Reglas:
 y poné la molestia en 'sintomas'.
 - 'caida_reportada': true SOLO si la persona dice que SE CAYÓ ella (no si "se le cayó" \
 un objeto). Ante la duda, false.
+- 'peso': en kilogramos si lo menciona (ej "peso 72", "estoy en 80 kilos" => 72 / 80).
 - 'adherencia_medicacion': 'tomo_todo' | 'tomo_parcial' | 'no_tomo' | 'desconocido'.
 - 'estado_animo': 'bien' | 'estable' | 'decaido' | 'angustiado' | 'desconocido'.
 - 'sintomas': lista de molestias mencionadas (texto corto normalizado).
