@@ -124,6 +124,9 @@ def _verify_twilio_signature(request: Request, params: dict, settings) -> None:
     En desarrollo (sin TWILIO_AUTH_TOKEN configurado) se omite con advertencia,
     para no frenar la demo ni los tests locales.
     """
+    if not settings.twilio_validate_signature:
+        logger.warning("Validación de firma de Twilio DESACTIVADA (twilio_validate_signature=false).")
+        return
     if not settings.twilio_auth_token:
         logger.warning("TWILIO_AUTH_TOKEN ausente; se omite validación de firma (modo dev).")
         return
@@ -146,7 +149,8 @@ async def twilio_voice(request: Request) -> Response:
     _verify_twilio_signature(request, form, settings)
 
     paciente_id = request.query_params.get("paciente_id", "")
-    ws_url = f"{settings.public_base_url.replace('https://', 'wss://')}/twilio/media-stream"
+    base = settings.public_base_url.rstrip("/")
+    ws_url = f"{base.replace('https://', 'wss://')}/twilio/media-stream"
     token = make_stream_token(signing_secret(), int(paciente_id or 0))
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>'

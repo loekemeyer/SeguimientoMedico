@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     twilio_voice_from: str = ""  # número de voz de Twilio (trial) para llamadas
     twilio_content_sid: str = ""  # plantilla aprobada para mensajes proactivos
     public_base_url: str = ""
+    # Validar la firma X-Twilio-Signature de los webhooks. Desactivar SOLO en
+    # entornos de prueba (p. ej. Codespaces) donde la URL pública puede no
+    # coincidir exactamente con la que Twilio firmó.
+    twilio_validate_signature: bool = True
 
     # Cerebro de IA
     realtime_provider: str = "openai"  # openai | gemini
