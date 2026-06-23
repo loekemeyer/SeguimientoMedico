@@ -48,6 +48,35 @@ def test_registro_login_y_me():
     assert login.json()["access_token"]
 
 
+def test_registro_privado_por_default():
+    headers = _register("priv@test.com")
+    me = client.get("/auth/me", headers=headers).json()
+    assert me["tipo_cuenta"] == "privado"
+
+
+def test_registro_por_obra_social_valida_y_se_vincula():
+    r = client.post("/auth/register", json={
+        "email": "afiliado@test.com", "password": "secret123", "nombre": "Afi",
+        "tipo_cuenta": "obra_social", "obra_social": "OSDE", "nro_afiliado": "123456789",
+    })
+    assert r.status_code == 201, r.text
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    me = client.get("/auth/me", headers=headers).json()
+    assert me["tipo_cuenta"] == "obra_social"
+    assert me["obra_social"] == "OSDE"
+    assert me["afiliacion_validada"] is True
+
+
+def test_obra_social_sin_numero_no_valida():
+    r = client.post("/auth/register", json={
+        "email": "sinnro@test.com", "password": "secret123",
+        "tipo_cuenta": "obra_social", "obra_social": "Swiss Medical", "nro_afiliado": "12",
+    })
+    assert r.status_code == 201
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get("/auth/me", headers=headers).json()["afiliacion_validada"] is False
+
+
 def test_email_duplicado_rechazado():
     _register("dup@test.com")
     r = client.post("/auth/register", json={"email": "dup@test.com", "password": "secret123"})

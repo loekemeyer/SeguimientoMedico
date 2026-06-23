@@ -27,13 +27,26 @@ _TRIAL_DAYS = 14
 def register(data: RegistroIn, db: Session = Depends(get_session)) -> TokenOut:
     if db.scalar(select(Usuario).where(Usuario.email == data.email)):
         raise HTTPException(status_code=409, detail="Ese email ya está registrado")
+
     user = Usuario(
         email=data.email,
         password_hash=hash_password(data.password),
         nombre=data.nombre,
+        tipo_cuenta=data.tipo_cuenta,
         plan="trial",
         suscripcion_vence=datetime.now(timezone.utc) + timedelta(days=_TRIAL_DAYS),
     )
+    if data.tipo_cuenta == "obra_social":
+        from health_monitor.cartilla import validar_afiliacion
+        from shared.config import get_settings
+        from shared.security import FieldCipher
+
+        user.obra_social = data.obra_social.strip()
+        if data.nro_afiliado.strip():
+            cipher = FieldCipher(get_settings().encryption_key)
+            user.nro_afiliado_enc = cipher.encrypt(data.nro_afiliado.strip())
+        user.afiliacion_validada = validar_afiliacion(data.obra_social, data.nro_afiliado)
+
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -56,4 +69,7 @@ def me(user: Usuario = Depends(get_current_user)) -> UsuarioOut:
         nombre=user.nombre,
         plan=user.plan,
         suscripcion_vence=user.suscripcion_vence,
+        tipo_cuenta=user.tipo_cuenta,
+        obra_social=user.obra_social,
+        afiliacion_validada=user.afiliacion_validada,
     )

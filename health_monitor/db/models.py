@@ -45,6 +45,13 @@ class Usuario(Base):
     password_hash: Mapped[str] = mapped_column(Text)
     nombre: Mapped[str] = mapped_column(String(120), default="")
 
+    # Forma de acceso: por cuenta privada (paga el usuario) o vinculado a la cartilla
+    # de una obra social/prepaga (la cobertura corre por cuenta del prestador).
+    tipo_cuenta: Mapped[str] = mapped_column(String(16), default="privado")  # privado|obra_social
+    obra_social: Mapped[str] = mapped_column(String(120), default="")
+    nro_afiliado_enc: Mapped[str | None] = mapped_column(Text)  # PII: cifrado
+    afiliacion_validada: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Suscripción (el cobro real se integra aparte; acá vive el estado).
     plan: Mapped[str] = mapped_column(String(32), default="trial")  # trial|activo|cancelado
     suscripcion_vence: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -15,6 +15,10 @@ class RegistroIn(BaseModel):
     email: str
     password: str = Field(min_length=8)
     nombre: str = ""
+    # Cómo entra: cuenta privada o vinculado a la cartilla de una obra social/prepaga.
+    tipo_cuenta: str = "privado"  # privado | obra_social
+    obra_social: str = ""
+    nro_afiliado: str = ""
 
     @field_validator("email")
     @classmethod
@@ -23,6 +27,11 @@ class RegistroIn(BaseModel):
         if not _EMAIL_RE.match(v):
             raise ValueError("Email inválido")
         return v
+
+    @field_validator("tipo_cuenta")
+    @classmethod
+    def _valid_tipo(cls, v: str) -> str:
+        return v if v in ("privado", "obra_social") else "privado"
 
 
 class LoginIn(BaseModel):
@@ -41,6 +50,9 @@ class UsuarioOut(BaseModel):
     nombre: str
     plan: str
     suscripcion_vence: datetime | None = None
+    tipo_cuenta: str = "privado"
+    obra_social: str = ""
+    afiliacion_validada: bool = False
 
 
 # --- Pacientes ---
