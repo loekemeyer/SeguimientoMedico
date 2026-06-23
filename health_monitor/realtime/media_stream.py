@@ -49,6 +49,7 @@ class MediaStreamBridge:
         self.state = state
         self.nombre = nombre
         self.stream_sid: str | None = None
+        self.call_sid: str | None = None
         self.transcript_parts: list[str] = []
         self._openai_ws = None
 
@@ -150,6 +151,11 @@ class MediaStreamBridge:
                     self.transcript_parts.append(text)
                     await self._maybe_interrupt()
 
+            elif etype == "response.function_call_arguments.done" and evt.get("name") == "end_call":
+                logger.info("El asistente pidió terminar la llamada (end_call).")
+                await self._hangup()
+                return
+
     async def _maybe_interrupt(self) -> None:
         """Chequeo crítico en vivo: si el supervisor marca ROJA, interrumpe."""
         partial = " ".join(self.transcript_parts)
@@ -171,6 +177,25 @@ class MediaStreamBridge:
                     ),
                 },
             }))
+
+    async def _hangup(self) -> None:
+        """Cuelga la llamada vía la API REST de Twilio (cuando el asistente cierra)."""
+        settings = get_settings()
+        if not (self.call_sid and settings.twilio_account_sid and settings.twilio_auth_token):
+            return
+
+        def _do() -> None:
+            from twilio.rest import Client
+            client = Client(settings.twilio_account_sid, settings.twilio_auth_token)
+            client.calls(self.call_sid).update(status="completed")
+
+        # Pausa breve para que termine de reproducirse la despedida antes de cortar.
+        await asyncio.sleep(2)
+        try:
+            await asyncio.to_thread(_do)
+            logger.info("Llamada %s finalizada por el asistente.", self.call_sid)
+        except Exception as exc:
+            logger.error("No se pudo colgar la llamada %s: %s", self.call_sid, exc)
 
     @property
     def full_transcript(self) -> str:

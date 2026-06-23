@@ -185,6 +185,7 @@ async def media_stream(ws: WebSocket) -> None:
 
     custom = start.get("customParameters", {})
     stream_sid = start.get("streamSid")
+    call_sid = start.get("callSid")
     paciente_id = int(custom.get("paciente_id", 0))
 
     # El WS no lleva firma de Twilio: exigimos el token emitido por /twilio/voice.
@@ -204,6 +205,7 @@ async def media_stream(ws: WebSocket) -> None:
 
     bridge = MediaStreamBridge(ws, state, nombre=nombre)
     bridge.stream_sid = stream_sid  # ya lo obtuvimos del evento 'start'
+    bridge.call_sid = call_sid      # para que el asistente pueda colgar al terminar
     try:
         await bridge.run()
     finally:

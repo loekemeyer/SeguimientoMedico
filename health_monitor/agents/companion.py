@@ -41,8 +41,22 @@ def build_realtime_session_config(
                 "output": {
                     "format": {"type": "audio/pcmu"},
                     "voice": voice,
+                    "speed": 0.85,  # < 1.0 = más lento y pausado (rango 0.25–1.5)
                 },
             },
+            # Herramienta para que el asistente corte la llamada solo al despedirse.
+            "tools": [
+                {
+                    "type": "function",
+                    "name": "end_call",
+                    "description": (
+                        "Terminá la llamada cuando la conversación ya concluyó. "
+                        "Usala SOLO después de haberte despedido en voz."
+                    ),
+                    "parameters": {"type": "object", "properties": {}},
+                }
+            ],
+            "tool_choice": "auto",
         },
     }
 
