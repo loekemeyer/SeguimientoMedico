@@ -333,3 +333,29 @@ def llamar_ahora(
         return {"status": "llamando", "detail": "Llamada iniciada.", "call_sid": call.sid}
     except Exception as exc:
         return {"status": "error", "detail": f"No se pudo iniciar la llamada: {exc}"}
+
+
+# --- Agente de Mejora Continua (sugerencias proactivas) ---
+
+@router.get("/{paciente_id}/sugerencias")
+def sugerencias_paciente(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> list[dict]:
+    """Sugerencias proactivas de mejora del cuidado, a partir del historial."""
+    from health_monitor.agents.improver import analizar
+
+    p = _owned_paciente(db, user, paciente_id)
+    rows = db.scalars(
+        select(EvolucionDiaria)
+        .where(EvolucionDiaria.paciente_id == paciente_id)
+        .order_by(EvolucionDiaria.fecha.desc())
+    ).all()
+    evoluciones = [
+        {"fecha": e.fecha, "nivel_alerta": e.nivel_alerta,
+         "motivos": e.motivos, "readout": e.readout}
+        for e in rows
+    ]
+    nombre = _cipher().decrypt(p.nombre_enc) if p.nombre_enc else ""
+    return analizar(evoluciones, nombre=nombre)
