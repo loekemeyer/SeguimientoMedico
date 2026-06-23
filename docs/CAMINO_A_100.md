@@ -171,7 +171,9 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
 - ✅ **Auditoría**: tabla `AuditLog` (quién/qué/cuándo, sin PII en claro) que registra
   alta/edición/baja de paciente + endpoint `GET /pacientes/{id}/auditoria` — `models.py`,
   `api/patients.py`.
-- [ ] Trace IDs por request (correlación de logs).
+- ✅ **Trace IDs por request**: middleware que asigna un id por petición (o respeta
+  `X-Request-ID`), lo devuelve en la respuesta y lo inyecta en cada log — `main.py`,
+  `shared/tracing.py`.
 
 ---
 

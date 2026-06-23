@@ -212,6 +212,14 @@ def test_fhir_export_de_la_ultima_evolucion():
     assert client.get(f"/pacientes/{pid}/fhir", headers=intruso).status_code == 404
 
 
+def test_trace_id_en_la_respuesta():
+    r = client.get("/health")
+    assert r.headers.get("X-Request-ID")  # se genera uno por request
+    # Si el cliente manda su propio id, se respeta (correlación end-to-end).
+    r2 = client.get("/health", headers={"X-Request-ID": "trace-abc-123"})
+    assert r2.headers.get("X-Request-ID") == "trace-abc-123"
+
+
 def test_twilio_voice_no_lo_tapa_el_frontend():
     """Regresión: el frontend montado en '/' no debe tapar los endpoints de la API.
 

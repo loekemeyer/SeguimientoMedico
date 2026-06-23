@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
@@ -36,16 +37,33 @@ from health_monitor.services import (
 )
 from shared.auth import signing_secret
 from shared.config import get_settings
+from shared.tracing import TraceIdFilter, set_trace_id
 from shared.twilio_security import (
     is_valid_twilio_signature,
     make_stream_token,
     verify_stream_token,
 )
 
-logging.basicConfig(level=get_settings().log_level)
+logging.basicConfig(
+    level=get_settings().log_level,
+    format="%(asctime)s %(levelname)s [%(trace_id)s] %(name)s: %(message)s",
+)
+for _h in logging.getLogger().handlers:  # que cada línea incluya el trace_id
+    _h.addFilter(TraceIdFilter())
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="SeguimientoMedico — Health Monitor", version=__version__)
+
+
+@app.middleware("http")
+async def _trace_id_middleware(request: Request, call_next):
+    """Asigna un id único por request (o respeta el X-Request-ID entrante)."""
+    trace_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:16]
+    set_trace_id(trace_id)
+    request.state.trace_id = trace_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = trace_id
+    return response
 app.include_router(auth_routes.router)
 app.include_router(patients_routes.router)
 app.include_router(whatsapp_routes.router)
