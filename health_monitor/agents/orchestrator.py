@@ -32,6 +32,8 @@ class CallState:
     # Cada contacto: {"telefono": str, "label": str, "recibe_alertas": bool}
     contactos: list[dict] = field(default_factory=list)
     ficha_resumen: str = ""
+    rutina_resumen: str = ""  # texto con la rutina del paciente para guiar la charla
+    nivel_insistencia: int = 2  # 1=pasivo, 2=recordar, 3=insistir (lo fija el admin)
 
     transcript: str = ""
     readout: ClinicalReadout | None = None

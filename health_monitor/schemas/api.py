@@ -52,6 +52,8 @@ class ProgramacionLlamada(BaseModel):
     llamada_hora: str = "10:00"  # "HH:MM" hora local
     llamada_zona: str = "America/Argentina/Buenos_Aires"
     llamada_dias: list[int] = Field(default_factory=list)  # 0=lun..6=dom; vacío=todos
+    # Insistencia del asistente: 1=pasivo, 2=recordar, 3=insistir amablemente.
+    nivel_insistencia: int = 2
 
     @field_validator("llamada_hora")
     @classmethod
@@ -62,6 +64,11 @@ class ProgramacionLlamada(BaseModel):
         except Exception:
             raise ValueError("Hora inválida; usá formato HH:MM (00:00 a 23:59)")
         return f"{hh:02d}:{mm:02d}"
+
+    @field_validator("nivel_insistencia")
+    @classmethod
+    def _valid_nivel(cls, v: int) -> int:
+        return v if v in (1, 2, 3) else 2
 
 
 class PacienteIn(BaseModel):

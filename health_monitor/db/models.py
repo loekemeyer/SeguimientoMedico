@@ -84,6 +84,8 @@ class Paciente(Base):
     )
     # Días de la semana a llamar (0=lunes ... 6=domingo). Vacío = todos los días.
     llamada_dias: Mapped[list] = mapped_column(JSON, default=list)
+    # Insistencia del asistente en la charla: 1=pasivo, 2=recordar, 3=insistir amable.
+    nivel_insistencia: Mapped[int] = mapped_column(Integer, default=2)
 
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

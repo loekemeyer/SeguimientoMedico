@@ -19,6 +19,7 @@ from health_monitor.db.models import (
     FichaClinica,
     Notificacion,
     Paciente,
+    RutinaItem,
 )
 from health_monitor.triage import ClinicalLimits
 from shared.config import get_settings
@@ -67,6 +68,23 @@ def _load_contactos(db: Session, paciente_id: int) -> list[dict]:
     return contactos
 
 
+def _load_rutina_resumen(db: Session, paciente_id: int, cipher: FieldCipher) -> str:
+    """Texto con la rutina activa del paciente, ordenada por horario, para el guion."""
+    rows = db.scalars(
+        select(RutinaItem)
+        .where(RutinaItem.paciente_id == paciente_id, RutinaItem.activa.is_(True))
+        .order_by(RutinaItem.horario)
+    ).all()
+    partes: list[str] = []
+    for r in rows:
+        nombre = cipher.decrypt(r.nombre_enc) if r.nombre_enc else ""
+        if not nombre:
+            continue
+        hora = f" ({r.horario})" if r.horario else ""
+        partes.append(f"{nombre}{hora}")
+    return "; ".join(partes)
+
+
 def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | None]:
     """Prepara el CallState de una llamada: límites, contactos y resumen de ficha."""
     paciente = db.get(Paciente, paciente_id)
@@ -82,6 +100,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     limits = _limits_from_ficha(paciente_id, ficha)
     patologias = ", ".join(ficha.patologias) if ficha and ficha.patologias else "s/d"
     ficha_resumen = f"Paciente {paciente_id}. Patologías: {patologias}."
+    rutina_resumen = _load_rutina_resumen(db, paciente_id, cipher)
 
     state = CallState(
         paciente_id=paciente_id,
@@ -89,6 +108,8 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
         paciente_nombre=nombre or "",
         contactos=contactos,
         ficha_resumen=ficha_resumen,
+        rutina_resumen=rutina_resumen,
+        nivel_insistencia=paciente.nivel_insistencia,
     )
     return state, nombre
 

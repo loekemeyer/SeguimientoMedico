@@ -11,14 +11,48 @@ from typing import Any
 
 from health_monitor.agents.prompts import COMPANION_SYSTEM_PROMPT
 
+_LANG_RULE = (
+    "\n\nIMPORTANTE: hablá SIEMPRE en español rioplatense (de Argentina), con voz "
+    "cálida y cercana. Nunca cambies a inglés ni a otro idioma."
+)
+
+
+# Cómo reacciona el asistente ante algo que la persona NO hizo de su rutina.
+# Lo elige el admin por paciente (1=pasivo, 2=recordar, 3=insistir amablemente).
+_INSISTENCIA = {
+    1: "- Insistencia 1 (pasivo): solo escuchá y registrá. Si no hizo algo, "
+       "anotalo sin recordarle ni presionar.",
+    2: "- Insistencia 2 (recordar): si no hizo algo, recordáselo UNA vez con "
+       "calidez y seguí, sin presionar.",
+    3: "- Insistencia 3 (insistir amablemente): si no hizo algo, recordáselo y "
+       "animala con mucha amabilidad a hacerlo (por ej. proponé que lo haga ahora), "
+       "sin retar ni presionar de más.",
+}
+
+
+def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: int = 2) -> str:
+    """Suma a la persona base el contexto del paciente (nombre, rutina, insistencia)."""
+    datos = ["\n\nDATOS DE ESTA LLAMADA:", f"- Persona: {nombre or 'la persona'}."]
+    if rutina:
+        datos.append(f"- Rutina de hoy para repasar, en orden: {rutina}.")
+    else:
+        datos.append(
+            "- No hay rutina cargada: hacé un seguimiento general "
+            "(medicación, presión/glucemia, molestias)."
+        )
+    datos.append(_INSISTENCIA.get(nivel_insistencia, _INSISTENCIA[2]))
+    return COMPANION_SYSTEM_PROMPT + _LANG_RULE + "\n".join(datos)
+
 
 def build_realtime_session_config(
     voice: str = "alloy", language: str = "es",
+    *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2,
 ) -> dict[str, Any]:
     """Config de sesión para la Realtime API (OpenAI) con la persona del contenedor.
 
     El formato de audio mulaw/8000 coincide con el de Twilio Media Streams, así
-    se evita el resampleo y se minimiza la latencia.
+    se evita el resampleo y se minimiza la latencia. `nombre` y `rutina` permiten
+    personalizar la llamada con los datos puntuales del paciente.
     """
     # Formato GA de la Realtime API: el audio va anidado en session.audio.{input,output}
     # con audio/pcmu (= g711 u-law, el formato de Twilio). El modelo va en la URL del WS.
@@ -27,11 +61,7 @@ def build_realtime_session_config(
         "session": {
             "type": "realtime",
             "output_modalities": ["audio"],
-            "instructions": (
-                COMPANION_SYSTEM_PROMPT
-                + "\n\nIMPORTANTE: hablá SIEMPRE en español rioplatense (de Argentina), "
-                "con voz cálida y cercana. Nunca cambies a inglés ni a otro idioma."
-            ),
+            "instructions": _build_instructions(nombre, rutina, nivel_insistencia),
             "audio": {
                 "input": {
                     "format": {"type": "audio/pcmu"},

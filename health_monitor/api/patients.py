@@ -62,6 +62,7 @@ def _to_out(p: Paciente, cipher: FieldCipher) -> PacienteOut:
             llamada_hora=p.llamada_hora,
             llamada_zona=p.llamada_zona,
             llamada_dias=p.llamada_dias or [],
+            nivel_insistencia=p.nivel_insistencia,
         ),
         activo=p.activo,
     )
@@ -72,6 +73,7 @@ def _apply_programacion(p: Paciente, prog: ProgramacionLlamada) -> None:
     p.llamada_hora = prog.llamada_hora
     p.llamada_zona = prog.llamada_zona
     p.llamada_dias = prog.llamada_dias
+    p.nivel_insistencia = prog.nivel_insistencia
 
 
 # --- Pacientes ---

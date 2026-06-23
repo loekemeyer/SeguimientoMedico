@@ -78,7 +78,11 @@ class MediaStreamBridge:
 
         self._openai_ws = openai_ws
         try:
-            await openai_ws.send(json.dumps(build_realtime_session_config()))
+            await openai_ws.send(json.dumps(build_realtime_session_config(
+                nombre=self.nombre or self.state.paciente_nombre,
+                rutina=self.state.rutina_resumen,
+                nivel_insistencia=self.state.nivel_insistencia,
+            )))
             await self._send_opening_line()
             logger.info("Sesión Realtime abierta y saludo enviado; conversación en curso.")
             await asyncio.gather(
@@ -108,7 +112,11 @@ class MediaStreamBridge:
         await self._openai_ws.send(json.dumps({
             "type": "response.create",
             "response": {
-                "instructions": f"Saludá para abrir la llamada diciendo: {opening_line(self.nombre)}",
+                "instructions": (
+                    f"Abrí la llamada: saludá con calidez ({opening_line(self.nombre)}) "
+                    "y enseguida empezá a repasar la rutina por el primer ítem, "
+                    "con una sola pregunta."
+                ),
             },
         }))
 

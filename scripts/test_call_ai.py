@@ -38,7 +38,7 @@ from shared.config import get_settings  # noqa: E402
 
 def _ensure_paciente(db, settings) -> tuple[int, str]:
     """Devuelve (id, nombre) de un paciente con consentimiento; crea uno si no hay."""
-    from health_monitor.db.models import FichaClinica, Paciente, Usuario
+    from health_monitor.db.models import FichaClinica, Paciente, RutinaItem, Usuario
     from shared.auth import hash_password
     from shared.security import FieldCipher
 
@@ -70,6 +70,14 @@ def _ensure_paciente(db, settings) -> tuple[int, str]:
         consentimiento_fecha=datetime.now(timezone.utc),
     )
     p.ficha = FichaClinica(limites={}, patologias=["I10"])
+    p.rutina = [
+        RutinaItem(tipo="medicamento", nombre_enc=cipher.encrypt("Losartán 50mg"),
+                   frecuencia="1 vez al día", horario="08:00"),
+        RutinaItem(tipo="presion", nombre_enc=cipher.encrypt("Tomar la presión"),
+                   frecuencia="1 vez al día", horario="09:00"),
+        RutinaItem(tipo="ejercicio", nombre_enc=cipher.encrypt("Caminar 20 minutos"),
+                   frecuencia="3 veces por semana", horario="17:00"),
+    ]
     db.add(p)
     db.commit()
     db.refresh(p)
