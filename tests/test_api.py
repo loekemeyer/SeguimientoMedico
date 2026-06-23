@@ -261,6 +261,16 @@ def test_twilio_voice_no_lo_tapa_el_frontend():
     assert "<Stream" in r.text and "media-stream" in r.text
 
 
+def test_pwa_manifest_y_service_worker_se_sirven():
+    """La PWA necesita que el manifest y el service worker se sirvan en la raíz."""
+    m = client.get("/manifest.webmanifest")
+    assert m.status_code == 200, "el manifest debe servirse para que la app sea instalable"
+    assert '"icons"' in m.text and "standalone" in m.text
+    sw = client.get("/sw.js")
+    assert sw.status_code == 200
+    assert "addEventListener" in sw.text  # es un service worker de verdad
+
+
 def test_whatsapp_incoming_sin_conversacion_responde_204():
     """El webhook de WhatsApp responde 204 si no hay conversación activa (ruta viva)."""
     r = client.post(

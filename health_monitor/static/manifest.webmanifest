@@ -1,0 +1,15 @@
+{
+  "name": "SeguimientoMedico — Acompañamiento",
+  "short_name": "Seguimiento",
+  "description": "Acompañamiento y monitoreo cálido de tus seres queridos, con avisos a la familia.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7f6",
+  "theme_color": "#0f766e",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -42,7 +42,10 @@ obra social/prepaga** o **por privado**. Decisiones presumidas con defaults sens
 1. ✅ Cimiento de cuenta: tipo (privado/obra social) + afiliación en el registro.
 2. ✅ Onboarding en la UI: selector "Cuenta privada" vs "Mi obra social" (con CEMIC),
    campos de obra social + número de afiliado que aparecen al elegir esa opción.
-3. [ ] PWA: manifest + service worker + íconos (instalable).
+3. ✅ PWA instalable: manifest + service worker (cachea solo el shell, no la API) +
+   ícono SVG + metadatos. La web ya se puede "Agregar a la pantalla de inicio" como app.
+   (Pendiente menor: íconos PNG 192/512 — no había rasterizador acá; el SVG cubre
+   Chrome/Android. Requiere vistazo visual del usuario en el celular.)
 4. [ ] Módulo de pagos: interfaz `PaymentProvider` + Mercado Pago + pantalla "Mi
    suscripción" + webhook. 🔑
 5. [ ] Integración real de cartillas por prestador. 🔑
