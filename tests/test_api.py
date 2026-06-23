@@ -151,3 +151,15 @@ def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
         headers=headers,
     )
     assert r.status_code == 402, r.text
+
+
+def test_twilio_voice_no_lo_tapa_el_frontend():
+    """Regresión: el frontend montado en '/' no debe tapar los endpoints de la API.
+
+    Si el StaticFiles se monta antes que /twilio/voice, el POST de Twilio rebota
+    con 405 Method Not Allowed (el frontend solo acepta GET). Debe responder el
+    TwiML (200) con el <Stream>.
+    """
+    r = client.post("/twilio/voice?paciente_id=1")
+    assert r.status_code == 200, f"esperaba 200 con el TwiML, vino {r.status_code}"
+    assert "<Stream" in r.text and "media-stream" in r.text

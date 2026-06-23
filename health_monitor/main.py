@@ -65,13 +65,6 @@ def health() -> dict:
     return {"status": "ok", "service": "health_monitor", "version": __version__}
 
 
-# Frontend (app web para los familiares). Se monta al final para que las rutas
-# de la API tengan prioridad; el resto sirve los archivos estáticos.
-_STATIC_DIR = Path(__file__).resolve().parent / "static"
-if _STATIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="frontend")
-
-
 @app.post("/calls/{paciente_id}/initiate")
 def initiate_call(
     paciente_id: int,
@@ -219,3 +212,12 @@ async def media_stream(ws: WebSocket) -> None:
         state = run_post_call(state)
         persist_evolucion(db, state)
         db.close()
+
+
+# Frontend (app web para los familiares). Se monta AL FINAL —después de TODOS los
+# endpoints de la API (/calls, /twilio/*)— para que esas rutas tengan prioridad.
+# Si se montara antes, el StaticFiles en "/" captura todo y los POST de Twilio
+# rebotan con "405 Method Not Allowed".
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="frontend")
