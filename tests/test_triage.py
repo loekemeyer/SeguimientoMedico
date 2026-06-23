@@ -151,3 +151,10 @@ def test_dolor_leve_es_verde():
     readout = ClinicalReadout(paciente_id=1, dolor=4)
     result = evaluate(readout, _limits())
     assert result.level == AlertLevel.VERDE
+
+
+def test_caida_reportada_es_amarilla():
+    readout = ClinicalReadout(paciente_id=1, caida_reportada=True)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.AMARILLA
+    assert any("caída" in r.lower() for r in result.reasons)

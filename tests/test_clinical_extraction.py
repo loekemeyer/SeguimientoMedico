@@ -61,6 +61,22 @@ def test_dolor_sin_intensidad_queda_en_none():
     assert r.dolor is None
 
 
+def test_detecta_caida():
+    r = _extract_heuristic(1, "Ayer me caí en el baño, pero no me pasó nada grave.")
+    assert r.caida_reportada is True
+
+
+def test_no_confunde_objeto_caido_con_caida():
+    # "se me cayó el vaso" no es una caída de la persona.
+    r = _extract_heuristic(1, "Se me cayó el vaso al piso y se rompió.")
+    assert r.caida_reportada is False
+
+
+def test_sin_caida_es_false():
+    r = _extract_heuristic(1, "Todo bien, salí a caminar un rato.")
+    assert r.caida_reportada is False
+
+
 def test_detecta_no_adherencia():
     r = _extract_heuristic(1, "Uy, me olvidé de tomar la pastilla hoy.")
     assert r.adherencia_medicacion == AdherenceState.NO_TOMO

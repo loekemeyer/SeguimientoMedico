@@ -44,6 +44,7 @@ def _fmt_metricas(readout: dict) -> list[str]:
         "saturacion_oxigeno": "Saturación O₂",
         "temperatura": "Temperatura (°C)",
         "dolor": "Dolor (0-10)",
+        "caida_reportada": "🤕 Caída reportada",
         "adherencia_medicacion": "Adherencia a la medicación",
         "estado_animo": "Estado de ánimo",
         "riesgo_emocional": "🆘 Riesgo emocional",
@@ -55,6 +56,10 @@ def _fmt_metricas(readout: dict) -> list[str]:
         valor = readout.get(clave)
         if valor in (None, "", [], "desconocido", "ninguno"):
             continue
+        if isinstance(valor, bool):  # booleanos: mostrar solo si es True
+            if not valor:
+                continue
+            valor = "sí"
         if isinstance(valor, list):
             valor = ", ".join(str(v) for v in valor)
         lineas.append(f"    {etiqueta}: {valor}")

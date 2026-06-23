@@ -95,6 +95,8 @@ Reglas:
 - 'dolor': intensidad del dolor de 0 a 10 si la persona la dice o se la pregunta \
 ("un ocho", "8 sobre 10"). Si solo dice que le duele algo sin intensidad, dejalo null \
 y poné la molestia en 'sintomas'.
+- 'caida_reportada': true SOLO si la persona dice que SE CAYÓ ella (no si "se le cayó" \
+un objeto). Ante la duda, false.
 - 'adherencia_medicacion': 'tomo_todo' | 'tomo_parcial' | 'no_tomo' | 'desconocido'.
 - 'estado_animo': 'bien' | 'estable' | 'decaido' | 'angustiado' | 'desconocido'.
 - 'sintomas': lista de molestias mencionadas (texto corto normalizado).

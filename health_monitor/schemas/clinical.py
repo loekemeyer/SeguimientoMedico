@@ -72,6 +72,8 @@ class ClinicalReadout(BaseModel):
     estado_animo: MoodState = MoodState.DESCONOCIDO
     # Seguridad emocional: señal de crisis/riesgo (independiente del ánimo).
     riesgo_emocional: EmotionalRisk = EmotionalRisk.NINGUNO
+    # Evento: la persona reportó una caída (alta incidencia y riesgo en adultos mayores).
+    caida_reportada: bool = False
 
     # Síntomas reportados (texto libre normalizado)
     sintomas: list[str] = Field(default_factory=list)

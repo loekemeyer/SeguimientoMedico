@@ -63,6 +63,22 @@ def _detectar_riesgo_emocional(text: str) -> EmotionalRisk:
     return EmotionalRisk.NINGUNO
 
 
+# Frases de que la PERSONA se cayó. Se evita "se me cayó (algo)" = se le cayó un objeto.
+_FRASES_CAIDA = (
+    "me caí", "me caigo", "me he caído", "me caído", "tuve una caída",
+    "sufrí una caída", "una caída", "me fui al piso", "me fui al suelo",
+    "terminé en el piso", "terminé en el suelo", "me resbalé y caí", "caí al piso",
+    "caí al suelo", "me desplomé",
+)
+
+
+def _detectar_caida(text: str) -> bool:
+    """¿La persona reportó una caída propia? Excluye 'se me cayó (un objeto)'."""
+    # "se me cayó / se le cayó (algo)" no es una caída de la persona.
+    limpio = re.sub(r"se (me|le|nos|te) cay[oó]\w*", " ", text)
+    return any(frase in limpio for frase in _FRASES_CAIDA)
+
+
 def _parse_temperatura(text: str) -> float | None:
     """Extrae temperatura corporal en °C de frases comunes. Conservador.
 
@@ -194,6 +210,9 @@ def _extract_heuristic(paciente_id: int, transcript: str) -> ClinicalReadout:
 
     # Seguridad emocional (crisis / riesgo suicida).
     readout.riesgo_emocional = _detectar_riesgo_emocional(text)
+
+    # Caída reportada.
+    readout.caida_reportada = _detectar_caida(text)
 
     return readout
 

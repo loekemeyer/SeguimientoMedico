@@ -160,6 +160,10 @@ def evaluate(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
     if dolor is not None and dolor > limits.dolor_max:
         findings.append((AlertLevel.AMARILLA, f"Dolor significativo: {dolor}/10"))
 
+    # --- Caída reportada (riesgo de lesión oculta; alta relevancia en mayores) ---
+    if readout.caida_reportada:
+        findings.append((AlertLevel.AMARILLA, "Reportó una caída"))
+
     # --- Adherencia a la medicación ---
     if readout.adherencia_medicacion == AdherenceState.NO_TOMO:
         findings.append((AlertLevel.AMARILLA, "No tomó la medicación prescrita"))
