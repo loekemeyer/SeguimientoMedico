@@ -131,12 +131,14 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
 3. **Línea de ayuda en crisis (135):** confirmar que es la que querés usar
    (hoy: Centro de Asistencia al Suicida, AR).
 
-### Fase 3 — Clínico básico completo
-- Extraer **temperatura** (cerrar el campo huérfano), **peso + tendencia**,
-  **dolor (0-10)**, **caídas**.
-- **Contexto de medicación** y **reglas por patología** (un diabético no se tría
+### Fase 3 — Clínico básico completo (🚧 en curso)
+- ✅ **Temperatura**: se extrae (heurística + LLM) y se tría (febrícula → AMARILLA,
+  fiebre alta/hipotermia → ROJA), con umbrales personalizables — `clinical.py`,
+  `triage/rules.py`, `supervisor.py`.
+- [ ] **Dolor (0-10)**, **peso + tendencia**, **caídas**.
+- [ ] **Contexto de medicación** y **reglas por patología** (un diabético no se tría
   como un prediabético).
-- Detección de **cambios agudos** comparando con el histórico.
+- [ ] Detección de **cambios agudos** comparando con el histórico.
 
 ### Fase 4 — Operación confiable y vendible
 - **Scheduler que dispara las llamadas solo** + manejo de no-respuesta (reintento).

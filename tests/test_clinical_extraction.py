@@ -19,6 +19,27 @@ def test_extrae_saturacion():
     assert r.saturacion_oxigeno == 92
 
 
+def test_extrae_temperatura_con_decimal():
+    r = _extract_heuristic(1, "Me tomé la fiebre y tengo 38,5.")
+    assert r.temperatura == 38.5
+
+
+def test_extrae_temperatura_y_medio():
+    r = _extract_heuristic(1, "Tengo algo de fiebre, 38 y medio.")
+    assert r.temperatura == 38.5
+
+
+def test_extrae_temperatura_grados():
+    r = _extract_heuristic(1, "El termómetro marcó 37 grados, todo normal.")
+    assert r.temperatura == 37.0
+
+
+def test_no_confunde_dias_con_temperatura():
+    # "hace 10 días" no es una temperatura plausible (fuera de 34–44 °C).
+    r = _extract_heuristic(1, "Tengo fiebre hace 10 días, no se me va.")
+    assert r.temperatura is None
+
+
 def test_detecta_no_adherencia():
     r = _extract_heuristic(1, "Uy, me olvidé de tomar la pastilla hoy.")
     assert r.adherencia_medicacion == AdherenceState.NO_TOMO

@@ -115,3 +115,27 @@ def test_saturacion_baja_critica_es_roja():
     readout = ClinicalReadout(paciente_id=1, saturacion_oxigeno=88)
     result = evaluate(readout, _limits())
     assert result.level == AlertLevel.ROJA
+
+
+def test_fiebre_alta_critica_es_roja():
+    readout = ClinicalReadout(paciente_id=1, temperatura=39.5)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.ROJA
+
+
+def test_febricula_es_amarilla():
+    readout = ClinicalReadout(paciente_id=1, temperatura=38.0)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.AMARILLA
+
+
+def test_temperatura_normal_es_verde():
+    readout = ClinicalReadout(paciente_id=1, temperatura=36.7)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.VERDE
+
+
+def test_hipotermia_es_roja():
+    readout = ClinicalReadout(paciente_id=1, temperatura=34.8)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.ROJA

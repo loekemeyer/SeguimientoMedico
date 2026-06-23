@@ -72,6 +72,13 @@ class ClinicalLimits(BaseModel):
     spo2_min: int = 94
     spo2_critica_min: int = 90
 
+    # Temperatura corporal (°C). Febrícula/fiebre y baja temperatura. En adultos
+    # mayores la fiebre puede ser signo de infección; la hipotermia es crítica.
+    temp_min: float = 36.0
+    temp_max: float = 37.8
+    temp_critica_min: float = 35.0
+    temp_critica_max: float = 39.0
+
 
 class TriageResult(BaseModel):
     """Resultado del triaje: nivel global + razones que lo justifican."""
@@ -135,6 +142,14 @@ def evaluate(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
             findings.append((AlertLevel.ROJA, f"Saturación de oxígeno crítica: {spo2}%"))
         elif spo2 < limits.spo2_min:
             findings.append((AlertLevel.AMARILLA, f"Saturación de oxígeno baja: {spo2}%"))
+
+    # --- Temperatura corporal ---
+    t = readout.temperatura
+    if t is not None:
+        if t >= limits.temp_critica_max or t <= limits.temp_critica_min:
+            findings.append((AlertLevel.ROJA, f"Temperatura crítica: {t} °C"))
+        elif t > limits.temp_max or t < limits.temp_min:
+            findings.append((AlertLevel.AMARILLA, f"Temperatura fuera de rango: {t} °C"))
 
     # --- Adherencia a la medicación ---
     if readout.adherencia_medicacion == AdherenceState.NO_TOMO:

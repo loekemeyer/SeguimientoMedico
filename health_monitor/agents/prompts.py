@@ -84,6 +84,7 @@ Reglas:
 - Si un dato no aparece o es ambiguo, dejalo en null / "desconocido". NO inventes.
 - 'presion_sistolica' y 'presion_diastolica' son enteros en mmHg (ej: "12 y 8" o \
 "doce ocho" => 120/80).
+- 'temperatura': grados centígrados (ej: "treinta y ocho y medio" o "38 y medio" => 38.5).
 - 'adherencia_medicacion': 'tomo_todo' | 'tomo_parcial' | 'no_tomo' | 'desconocido'.
 - 'estado_animo': 'bien' | 'estable' | 'decaido' | 'angustiado' | 'desconocido'.
 - 'sintomas': lista de molestias mencionadas (texto corto normalizado).

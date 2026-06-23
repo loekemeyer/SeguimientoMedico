@@ -63,6 +63,31 @@ def _detectar_riesgo_emocional(text: str) -> EmotionalRisk:
     return EmotionalRisk.NINGUNO
 
 
+def _parse_temperatura(text: str) -> float | None:
+    """Extrae temperatura corporal en °C de frases comunes. Conservador.
+
+    Acepta "fiebre de 38", "tengo 38 y medio", "37,5 grados", "38.5°". Descarta
+    valores fuera del rango plausible de temperatura corporal (34–44 °C), así no
+    confunde "hace 10 días" o "38 cuadras" con una temperatura.
+    """
+    # "38 y medio" => 38.5 (con contexto de fiebre/temperatura, antes o después).
+    m = re.search(r"(?:fiebre|temperatura|febril|grados?)\D{0,15}(\d{2})\s+y\s+medio", text)
+    if not m:
+        m = re.search(r"(\d{2})\s+y\s+medio\s+(?:de\s+)?(?:fiebre|grados|temperatura)", text)
+    if m:
+        val = float(m.group(1)) + 0.5
+        return val if 34.0 <= val <= 44.0 else None
+
+    # Número (con decimal opcional) junto a fiebre/temperatura, o seguido de "grados/°".
+    m = re.search(r"(?:fiebre|temperatura|febril)\D{0,15}(\d{2})(?:[.,](\d))?", text)
+    if not m:
+        m = re.search(r"(\d{2})(?:[.,](\d))?\s*(?:grados|°)", text)
+    if m:
+        val = float(f"{m.group(1)}.{m.group(2)}") if m.group(2) else float(m.group(1))
+        return val if 34.0 <= val <= 44.0 else None
+    return None
+
+
 def extract_readout(paciente_id: int, transcript: str) -> ClinicalReadout:
     """Extrae un ClinicalReadout de la transcripción.
 
@@ -116,6 +141,11 @@ def _extract_heuristic(paciente_id: int, transcript: str) -> ClinicalReadout:
     ms = re.search(r"(?:saturaci[oó]n|satura|spo2)\D{0,8}(\d{2,3})", text)
     if ms:
         readout.saturacion_oxigeno = int(ms.group(1))
+
+    # Temperatura "fiebre de 38", "tengo 38 y medio", "37,5 grados".
+    temp = _parse_temperatura(text)
+    if temp is not None:
+        readout.temperatura = temp
 
     # Adherencia.
     if re.search(r"no\s+(la|las|lo|los)?\s*tom", text) or "me olvidé" in text:

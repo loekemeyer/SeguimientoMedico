@@ -48,6 +48,8 @@ def build_resumen(
         partes.append(f"glucemia {readout.glucemia} mg/dL")
     if readout.saturacion_oxigeno:
         partes.append(f"saturación {readout.saturacion_oxigeno}%")
+    if readout.temperatura:
+        partes.append(f"temperatura {readout.temperatura} °C")
 
     if readout.adherencia_medicacion == AdherenceState.TOMO_TODO:
         partes.append("tomó la medicación")
