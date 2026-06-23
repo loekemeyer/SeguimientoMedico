@@ -51,7 +51,8 @@ modelo y la API (`PersonalidadAcompanante`); falta exponerlo en la pantalla.*
 - **Trato**: de "vos" o de "usted" ✅ API → el guion lo respeta
 - **Cómo se presenta** (nombre del acompañante, p. ej. "Sofía") ✅ API → saludo y guion
 - **Temas que le gustan** (fútbol, los nietos, el jardín) y **temas a evitar** ✅ API → guion
-- Falta: 🔶 mostrarlo en la UI (modo avanzado) y 🆕 llevarlo también al modo WhatsApp por voz
+- ✅ El modo **WhatsApp por voz** también respeta trato / temas / nombre del acompañante
+- Falta: 🔶 mostrarlo en la UI (modo avanzado)
 - **¿Se presenta como asistente o no?** — ver *PENDIENTES DE DECISIÓN* en `CAMINO_A_100.md` (aristas éticas/legales)
 
 ### E. Seguridad y alertas (a quién y cuándo avisar) — ✅/🔶/🆕

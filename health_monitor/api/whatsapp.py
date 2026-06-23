@@ -84,6 +84,8 @@ def iniciar(
     msg, _fin = voice_chat.next_assistant_message(
         [], "", nombre=nombre or "", rutina=state.rutina_resumen,
         nivel_insistencia=state.nivel_insistencia, historial_clinico=state.historial_resumen,
+        trato=state.trato, acompanante_nombre=state.acompanante_nombre,
+        temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
     )
     conv = ConversacionWhatsApp(
         paciente_id=paciente_id,
@@ -136,6 +138,8 @@ async def incoming(request: Request, db: Session = Depends(get_session)) -> Resp
         historial_previo, user_text,
         nombre=nombre or "", rutina=state.rutina_resumen,
         nivel_insistencia=state.nivel_insistencia, historial_clinico=state.historial_resumen,
+        trato=state.trato, acompanante_nombre=state.acompanante_nombre,
+        temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
     )
 
     nuevo = historial_previo

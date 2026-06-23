@@ -15,6 +15,21 @@ def test_continuacion_da_mensaje():
     assert msg and not fin
 
 
+def test_system_prompt_respeta_personalidad():
+    sp = voice_chat._system_prompt(
+        "Rosa", "Losartán (08:00)", 2, "",
+        trato="usted", acompanante_nombre="Sofía", temas_preferidos="el jardín",
+    )
+    assert "USTED" in sp
+    assert "Sofía" in sp
+    assert "jardín" in sp
+
+
+def test_fallback_respeta_trato_de_usted():
+    msg = voice_chat._fallback_message([], trato="usted")
+    assert "Cuénteme" in msg  # tratamiento de usted en el respaldo
+
+
 def test_transcribe_sin_apikey_es_vacio():
     assert voice_chat.transcribe(b"datos-de-audio") == ""
 

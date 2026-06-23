@@ -34,9 +34,15 @@ _CHAT_RULE = (
 )
 
 
-def _system_prompt(nombre: str, rutina: str, nivel_insistencia: int, historial_clinico: str) -> str:
-    """Reusa el guion del contenedor (rutina, insistencia, historial) para el chat."""
-    return _build_instructions(nombre, rutina, nivel_insistencia, historial_clinico) + _CHAT_RULE
+def _system_prompt(nombre: str, rutina: str, nivel_insistencia: int, historial_clinico: str,
+                   *, trato: str = "vos", acompanante_nombre: str = "",
+                   temas_preferidos: str = "", temas_evitar: str = "") -> str:
+    """Reusa el guion del contenedor (rutina, insistencia, historial, personalidad)."""
+    return _build_instructions(
+        nombre, rutina, nivel_insistencia, historial_clinico,
+        trato=trato, acompanante_nombre=acompanante_nombre,
+        temas_preferidos=temas_preferidos, temas_evitar=temas_evitar,
+    ) + _CHAT_RULE
 
 
 def next_assistant_message(
@@ -47,6 +53,10 @@ def next_assistant_message(
     rutina: str = "",
     nivel_insistencia: int = 2,
     historial_clinico: str = "",
+    trato: str = "vos",
+    acompanante_nombre: str = "",
+    temas_preferidos: str = "",
+    temas_evitar: str = "",
 ) -> tuple[str, bool]:
     """Genera el próximo mensaje del asistente y si la conversación terminó.
 
@@ -55,13 +65,15 @@ def next_assistant_message(
     """
     settings = get_settings()
     if not settings.openai_api_key:
-        return _fallback_message(historial), False
+        return _fallback_message(historial, trato, acompanante_nombre), False
     try:
         from openai import OpenAI  # import perezoso
 
         client = OpenAI(api_key=settings.openai_api_key)
         messages = [{"role": "system", "content": _system_prompt(
-            nombre, rutina, nivel_insistencia, historial_clinico)}]
+            nombre, rutina, nivel_insistencia, historial_clinico,
+            trato=trato, acompanante_nombre=acompanante_nombre,
+            temas_preferidos=temas_preferidos, temas_evitar=temas_evitar)}]
         messages.extend(historial)
         if user_text:
             messages.append({"role": "user", "content": user_text})
@@ -73,15 +85,20 @@ def next_assistant_message(
         return text.replace(_FIN, "").strip(), finished
     except Exception as exc:  # degradación elegante
         logger.warning("LLM del chat por voz falló (%s); uso fallback.", exc)
-        return _fallback_message(historial), False
+        return _fallback_message(historial, trato, acompanante_nombre), False
 
 
-def _fallback_message(historial: list[dict]) -> str:
+def _fallback_message(historial: list[dict], trato: str = "vos",
+                      acompanante_nombre: str = "") -> str:
     """Respuesta de respaldo cuando no hay LLM (apertura o continuación neutra)."""
+    quien = f"soy {acompanante_nombre}" if acompanante_nombre else "le hablo de su acompañamiento"
     if not historial:
-        return ("Hola, le hablo de su servicio de acompañamiento. "
-                "Cuénteme, ¿cómo viene con su rutina de hoy?")
-    return "Gracias por contarme. ¿Hay algo más que quiera comentarme hoy?"
+        if trato == "usted":
+            return f"Hola, {quien}. Cuénteme, ¿cómo viene con su rutina de hoy?"
+        return f"Hola, {quien}. Contame, ¿cómo venís con tu rutina de hoy?"
+    return ("Gracias por contarme. ¿Hay algo más que quieras comentarme hoy?"
+            if trato != "usted"
+            else "Gracias por contarme. ¿Hay algo más que quiera comentarme hoy?")
 
 
 def transcribe(audio_bytes: bytes, *, filename: str = "audio.ogg") -> str:
