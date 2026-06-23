@@ -20,21 +20,29 @@ def build_realtime_session_config(
     El formato de audio mulaw/8000 coincide con el de Twilio Media Streams, así
     se evita el resampleo y se minimiza la latencia.
     """
+    # Formato GA de la Realtime API: el audio va anidado en session.audio.{input,output}
+    # con audio/pcmu (= g711 u-law, el formato de Twilio). El modelo va en la URL del WS.
     return {
         "type": "session.update",
         "session": {
-            "modalities": ["audio", "text"],
+            "type": "realtime",
+            "output_modalities": ["audio"],
             "instructions": (
                 COMPANION_SYSTEM_PROMPT
                 + "\n\nIMPORTANTE: hablá SIEMPRE en español rioplatense (de Argentina), "
                 "con voz cálida y cercana. Nunca cambies a inglés ni a otro idioma."
             ),
-            "voice": voice,
-            "input_audio_format": "g711_ulaw",   # mulaw/8000 de Twilio
-            "output_audio_format": "g711_ulaw",
-            "input_audio_transcription": {"model": "whisper-1", "language": language},
-            "turn_detection": {"type": "server_vad", "silence_duration_ms": 600},
-            "temperature": 0.7,
+            "audio": {
+                "input": {
+                    "format": {"type": "audio/pcmu"},
+                    "turn_detection": {"type": "server_vad"},
+                    "transcription": {"model": "whisper-1"},
+                },
+                "output": {
+                    "format": {"type": "audio/pcmu"},
+                    "voice": voice,
+                },
+            },
         },
     }
 

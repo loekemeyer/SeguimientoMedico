@@ -67,7 +67,6 @@ class MediaStreamBridge:
         url = OPENAI_REALTIME_URL.format(model=settings.openai_realtime_model)
         headers = {
             "Authorization": f"Bearer {settings.openai_api_key}",
-            "OpenAI-Beta": "realtime=v1",
         }
         logger.info("Conectando a OpenAI Realtime (modelo %s)...", settings.openai_realtime_model)
         try:
@@ -108,8 +107,7 @@ class MediaStreamBridge:
         await self._openai_ws.send(json.dumps({
             "type": "response.create",
             "response": {
-                "modalities": ["audio", "text"],
-                "instructions": f"Abrí la llamada diciendo: {opening_line(self.nombre)}",
+                "instructions": f"Saludá para abrir la llamada diciendo: {opening_line(self.nombre)}",
             },
         }))
 
@@ -134,7 +132,8 @@ class MediaStreamBridge:
             evt = json.loads(raw)
             etype = evt.get("type")
 
-            if etype == "response.audio.delta":
+            # GA emite "response.output_audio.delta"; la beta usaba "response.audio.delta".
+            if etype in ("response.output_audio.delta", "response.audio.delta"):
                 await self.twilio_ws.send_text(json.dumps({
                     "event": "media",
                     "streamSid": self.stream_sid,
@@ -143,6 +142,7 @@ class MediaStreamBridge:
 
             elif etype in (
                 "conversation.item.input_audio_transcription.completed",
+                "response.output_audio_transcript.done",
                 "response.audio_transcript.done",
             ):
                 text = evt.get("transcript", "")
@@ -164,7 +164,6 @@ class MediaStreamBridge:
             await self._openai_ws.send(json.dumps({
                 "type": "response.create",
                 "response": {
-                    "modalities": ["audio"],
                     "instructions": (
                         "Con calma y contención, decile que notaste algo importante "
                         "y que vas a avisar ahora mismo a quien puede ayudarlo. "
