@@ -165,3 +165,12 @@ def test_twilio_voice_no_lo_tapa_el_frontend():
     r = client.post("/twilio/voice?paciente_id=1")
     assert r.status_code == 200, f"esperaba 200 con el TwiML, vino {r.status_code}"
     assert "<Stream" in r.text and "media-stream" in r.text
+
+
+def test_whatsapp_incoming_sin_conversacion_responde_204():
+    """El webhook de WhatsApp responde 204 si no hay conversación activa (ruta viva)."""
+    r = client.post(
+        "/whatsapp/incoming",
+        data={"From": "whatsapp:+5490000000099", "Body": "hola"},
+    )
+    assert r.status_code == 204

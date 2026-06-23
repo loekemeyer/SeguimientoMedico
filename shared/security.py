@@ -26,6 +26,20 @@ def generate_key() -> str:
     return base64.b64encode(os.urandom(KEY_BYTES)).decode("ascii")
 
 
+def phone_index(numero: str, key_b64: str) -> str:
+    """Índice determinístico de un teléfono (HMAC-SHA256) para buscarlo sin exponerlo.
+
+    El cifrado AES-GCM usa nonce aleatorio, así que no permite buscar por igualdad.
+    Este HMAC con clave da un valor estable por número para indexar conversaciones.
+    """
+    import hashlib
+    import hmac
+
+    norm = numero.replace("whatsapp:", "").strip()
+    key = base64.b64decode(key_b64) if key_b64 else b"sm-phone-index"
+    return hmac.new(key, norm.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
 def _load_key(key_b64: str) -> bytes:
     if not key_b64:
         raise ValueError(

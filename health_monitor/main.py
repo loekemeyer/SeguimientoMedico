@@ -24,6 +24,7 @@ from health_monitor import __version__
 from health_monitor.agents.orchestrator import run_post_call
 from health_monitor.api import auth as auth_routes
 from health_monitor.api import patients as patients_routes
+from health_monitor.api import whatsapp as whatsapp_routes
 from health_monitor.api.deps import require_active_subscription
 from health_monitor.db.models import Paciente, Usuario
 from health_monitor.db.session import get_session
@@ -47,6 +48,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="SeguimientoMedico — Health Monitor", version=__version__)
 app.include_router(auth_routes.router)
 app.include_router(patients_routes.router)
+app.include_router(whatsapp_routes.router)
 
 
 @app.on_event("startup")

@@ -218,3 +218,25 @@ class Notificacion(Base):
     enviado: Mapped[bool] = mapped_column(Boolean, default=False)
 
     evolucion: Mapped["EvolucionDiaria"] = relationship(back_populates="notificaciones")
+
+
+class ConversacionWhatsApp(Base):
+    """Estado de un seguimiento ASÍNCRONO por mensajes de voz de WhatsApp.
+
+    Como los turnos llegan separados en el tiempo (webhooks), el historial se
+    persiste. Se busca por `telefono_index` (HMAC del número) al recibir un audio.
+    """
+
+    __tablename__ = "conversaciones_whatsapp"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    paciente_id: Mapped[int] = mapped_column(
+        ForeignKey("pacientes.id", ondelete="CASCADE"), index=True
+    )
+    telefono_index: Mapped[str] = mapped_column(String(64), index=True)  # HMAC del número
+    estado: Mapped[str] = mapped_column(String(16), default="activa")  # activa | cerrada
+    historial: Mapped[list] = mapped_column(JSON, default=list)  # [{"role","content"}]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
