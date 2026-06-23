@@ -130,6 +130,17 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
    queda como un aviso al familiar.
 3. **Línea de ayuda en crisis (135):** confirmar que es la que querés usar
    (hoy: Centro de Asistencia al Suicida, AR).
+4. **¿Cuánto se le oculta al paciente que es un asistente automático?** Ya hice que
+   el acompañante hable con total naturalidad y NO se presente como bot/IA, y que si
+   le preguntan responda con calidez "soy parte del equipo que te acompaña". Falta tu
+   decisión sobre el límite: si pregunta de forma directa e insistente "¿sos una
+   máquina?", ¿igual lo evade? Mi recomendación profesional: que el **consentimiento
+   del apoderado** deje claro que es un asistente automático (lo cubre legalmente), y
+   que con el paciente se mantenga la experiencia natural sin mentir activamente si
+   confronta. Es la postura más segura ética y legalmente con personas vulnerables.
+5. **Parametrización (ver `PARAMETRIZACION.md`):** priorizar qué configurables nuevos
+   construir primero (sugiero: personalidad/voz por paciente, duración de la charla,
+   y umbrales clínicos por plantilla de patología).
 
 ### Fase 3 — Clínico básico completo (🚧 en curso)
 - ✅ **Temperatura**: se extrae (heurística + LLM) y se tría (febrícula → AMARILLA,
