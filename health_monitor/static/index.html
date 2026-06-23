@@ -210,6 +210,48 @@
             <option value="3">3 · Insistir amablemente</option>
           </select>
         </label>
+        <details class="form__advanced">
+          <summary>Personalidad del acompañante (opcional)</summary>
+          <div class="form__row">
+            <label class="field"><span>Trato</span>
+              <select name="trato" class="select">
+                <option value="vos" selected>De vos (cercano)</option>
+                <option value="usted">De usted (formal)</option>
+              </select>
+            </label>
+            <label class="field"><span>Nombre del acompañante</span>
+              <input type="text" name="acompanante_nombre" placeholder="Ej: Sofía" />
+            </label>
+          </div>
+          <div class="form__row">
+            <label class="field"><span>Voz</span>
+              <select name="voz" class="select">
+                <option value="coral" selected>Coral (cálida)</option>
+                <option value="alloy">Alloy</option>
+                <option value="echo">Echo</option>
+                <option value="shimmer">Shimmer</option>
+                <option value="ash">Ash</option>
+                <option value="ballad">Ballad</option>
+                <option value="sage">Sage</option>
+                <option value="verse">Verse</option>
+              </select>
+            </label>
+            <label class="field"><span>Velocidad de la voz</span>
+              <select name="velocidad" class="select">
+                <option value="0.8">Más lenta</option>
+                <option value="0.9" selected>Pausada</option>
+                <option value="1">Normal</option>
+                <option value="1.1">Más rápida</option>
+              </select>
+            </label>
+          </div>
+          <label class="field"><span>Temas que le gustan (para charlar)</span>
+            <input type="text" name="temas_preferidos" placeholder="Ej: fútbol, los nietos, el jardín" />
+          </label>
+          <label class="field"><span>Temas a evitar</span>
+            <input type="text" name="temas_evitar" placeholder="Ej: política" />
+          </label>
+        </details>
         <div id="contacto-section">
           <h3 class="form__section">Contacto de emergencia</h3>
           <div class="form__row">

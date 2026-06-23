@@ -44,15 +44,15 @@
   vía plantilla por patología
 - **Preguntas de seguimiento personalizadas** ✅ (tipo "pregunta")
 
-### D. Personalidad y voz del acompañante (lo que lo hace sentir humano) — ✅ backend / 🔶 UI
-*Lo que más mueve la aguja en "no parece un bot". Ya es configurable por paciente en el
-modelo y la API (`PersonalidadAcompanante`); falta exponerlo en la pantalla.*
+### D. Personalidad y voz del acompañante (lo que lo hace sentir humano) — ✅ backend + UI
+*Lo que más mueve la aguja en "no parece un bot". Configurable por paciente en el modelo,
+la API (`PersonalidadAcompanante`) y la pantalla (sección "Personalidad del acompañante").*
 - **Voz** (8 voces) y **velocidad** ✅ API (antes `coral` / `speed 0.9` fijos en el código)
 - **Trato**: de "vos" o de "usted" ✅ API → el guion lo respeta
 - **Cómo se presenta** (nombre del acompañante, p. ej. "Sofía") ✅ API → saludo y guion
 - **Temas que le gustan** (fútbol, los nietos, el jardín) y **temas a evitar** ✅ API → guion
 - ✅ El modo **WhatsApp por voz** también respeta trato / temas / nombre del acompañante
-- Falta: 🔶 mostrarlo en la UI (modo avanzado)
+- ✅ Configurable desde la **UI** (sección "Personalidad del acompañante", modo avanzado)
 - **¿Se presenta como asistente o no?** — ver *PENDIENTES DE DECISIÓN* en `CAMINO_A_100.md` (aristas éticas/legales)
 
 ### E. Seguridad y alertas (a quién y cuándo avisar) — ✅/🔶/🆕

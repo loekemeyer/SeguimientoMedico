@@ -279,6 +279,13 @@ function openEditModal() {        // edición del paciente abierto
   $("[name=llamada_hora]", form).value = currentPatient.programacion?.llamada_hora || "10:00";
   $("[name=consentimiento_firmado]", form).checked = !!currentPatient.consentimiento_firmado;
   $("[name=nivel_insistencia]", form).value = String(currentPatient.programacion?.nivel_insistencia || 2);
+  const pers = currentPatient.personalidad || {};
+  $("[name=trato]", form).value = pers.trato || "vos";
+  $("[name=acompanante_nombre]", form).value = pers.acompanante_nombre || "";
+  $("[name=voz]", form).value = pers.voz || "coral";
+  $("[name=velocidad]", form).value = String(pers.velocidad ?? 0.9);
+  $("[name=temas_preferidos]", form).value = pers.temas_preferidos || "";
+  $("[name=temas_evitar]", form).value = pers.temas_evitar || "";
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -297,11 +304,20 @@ form.addEventListener("submit", async (e) => {
   const f = new FormData(e.target);
   const patologias = (f.get("patologias") || "").split(",").map((s) => s.trim()).filter(Boolean);
   const nivel = Number(f.get("nivel_insistencia")) || 2;
+  const personalidad = {
+    voz: f.get("voz") || "coral",
+    velocidad: Number(f.get("velocidad")) || 0.9,
+    trato: f.get("trato") || "vos",
+    acompanante_nombre: f.get("acompanante_nombre") || "",
+    temas_preferidos: f.get("temas_preferidos") || "",
+    temas_evitar: f.get("temas_evitar") || "",
+  };
   const body = {
     nombre: f.get("nombre"),
     telefono_whatsapp: f.get("telefono_whatsapp"),
     consentimiento_firmado: f.get("consentimiento_firmado") === "on",
     patologias,
+    personalidad,
     programacion: { ...(currentPatient?.programacion || {}), llamada_hora: f.get("llamada_hora") || "10:00", nivel_insistencia: nivel },
   };
   try {
