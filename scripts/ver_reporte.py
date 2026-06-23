@@ -43,6 +43,7 @@ def _fmt_metricas(readout: dict) -> list[str]:
         "glucemia": "Glucemia",
         "saturacion_oxigeno": "Saturación O₂",
         "temperatura": "Temperatura (°C)",
+        "dolor": "Dolor (0-10)",
         "adherencia_medicacion": "Adherencia a la medicación",
         "estado_animo": "Estado de ánimo",
         "riesgo_emocional": "🆘 Riesgo emocional",

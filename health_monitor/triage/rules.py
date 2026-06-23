@@ -79,6 +79,10 @@ class ClinicalLimits(BaseModel):
     temp_critica_min: float = 35.0
     temp_critica_max: float = 39.0
 
+    # Dolor (escala 0-10). Por encima de este umbral se marca AMARILLA (dolor
+    # significativo que conviene revisar; el adulto mayor suele subreportarlo).
+    dolor_max: int = 6
+
 
 class TriageResult(BaseModel):
     """Resultado del triaje: nivel global + razones que lo justifican."""
@@ -150,6 +154,11 @@ def evaluate(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
             findings.append((AlertLevel.ROJA, f"Temperatura crítica: {t} °C"))
         elif t > limits.temp_max or t < limits.temp_min:
             findings.append((AlertLevel.AMARILLA, f"Temperatura fuera de rango: {t} °C"))
+
+    # --- Dolor (0-10) ---
+    dolor = readout.dolor
+    if dolor is not None and dolor > limits.dolor_max:
+        findings.append((AlertLevel.AMARILLA, f"Dolor significativo: {dolor}/10"))
 
     # --- Adherencia a la medicación ---
     if readout.adherencia_medicacion == AdherenceState.NO_TOMO:

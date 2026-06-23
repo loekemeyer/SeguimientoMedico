@@ -92,6 +92,9 @@ Reglas:
 - 'presion_sistolica' y 'presion_diastolica' son enteros en mmHg (ej: "12 y 8" o \
 "doce ocho" => 120/80).
 - 'temperatura': grados centígrados (ej: "treinta y ocho y medio" o "38 y medio" => 38.5).
+- 'dolor': intensidad del dolor de 0 a 10 si la persona la dice o se la pregunta \
+("un ocho", "8 sobre 10"). Si solo dice que le duele algo sin intensidad, dejalo null \
+y poné la molestia en 'sintomas'.
 - 'adherencia_medicacion': 'tomo_todo' | 'tomo_parcial' | 'no_tomo' | 'desconocido'.
 - 'estado_animo': 'bien' | 'estable' | 'decaido' | 'angustiado' | 'desconocido'.
 - 'sintomas': lista de molestias mencionadas (texto corto normalizado).

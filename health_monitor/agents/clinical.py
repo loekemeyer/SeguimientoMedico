@@ -88,6 +88,27 @@ def _parse_temperatura(text: str) -> float | None:
     return None
 
 
+def _parse_dolor(text: str) -> int | None:
+    """Extrae la intensidad del dolor (0-10) cuando hay una escala explícita.
+
+    Prioriza precisión: solo captura con señal clara de escala ("8 sobre 10",
+    "del 1 al 10 un 8", "dolor de 8"), y excluye duraciones ("dolor de 8 días").
+    """
+    m = re.search(r"\b(\d{1,2})\s*(?:/\s*10|sobre\s*(?:10|diez)|de\s*10)\b", text)
+    if not m:
+        m = re.search(r"(?:1\s*al\s*10|uno\s*al\s*diez)\D{0,20}(\d{1,2})\b", text)
+    if not m:
+        m = re.search(
+            r"(?:dolor|duele|molestia)\D{0,12}?(?:un|de|en)\s+(\d{1,2})\b"
+            r"(?!\s*(?:d[ií]a|semana|hora|año|mes))",
+            text,
+        )
+    if m:
+        val = int(m.group(1))
+        return val if 0 <= val <= 10 else None
+    return None
+
+
 def extract_readout(paciente_id: int, transcript: str) -> ClinicalReadout:
     """Extrae un ClinicalReadout de la transcripción.
 
@@ -146,6 +167,11 @@ def _extract_heuristic(paciente_id: int, transcript: str) -> ClinicalReadout:
     temp = _parse_temperatura(text)
     if temp is not None:
         readout.temperatura = temp
+
+    # Dolor "8 sobre 10", "dolor de 8".
+    dolor = _parse_dolor(text)
+    if dolor is not None:
+        readout.dolor = dolor
 
     # Adherencia.
     if re.search(r"no\s+(la|las|lo|los)?\s*tom", text) or "me olvidé" in text:

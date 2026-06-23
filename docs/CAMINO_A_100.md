@@ -146,7 +146,10 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
 - ✅ **Temperatura**: se extrae (heurística + LLM) y se tría (febrícula → AMARILLA,
   fiebre alta/hipotermia → ROJA), con umbrales personalizables — `clinical.py`,
   `triage/rules.py`, `supervisor.py`.
-- [ ] **Dolor (0-10)**, **peso + tendencia**, **caídas**.
+- ✅ **Dolor (0-10)**: se extrae con escala explícita (precisión sobre recall, no
+  confunde "8 días" con intensidad) y dolor > umbral → AMARILLA — `clinical.py`,
+  `triage/rules.py`.
+- [ ] **Peso + tendencia**, **caídas**.
 - [ ] **Contexto de medicación** y **reglas por patología** (un diabético no se tría
   como un prediabético).
 - [ ] Detección de **cambios agudos** comparando con el histórico.

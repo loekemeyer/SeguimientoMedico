@@ -65,6 +65,7 @@ class ClinicalReadout(BaseModel):
     glucemia: int | None = Field(None, ge=20, le=800, description="mg/dL")
     saturacion_oxigeno: int | None = Field(None, ge=50, le=100, description="SpO2 %")
     temperatura: float | None = Field(None, ge=30.0, le=45.0, description="°C")
+    dolor: int | None = Field(None, ge=0, le=10, description="Intensidad del dolor 0-10")
 
     # Estado subjetivo / conductual
     adherencia_medicacion: AdherenceState = AdherenceState.DESCONOCIDO

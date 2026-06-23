@@ -40,6 +40,27 @@ def test_no_confunde_dias_con_temperatura():
     assert r.temperatura is None
 
 
+def test_extrae_dolor_escala():
+    r = _extract_heuristic(1, "Me duele la rodilla, como un 8 sobre 10.")
+    assert r.dolor == 8
+
+
+def test_extrae_dolor_de_x():
+    r = _extract_heuristic(1, "Tengo un dolor de 7 en la espalda.")
+    assert r.dolor == 7
+
+
+def test_no_confunde_dias_con_dolor():
+    # "hace 8 días" es duración, no intensidad.
+    r = _extract_heuristic(1, "Me duele la cabeza hace 8 días.")
+    assert r.dolor is None
+
+
+def test_dolor_sin_intensidad_queda_en_none():
+    r = _extract_heuristic(1, "Me duele un poco la cabeza, nada grave.")
+    assert r.dolor is None
+
+
 def test_detecta_no_adherencia():
     r = _extract_heuristic(1, "Uy, me olvidé de tomar la pastilla hoy.")
     assert r.adherencia_medicacion == AdherenceState.NO_TOMO

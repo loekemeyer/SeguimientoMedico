@@ -50,6 +50,8 @@ def build_resumen(
         partes.append(f"saturación {readout.saturacion_oxigeno}%")
     if readout.temperatura:
         partes.append(f"temperatura {readout.temperatura} °C")
+    if readout.dolor is not None:
+        partes.append(f"dolor {readout.dolor}/10")
 
     if readout.adherencia_medicacion == AdherenceState.TOMO_TODO:
         partes.append("tomó la medicación")

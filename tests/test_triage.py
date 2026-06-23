@@ -139,3 +139,15 @@ def test_hipotermia_es_roja():
     readout = ClinicalReadout(paciente_id=1, temperatura=34.8)
     result = evaluate(readout, _limits())
     assert result.level == AlertLevel.ROJA
+
+
+def test_dolor_intenso_es_amarilla():
+    readout = ClinicalReadout(paciente_id=1, dolor=8)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.AMARILLA
+
+
+def test_dolor_leve_es_verde():
+    readout = ClinicalReadout(paciente_id=1, dolor=4)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.VERDE
