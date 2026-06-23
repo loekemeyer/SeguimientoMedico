@@ -12,6 +12,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from health_monitor.agents import mood
 from health_monitor.agents.orchestrator import CallState
 from health_monitor.db.models import (
     ContactoEmergencia,
@@ -86,17 +87,27 @@ def _load_rutina_resumen(db: Session, paciente_id: int, cipher: FieldCipher) -> 
 
 
 def _load_historial_resumen(db: Session, paciente_id: int) -> str:
-    """Resumen de la última llamada, para que el asistente abra con contexto."""
-    evo = db.scalars(
+    """Resumen de la última llamada + tendencia del ánimo, para abrir con contexto.
+
+    Le da al acompañante continuidad emocional: no solo qué pasó la última vez,
+    sino cómo viene el ánimo en las últimas llamadas (mejora / baja / se mantiene).
+    """
+    evos = db.scalars(
         select(EvolucionDiaria)
         .where(EvolucionDiaria.paciente_id == paciente_id)
         .order_by(EvolucionDiaria.fecha.desc())
-    ).first()
-    if evo is None:
+        .limit(5)
+    ).all()
+    if not evos:
         return ""
-    fecha = evo.fecha.strftime("%d/%m")
-    detalle = evo.resumen or "; ".join(evo.motivos or []) or "sin novedades"
-    return f"Última llamada ({fecha}, nivel {evo.nivel_alerta}): {detalle}"
+    ult = evos[0]
+    fecha = ult.fecha.strftime("%d/%m")
+    detalle = ult.resumen or "; ".join(ult.motivos or []) or "sin novedades"
+    linea = f"Última llamada ({fecha}, nivel {ult.nivel_alerta}): {detalle}"
+    tendencia = mood.tendencia_animo(
+        [{"fecha": e.fecha, "readout": e.readout} for e in evos]
+    )
+    return f"{linea}. {tendencia}" if tendencia else linea
 
 
 def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | None]:

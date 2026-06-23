@@ -105,10 +105,31 @@ El orden está pensado por **riesgo primero, después profundidad, después esca
 - **Guion**: charla que apunta a 5-10 min para que se sienta acompañado, sin
   obligar a hablar — `prompts.py`.
 
-### Fase 2 — Técnica terapéutica real
-- **PHQ-9 / GDS-15** conversacional, con score histórico y triaje emocional propio.
-- **Memoria emocional con tendencia** ("la última vez te noté más bajón…").
-- Derivación automática a profesional con criterios (no solo "considerá consulta").
+### Fase 2 — Técnica terapéutica real (🚧 en curso)
+- ✅ **Memoria emocional con tendencia**: el acompañante recibe la trayectoria del
+  ánimo de las últimas llamadas (mejora / baja / se mantiene) para retomar con
+  sensibilidad — `agents/mood.py`, `services.py:_load_historial_resumen`.
+- [ ] **PHQ-9 / GDS-15** conversacional, con score histórico y triaje emocional propio.
+- [ ] Derivación automática a profesional con criterios (no solo "considerá consulta").
+
+---
+
+## PENDIENTES DE DECISIÓN (del usuario)
+
+Cosas que el loop autónomo dejó anotadas porque necesitan tu criterio (no las
+decide solo). Mientras tanto sigue con lo que no depende de esto.
+
+1. **Cadencia de la escala validada (PHQ-9 / GDS-15).** Administrar 9 preguntas
+   tipo cuestionario en CADA llamada choca con tu pedido de charla natural de
+   5-10 min "sin obligar a hablar". Opciones: (a) periódica (p. ej. cada 14 días),
+   (b) solo cuando hay señales (ánimo en baja varias llamadas), (c) nunca rígida:
+   inferir de la conversación. *Default propuesto si no decidís: (b) gatillada por
+   señales, tejida con naturalidad.*
+2. **Derivación a profesional:** ¿a quién deriva y cómo? (¿la prepaga tiene red de
+   salud mental? ¿el familiar coordina?) Sin esto, la "derivación automática"
+   queda como un aviso al familiar.
+3. **Línea de ayuda en crisis (135):** confirmar que es la que querés usar
+   (hoy: Centro de Asistencia al Suicida, AR).
 
 ### Fase 3 — Clínico básico completo
 - Extraer **temperatura** (cerrar el campo huérfano), **peso + tendencia**,
