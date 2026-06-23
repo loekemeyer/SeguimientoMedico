@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     emergency_webhook: str = ""  # central de emergencias / médico de guardia
 
     # Operación
+    environment: str = "dev"  # dev | production (en production, JWT_SECRET es obligatorio)
     log_level: str = "INFO"
 
 

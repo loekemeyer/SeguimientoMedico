@@ -26,11 +26,25 @@ _DEV_SECRET = "dev-insecure-secret-cambiar-en-produccion"
 def _secret() -> str:
     from shared.config import get_settings
 
-    s = get_settings().jwt_secret
-    if not s:
-        logger.warning("JWT_SECRET vacío: usando secreto de desarrollo (INSEGURO).")
-        return _DEV_SECRET
-    return s
+    settings = get_settings()
+    if settings.jwt_secret:
+        return settings.jwt_secret
+    if settings.environment.strip().lower() in ("prod", "production"):
+        raise RuntimeError(
+            "JWT_SECRET es obligatorio con ENVIRONMENT=production. "
+            'Generá uno con: python -c "import secrets;print(secrets.token_urlsafe(48))"'
+        )
+    logger.warning("JWT_SECRET vacío: usando secreto de desarrollo (INSEGURO).")
+    return _DEV_SECRET
+
+
+def signing_secret() -> str:
+    """Secreto activo para firmar tokens fuera de este módulo (p. ej. el WS de Twilio).
+
+    Comparte la misma política que los tokens de sesión: lanza en producción si
+    falta `JWT_SECRET`, y en desarrollo cae al secreto de dev con advertencia.
+    """
+    return _secret()
 
 
 # --- Contraseñas ---

@@ -24,7 +24,7 @@ from health_monitor import __version__
 from health_monitor.agents.orchestrator import run_post_call
 from health_monitor.api import auth as auth_routes
 from health_monitor.api import patients as patients_routes
-from health_monitor.api.deps import get_current_user
+from health_monitor.api.deps import require_active_subscription
 from health_monitor.db.models import Paciente, Usuario
 from health_monitor.db.session import get_session
 from health_monitor.realtime.media_stream import MediaStreamBridge
@@ -33,7 +33,13 @@ from health_monitor.services import (
     persist_evolucion,
     require_consent,
 )
+from shared.auth import signing_secret
 from shared.config import get_settings
+from shared.twilio_security import (
+    is_valid_twilio_signature,
+    make_stream_token,
+    verify_stream_token,
+)
 
 logging.basicConfig(level=get_settings().log_level)
 logger = logging.getLogger(__name__)
@@ -69,7 +75,7 @@ if _STATIC_DIR.exists():
 @app.post("/calls/{paciente_id}/initiate")
 def initiate_call(
     paciente_id: int,
-    user: Usuario = Depends(get_current_user),
+    user: Usuario = Depends(require_active_subscription),
     db: Session = Depends(get_session),
 ) -> JSONResponse:
     """Inicia una llamada saliente de seguimiento hacia el WhatsApp del paciente.
@@ -104,16 +110,50 @@ def initiate_call(
     return JSONResponse({"call_sid": call.sid, "paciente_id": paciente_id})
 
 
+def _twilio_public_url(request: Request, settings) -> str:
+    """Reconstruye la URL pública exacta que Twilio firmó (base + path + query)."""
+    url = (settings.public_base_url or "").rstrip("/") + request.url.path
+    if request.url.query:
+        url += "?" + request.url.query
+    return url
+
+
+def _verify_twilio_signature(request: Request, params: dict, settings) -> None:
+    """Valida el header X-Twilio-Signature; 403 si no coincide.
+
+    En desarrollo (sin TWILIO_AUTH_TOKEN configurado) se omite con advertencia,
+    para no frenar la demo ni los tests locales.
+    """
+    if not settings.twilio_auth_token:
+        logger.warning("TWILIO_AUTH_TOKEN ausente; se omite validación de firma (modo dev).")
+        return
+    signature = request.headers.get("X-Twilio-Signature", "")
+    url = _twilio_public_url(request, settings)
+    if not is_valid_twilio_signature(settings.twilio_auth_token, signature, url, params):
+        logger.warning("Firma de Twilio inválida en %s", request.url.path)
+        raise HTTPException(status_code=403, detail="Firma de Twilio inválida")
+
+
 @app.post("/twilio/voice")
 async def twilio_voice(request: Request) -> Response:
-    """Webhook TwiML: instruye a Twilio a abrir el Media Stream hacia el WS."""
+    """Webhook TwiML: instruye a Twilio a abrir el Media Stream hacia el WS.
+
+    Verifica la firma de Twilio y entrega al stream un token firmado de corta
+    duración, que el WebSocket exige antes de operar (el WS no lleva firma).
+    """
+    settings = get_settings()
+    form = dict(await request.form())
+    _verify_twilio_signature(request, form, settings)
+
     paciente_id = request.query_params.get("paciente_id", "")
-    ws_url = f"{get_settings().public_base_url.replace('https://', 'wss://')}/twilio/media-stream"
+    ws_url = f"{settings.public_base_url.replace('https://', 'wss://')}/twilio/media-stream"
+    token = make_stream_token(signing_secret(), int(paciente_id or 0))
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         "<Response><Connect>"
         f'<Stream url="{ws_url}">'
         f'<Parameter name="paciente_id" value="{paciente_id}"/>'
+        f'<Parameter name="token" value="{token}"/>'
         "</Stream></Connect></Response>"
     )
     return Response(content=twiml, media_type="application/xml")
@@ -124,11 +164,16 @@ async def media_stream(ws: WebSocket) -> None:
     """WebSocket bidireccional: puentea el audio Twilio <-> Realtime API."""
     await ws.accept()
 
-    # El primer mensaje "start" trae los custom parameters (paciente_id).
+    # El primer mensaje "start" trae los custom parameters (paciente_id + token).
     first = json.loads(await ws.receive_text())
-    paciente_id = int(
-        first.get("start", {}).get("customParameters", {}).get("paciente_id", 0)
-    )
+    custom = first.get("start", {}).get("customParameters", {})
+    paciente_id = int(custom.get("paciente_id", 0))
+
+    # El WS no lleva firma de Twilio: exigimos el token emitido por /twilio/voice.
+    if not verify_stream_token(signing_secret(), custom.get("token", ""), paciente_id):
+        logger.warning("WS media-stream sin token válido (paciente %s); se cierra.", paciente_id)
+        await ws.close(code=1008)  # 1008 = policy violation
+        return
 
     db = next(get_session())
     try:

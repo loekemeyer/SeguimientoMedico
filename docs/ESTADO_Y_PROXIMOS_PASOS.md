@@ -61,6 +61,12 @@ Repositorio en GitHub, rama `main`:
 - **Registro de cada notificación** enviada (para seguimiento del familiar).
 - **Cifrado AES-256** de datos sensibles + interoperabilidad **HL7/FHIR**.
 - **Botones** "Llamar ahora" y "Editar" en la app.
+- **Endurecimiento de seguridad**:
+  - Validación de la **firma de Twilio** (`X-Twilio-Signature`) en los webhooks,
+    y **token firmado de corta duración** para el WebSocket de Media Streams.
+  - `JWT_SECRET` **obligatorio** en producción (`ENVIRONMENT=production`).
+  - **Control de suscripción**: un plan vencido/cancelado puede leer sus datos
+    pero no crear pacientes ni iniciar llamadas (respuesta `402`).
 - **Suite de tests** automáticos en verde.
 
 ### Servicios externos ya conectados

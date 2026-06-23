@@ -121,3 +121,33 @@ def test_rutina_y_contactos():
     contactos = client.get(f"/pacientes/{pid}/contactos", headers=headers).json()
     assert contactos[0]["telefono"] == "+5491162521635"
     assert contactos[0]["relacion"] == "hijo"
+
+
+def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import select
+
+    from health_monitor.db.models import Usuario
+    from health_monitor.db.session import get_session
+
+    headers = _register("vencido@test.com")
+
+    # Vencer la suscripción del usuario directamente en la base.
+    db = next(get_session())
+    try:
+        u = db.scalar(select(Usuario).where(Usuario.email == "vencido@test.com"))
+        u.suscripcion_vence = datetime.now(timezone.utc) - timedelta(days=1)
+        db.commit()
+    finally:
+        db.close()
+
+    # La lectura sigue permitida (puede ver sus datos y renovar).
+    assert client.get("/pacientes", headers=headers).status_code == 200
+    # La escritura se bloquea con 402 Payment Required.
+    r = client.post(
+        "/pacientes",
+        json={"nombre": "X", "telefono_whatsapp": "+5490000000001"},
+        headers=headers,
+    )
+    assert r.status_code == 402, r.text

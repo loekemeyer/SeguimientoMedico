@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from health_monitor.api.deps import get_current_user
+from health_monitor.api.deps import get_current_user, require_active_subscription
 from health_monitor.db.models import (
     ContactoEmergencia,
     EvolucionDiaria,
@@ -79,7 +79,7 @@ def _apply_programacion(p: Paciente, prog: ProgramacionLlamada) -> None:
 @router.post("", response_model=PacienteOut, status_code=201)
 def crear_paciente(
     data: PacienteIn,
-    user: Usuario = Depends(get_current_user),
+    user: Usuario = Depends(require_active_subscription),
     db: Session = Depends(get_session),
 ) -> PacienteOut:
     cipher = _cipher()
@@ -126,7 +126,7 @@ def ver_paciente(
 def actualizar_paciente(
     paciente_id: int,
     data: PacienteIn,
-    user: Usuario = Depends(get_current_user),
+    user: Usuario = Depends(require_active_subscription),
     db: Session = Depends(get_session),
 ) -> PacienteOut:
     cipher = _cipher()
@@ -170,7 +170,7 @@ def _rutina_out(r: RutinaItem, cipher: FieldCipher) -> RutinaItemOut:
 def agregar_rutina(
     paciente_id: int,
     data: RutinaItemIn,
-    user: Usuario = Depends(get_current_user),
+    user: Usuario = Depends(require_active_subscription),
     db: Session = Depends(get_session),
 ) -> RutinaItemOut:
     _owned_paciente(db, user, paciente_id)
@@ -207,7 +207,7 @@ def listar_rutina(
 def agregar_contacto(
     paciente_id: int,
     data: ContactoIn,
-    user: Usuario = Depends(get_current_user),
+    user: Usuario = Depends(require_active_subscription),
     db: Session = Depends(get_session),
 ) -> ContactoOut:
     _owned_paciente(db, user, paciente_id)
@@ -296,7 +296,7 @@ def historial_notificaciones(
 @router.post("/{paciente_id}/llamar")
 def llamar_ahora(
     paciente_id: int,
-    user: Usuario = Depends(get_current_user),
+    user: Usuario = Depends(require_active_subscription),
     db: Session = Depends(get_session),
 ) -> dict:
     """Dispara una llamada de seguimiento inmediata (sin esperar el horario)."""
