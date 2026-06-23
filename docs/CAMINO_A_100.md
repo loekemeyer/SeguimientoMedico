@@ -168,7 +168,10 @@ decide solo). Mientras tanto sigue con lo que no depende de esto.
   (`scheduler_enabled`, default OFF) + `scripts/run_scheduler.py` para cron.
 - [ ] Manejo de **no-respuesta** del paciente (reintento a los X min).
 - [ ] **Reintentos + idempotencia** en alertas y persistencia.
-- [ ] **Auditoría** (trace IDs + tabla de audit log).
+- ✅ **Auditoría**: tabla `AuditLog` (quién/qué/cuándo, sin PII en claro) que registra
+  alta/edición/baja de paciente + endpoint `GET /pacientes/{id}/auditoria` — `models.py`,
+  `api/patients.py`.
+- [ ] Trace IDs por request (correlación de logs).
 
 ---
 

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from health_monitor.api.deps import get_current_user, require_active_subscription
 from health_monitor.db.models import (
+    AuditLog,
     ContactoEmergencia,
     EvolucionDiaria,
     FichaClinica,
@@ -49,6 +50,15 @@ def _owned_paciente(db: Session, user: Usuario, paciente_id: int) -> Paciente:
     if p is None or p.usuario_id != user.id:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
     return p
+
+
+def _auditar(db: Session, usuario_id: int, accion: str, recurso: str,
+             recurso_id: int | None = None, detalle: str = "") -> None:
+    """Asienta una acción en el registro de auditoría (sin commitear: lo hace el caller).
+
+    `detalle` no debe contener PII en claro (solo una descripción)."""
+    db.add(AuditLog(usuario_id=usuario_id, accion=accion, recurso=recurso,
+                    recurso_id=recurso_id, detalle=detalle))
 
 
 def _to_out(p: Paciente, cipher: FieldCipher) -> PacienteOut:
@@ -121,6 +131,8 @@ def crear_paciente(
     _apply_programacion(p, data.programacion)
     _apply_personalidad(p, data.personalidad)
     db.add(p)
+    db.flush()  # asigna p.id para la auditoría
+    _auditar(db, user.id, "crear", "paciente", p.id, "alta de paciente")
     db.commit()
     db.refresh(p)
     return _to_out(p, cipher)
@@ -165,6 +177,7 @@ def actualizar_paciente(
     p.ficha.patologias = data.patologias
     _apply_programacion(p, data.programacion)
     _apply_personalidad(p, data.personalidad)
+    _auditar(db, user.id, "actualizar", "paciente", p.id, "edición de paciente")
     db.commit()
     db.refresh(p)
     return _to_out(p, cipher)
@@ -178,6 +191,7 @@ def baja_paciente(
 ) -> None:
     p = _owned_paciente(db, user, paciente_id)
     p.activo = False
+    _auditar(db, user.id, "baja", "paciente", p.id, "baja de paciente")
     db.commit()
 
 
@@ -293,6 +307,26 @@ def historial_llamadas(
         EvolucionOut(id=e.id, fecha=e.fecha, nivel_alerta=e.nivel_alerta,
                      motivos=e.motivos, readout=e.readout, relato=e.relato)
         for e in rows
+    ]
+
+
+@router.get("/{paciente_id}/auditoria")
+def auditoria_paciente(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> list[dict]:
+    """Registro de auditoría (quién hizo qué y cuándo) sobre este paciente."""
+    _owned_paciente(db, user, paciente_id)
+    rows = db.scalars(
+        select(AuditLog)
+        .where(AuditLog.recurso == "paciente", AuditLog.recurso_id == paciente_id)
+        .order_by(AuditLog.fecha.desc())
+    ).all()
+    return [
+        {"fecha": r.fecha.isoformat(), "accion": r.accion,
+         "recurso": r.recurso, "detalle": r.detalle}
+        for r in rows
     ]
 
 

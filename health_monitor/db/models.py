@@ -257,3 +257,26 @@ class ConversacionWhatsApp(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
+
+
+class AuditLog(Base):
+    """Registro de auditoría de acciones del usuario (trazabilidad / compliance).
+
+    Una prepaga exige saber QUIÉN hizo QUÉ y CUÁNDO. `detalle` NO debe contener
+    PII en claro (solo descripciones, ej. "alta de paciente"): la trazabilidad no
+    necesita el dato sensible.
+    """
+
+    __tablename__ = "audit_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int | None] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="SET NULL"), index=True
+    )
+    fecha: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
+    accion: Mapped[str] = mapped_column(String(40))   # crear | actualizar | baja | ...
+    recurso: Mapped[str] = mapped_column(String(40))  # paciente | rutina | contacto | ...
+    recurso_id: Mapped[int | None] = mapped_column(Integer)
+    detalle: Mapped[str] = mapped_column(Text, default="")  # SIN PII en claro

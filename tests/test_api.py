@@ -155,6 +155,26 @@ def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
     assert r.status_code == 402, r.text
 
 
+def test_auditoria_registra_alta_y_edicion():
+    headers = _register("audit@test.com")
+    payload = {"nombre": "Audit", "telefono_whatsapp": "+5490000000088"}
+    pid = client.post("/pacientes", json=payload, headers=headers).json()["id"]
+    # Editar (mismo payload alcanza para generar el evento).
+    client.put(f"/pacientes/{pid}", json=payload, headers=headers)
+
+    auditoria = client.get(f"/pacientes/{pid}/auditoria", headers=headers)
+    assert auditoria.status_code == 200
+    acciones = [a["accion"] for a in auditoria.json()]
+    assert "crear" in acciones
+    assert "actualizar" in acciones
+    # El detalle no debe filtrar PII (solo descripciones).
+    assert all("Audit" not in a["detalle"] for a in auditoria.json())
+
+    # Otro usuario no ve la auditoría de este paciente.
+    intruso = _register("audit_intruso@test.com")
+    assert client.get(f"/pacientes/{pid}/auditoria", headers=intruso).status_code == 404
+
+
 def test_fhir_export_de_la_ultima_evolucion():
     from health_monitor.db.models import EvolucionDiaria
     from health_monitor.db.session import get_session
