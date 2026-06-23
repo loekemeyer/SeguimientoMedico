@@ -9,7 +9,7 @@ def _session(**kw):
 def test_audio_pcmu_y_voz_pausada():
     out = _session()["audio"]["output"]
     assert out["format"]["type"] == "audio/pcmu"
-    assert out["speed"] == 0.85  # < 1.0 = más lento/pausado
+    assert out["speed"] < 1.0  # algo más lento/pausado que lo normal
     assert _session()["audio"]["input"]["format"]["type"] == "audio/pcmu"
 
 

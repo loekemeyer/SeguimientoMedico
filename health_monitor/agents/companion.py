@@ -51,7 +51,7 @@ def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: i
 
 
 def build_realtime_session_config(
-    voice: str = "alloy", language: str = "es",
+    voice: str = "coral", language: str = "es",
     *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2, historial: str = "",
 ) -> dict[str, Any]:
     """Config de sesión para la Realtime API (OpenAI) con la persona del contenedor.
@@ -80,7 +80,7 @@ def build_realtime_session_config(
                 "output": {
                     "format": {"type": "audio/pcmu"},
                     "voice": voice,
-                    "speed": 0.85,  # < 1.0 = más lento y pausado (rango 0.25–1.5)
+                    "speed": 0.9,  # levemente pausado pero natural, no robótico (0.25–1.5)
                 },
             },
             # Herramienta para que el asistente corte la llamada solo al despedirse.
@@ -121,8 +121,8 @@ def build_realtime_session_config(
 
 def opening_line(nombre: str | None = None) -> str:
     """Saludo inicial que abre la llamada con calidez."""
-    saludo = f"Hola {nombre}" if nombre else "Hola, ¿cómo está?"
+    saludo = f"Hola, {nombre}" if nombre else "Hola"
     return (
-        f"{saludo}, le hablo de su servicio de acompañamiento. "
-        "Lo/la llamo para ver cómo viene su día. ¿Cómo se está sintiendo hoy?"
+        f"{saludo}, soy tu acompañante de siempre. Te llamo para ver cómo venís hoy. "
+        "Contame, ¿cómo andás?"
     )
