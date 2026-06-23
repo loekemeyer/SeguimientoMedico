@@ -110,6 +110,17 @@ def _load_historial_resumen(db: Session, paciente_id: int) -> str:
     return f"{linea}. {tendencia}" if tendencia else linea
 
 
+def _necesita_screening_animo(db: Session, paciente_id: int) -> bool:
+    """¿Conviene explorar el ánimo (GDS-15) hoy? Gatillado por señales del historial."""
+    evos = db.scalars(
+        select(EvolucionDiaria)
+        .where(EvolucionDiaria.paciente_id == paciente_id)
+        .order_by(EvolucionDiaria.fecha.desc())
+        .limit(3)
+    ).all()
+    return mood.necesita_screening([{"readout": e.readout} for e in evos])
+
+
 def _load_peso_anterior(db: Session, paciente_id: int) -> tuple[float | None, int | None]:
     """Última medición de peso conocida y su antigüedad en días (para detectar saltos)."""
     rows = db.scalars(
@@ -144,6 +155,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     rutina_resumen = _load_rutina_resumen(db, paciente_id, cipher)
     historial_resumen = _load_historial_resumen(db, paciente_id)
     peso_anterior, peso_dias = _load_peso_anterior(db, paciente_id)
+    explorar_animo = _necesita_screening_animo(db, paciente_id)
 
     state = CallState(
         paciente_id=paciente_id,
@@ -162,6 +174,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
         temas_evitar=paciente.temas_evitar,
         peso_anterior=peso_anterior,
         peso_dias=peso_dias,
+        explorar_animo=explorar_animo,
     )
     return state, nombre
 

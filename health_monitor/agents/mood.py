@@ -54,3 +54,22 @@ def tendencia_animo(evoluciones: list[dict], *, max_puntos: int = 5) -> str:
     delta = _VALOR_ANIMO[puntos[-1][1]] - _VALOR_ANIMO[puntos[0][1]]
     rumbo = "viene mejorando" if delta > 0 else "viene en baja" if delta < 0 else "se mantiene"
     return f"Ánimo en las últimas llamadas: {tramo} ({rumbo})"
+
+
+def necesita_screening(evoluciones: list[dict], *, ventana: int = 3) -> bool:
+    """¿Conviene explorar el ánimo (estilo GDS-15) en esta llamada?
+
+    Política: gatillado por señales (no en cada llamada). True si el ánimo viene
+    bajo (decaído/angustiado) en al menos 2 de las últimas `ventana` llamadas, o si
+    hubo una señal de riesgo emocional reciente.
+    """
+    recientes = evoluciones[:ventana]
+    bajos = sum(
+        1 for e in recientes
+        if (e.get("readout") or {}).get("estado_animo") in ("decaido", "angustiado")
+    )
+    riesgo = any(
+        (e.get("readout") or {}).get("riesgo_emocional") in ("angustia_aguda", "riesgo_suicida")
+        for e in recientes
+    )
+    return bajos >= 2 or riesgo

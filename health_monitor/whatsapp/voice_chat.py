@@ -36,12 +36,14 @@ _CHAT_RULE = (
 
 def _system_prompt(nombre: str, rutina: str, nivel_insistencia: int, historial_clinico: str,
                    *, trato: str = "vos", acompanante_nombre: str = "",
-                   temas_preferidos: str = "", temas_evitar: str = "") -> str:
+                   temas_preferidos: str = "", temas_evitar: str = "",
+                   explorar_animo: bool = False) -> str:
     """Reusa el guion del contenedor (rutina, insistencia, historial, personalidad)."""
     return _build_instructions(
         nombre, rutina, nivel_insistencia, historial_clinico,
         trato=trato, acompanante_nombre=acompanante_nombre,
         temas_preferidos=temas_preferidos, temas_evitar=temas_evitar,
+        explorar_animo=explorar_animo,
     ) + _CHAT_RULE
 
 
@@ -57,6 +59,7 @@ def next_assistant_message(
     acompanante_nombre: str = "",
     temas_preferidos: str = "",
     temas_evitar: str = "",
+    explorar_animo: bool = False,
 ) -> tuple[str, bool]:
     """Genera el próximo mensaje del asistente y si la conversación terminó.
 
@@ -73,7 +76,8 @@ def next_assistant_message(
         messages = [{"role": "system", "content": _system_prompt(
             nombre, rutina, nivel_insistencia, historial_clinico,
             trato=trato, acompanante_nombre=acompanante_nombre,
-            temas_preferidos=temas_preferidos, temas_evitar=temas_evitar)}]
+            temas_preferidos=temas_preferidos, temas_evitar=temas_evitar,
+            explorar_animo=explorar_animo)}]
         messages.extend(historial)
         if user_text:
             messages.append({"role": "user", "content": user_text})

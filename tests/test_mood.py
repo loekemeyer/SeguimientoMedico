@@ -38,3 +38,21 @@ def test_ignora_animo_desconocido():
     # 'desconocido' (o ausente) no cuenta como punto: solo queda uno válido -> "".
     evos = [_evo(18, "bien"), _evo(15, None), _evo(12, "desconocido")]
     assert tendencia_animo(evos) == ""
+
+
+def test_screening_se_gatilla_con_animo_bajo_repetido():
+    from health_monitor.agents.mood import necesita_screening
+    evos = [_evo(18, "decaido"), _evo(15, "angustiado"), _evo(12, "bien")]
+    assert necesita_screening(evos) is True
+
+
+def test_screening_no_se_gatilla_con_buen_animo():
+    from health_monitor.agents.mood import necesita_screening
+    evos = [_evo(18, "bien"), _evo(15, "bien"), _evo(12, "estable")]
+    assert necesita_screening(evos) is False
+
+
+def test_screening_se_gatilla_con_riesgo_emocional():
+    from health_monitor.agents.mood import necesita_screening
+    evos = [{"readout": {"estado_animo": "bien", "riesgo_emocional": "angustia_aguda"}}]
+    assert necesita_screening(evos) is True

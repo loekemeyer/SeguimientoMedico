@@ -30,12 +30,23 @@ _INSISTENCIA = {
 }
 
 
+_SCREENING_ANIMO = (
+    "\n- ATENCIÓN: el ánimo de la persona viene bajo en las últimas llamadas. Con MUCHO "
+    "tacto y SIN que parezca un cuestionario, explorá cómo está anímicamente: cómo viene "
+    "durmiendo, si tiene ganas de hacer las cosas que le gustan, si se siente acompañada "
+    "o sola, si la nota más desganada o sin esperanza. Escuchá más de lo que preguntás, "
+    "una sola pregunta por vez, sin interrogar ni presionar."
+)
+
+
 def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: int = 2,
                         historial: str = "", *, trato: str = "vos",
                         acompanante_nombre: str = "", temas_preferidos: str = "",
-                        temas_evitar: str = "") -> str:
+                        temas_evitar: str = "", explorar_animo: bool = False) -> str:
     """Suma a la persona base el contexto y la personalización del paciente."""
     datos = ["\n\nDATOS DE ESTA LLAMADA:", f"- Persona: {nombre or 'la persona'}."]
+    if explorar_animo:
+        datos.append(_SCREENING_ANIMO)
     if acompanante_nombre:
         datos.append(f"- Te presentás como {acompanante_nombre}, del equipo que lo acompaña.")
     if trato == "usted":
@@ -68,7 +79,7 @@ def build_realtime_session_config(
     voice: str = "coral", language: str = "es",
     *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2, historial: str = "",
     speed: float = 0.9, trato: str = "vos", acompanante_nombre: str = "",
-    temas_preferidos: str = "", temas_evitar: str = "",
+    temas_preferidos: str = "", temas_evitar: str = "", explorar_animo: bool = False,
 ) -> dict[str, Any]:
     """Config de sesión para la Realtime API (OpenAI) con la persona del contenedor.
 
@@ -87,6 +98,7 @@ def build_realtime_session_config(
                 nombre, rutina, nivel_insistencia, historial,
                 trato=trato, acompanante_nombre=acompanante_nombre,
                 temas_preferidos=temas_preferidos, temas_evitar=temas_evitar,
+                explorar_animo=explorar_animo,
             ),
             "audio": {
                 "input": {

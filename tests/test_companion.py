@@ -69,3 +69,8 @@ def test_acompanante_nombre_y_temas_en_instrucciones():
     assert "Sofía" in ins
     assert "fútbol" in ins
     assert "política" in ins
+
+
+def test_screening_animo_solo_cuando_se_gatilla():
+    assert "explorá cómo está" not in _session()["instructions"]
+    assert "explorá cómo está" in _session(explorar_animo=True)["instructions"]

@@ -45,6 +45,8 @@ class CallState:
     # Para detectar aumento brusco de peso: última medición conocida y su antigüedad.
     peso_anterior: float | None = None
     peso_dias: int | None = None
+    # Gatillo de exploración del ánimo (GDS-15) cuando viene bajo en llamadas previas.
+    explorar_animo: bool = False
 
     transcript: str = ""
     readout: ClinicalReadout | None = None

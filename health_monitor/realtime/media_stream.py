@@ -97,6 +97,7 @@ class MediaStreamBridge:
                 acompanante_nombre=self.state.acompanante_nombre,
                 temas_preferidos=self.state.temas_preferidos,
                 temas_evitar=self.state.temas_evitar,
+                explorar_animo=self.state.explorar_animo,
             )))
             await self._send_opening_line()
             logger.info("Sesión Realtime abierta y saludo enviado; conversación en curso.")
