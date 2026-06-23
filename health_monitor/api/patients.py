@@ -289,6 +289,23 @@ def listar_contactos(
     ]
 
 
+@router.delete("/{paciente_id}/contactos/{contacto_id}", status_code=204)
+def borrar_contacto(
+    paciente_id: int,
+    contacto_id: int,
+    user: Usuario = Depends(require_active_subscription),
+    db: Session = Depends(get_session),
+) -> None:
+    """Quita un contacto de emergencia del paciente (solo el dueño)."""
+    _owned_paciente(db, user, paciente_id)
+    c = db.get(ContactoEmergencia, contacto_id)
+    if c is None or c.paciente_id != paciente_id:
+        raise HTTPException(status_code=404, detail="Contacto no encontrado")
+    db.delete(c)
+    _auditar(db, user.id, "baja", "contacto", paciente_id, "baja de contacto de emergencia")
+    db.commit()
+
+
 # --- Historial de llamadas y notificaciones (seguimiento del familiar) ---
 
 @router.get("/{paciente_id}/evoluciones", response_model=list[EvolucionOut])

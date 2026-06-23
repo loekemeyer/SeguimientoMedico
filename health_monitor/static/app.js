@@ -210,6 +210,57 @@ $("#form-rutina").addEventListener("submit", async (e) => {
   } catch (ex) { toast(ex.message, true); }
 });
 
+/* ---------- contactos de emergencia ---------- */
+function renderContactos(contactos) {
+  $("#detail-contacts").innerHTML = contactos.length
+    ? contactos.map((c) => {
+        const alertas = c.recibe_alertas ? "🔔 recibe avisos" : "🔕 no recibe";
+        const det = [c.relacion, c.telefono, `${c.prioridad || 1}º en avisar`, alertas]
+          .filter(Boolean).join(" · ");
+        return `<div class="stack-item">👤
+          <div class="stack-item__main"><div>${escapeHtml(c.nombre || "")}</div><small>${escapeHtml(det)}</small></div>
+          <button class="icon-btn" data-del-contacto="${c.id}" title="Quitar contacto">✕</button>
+        </div>`;
+      }).join("")
+    : `<p class="empty">Sin contactos. Agregá al menos uno para que lleguen los avisos.</p>`;
+}
+
+async function reloadContactos() {
+  if (!currentPatient) return;
+  const contactos = await api(`/pacientes/${currentPatient.id}/contactos`).catch(() => []);
+  renderContactos(contactos);
+}
+
+$("#form-contacto").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentPatient) return;
+  const f = new FormData(e.target);
+  try {
+    await api(`/pacientes/${currentPatient.id}/contactos`, {
+      method: "POST",
+      body: {
+        nombre: f.get("nombre"), telefono: f.get("telefono"),
+        relacion: f.get("relacion") || "", prioridad: Number(f.get("prioridad")) || 1,
+        recibe_alertas: f.get("recibe_alertas") === "on",
+      },
+    });
+    e.target.reset();
+    await reloadContactos();
+    toast("Contacto agregado ✅");
+  } catch (ex) { toast(ex.message, true); }
+});
+
+$("#detail-contacts").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-del-contacto]");
+  if (!btn || !currentPatient) return;
+  if (!confirm("¿Quitar este contacto de emergencia?")) return;
+  try {
+    await api(`/pacientes/${currentPatient.id}/contactos/${btn.dataset.delContacto}`, { method: "DELETE" });
+    await reloadContactos();
+    toast("Contacto quitado");
+  } catch (ex) { toast(ex.message, true); }
+});
+
 function renderRutina(items) {
   $("#detail-rutina").innerHTML = items.length
     ? items.map((r) => {
@@ -241,10 +292,7 @@ function renderDetail(p, contactos, rutina, evos) {
     <div class="kv__row"><span>Días</span><span>${dias}</span></div>
     <div class="kv__row"><span>Zona</span><span>${(prog.llamada_zona || "").split("/").pop() || "—"}</span></div>`;
 
-  $("#detail-contacts").innerHTML = contactos.length
-    ? contactos.map((c) => `<div class="stack-item">👤 <div><div>${escapeHtml(c.nombre || "")}</div><small>${escapeHtml(c.relacion || "")} · ${escapeHtml(c.telefono || "")}</small></div></div>`).join("")
-    : `<p class="empty">Sin contactos cargados.</p>`;
-
+  renderContactos(contactos);
   renderRutina(rutina);
 
   $("#detail-history").innerHTML = evos.length

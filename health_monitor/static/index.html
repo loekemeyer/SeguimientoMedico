@@ -151,7 +151,27 @@
           </div>
           <div class="card info-card">
             <h3 class="card__title">👥 Contactos de emergencia</h3>
+            <p class="hint">A quién avisamos y en qué orden. El de prioridad 1 se contacta primero.</p>
             <div id="detail-contacts" class="stacklist"></div>
+            <form id="form-contacto" class="addform">
+              <div class="addform__row">
+                <input name="nombre" placeholder="Nombre (ej: Thomas)" required />
+                <input name="telefono" placeholder="WhatsApp (+54911...)" required />
+              </div>
+              <div class="addform__row">
+                <input name="relacion" placeholder="Relación (ej: hijo)" />
+                <select name="prioridad" class="select">
+                  <option value="1">1º en avisar</option>
+                  <option value="2">2º en avisar</option>
+                  <option value="3">3º en avisar</option>
+                </select>
+              </div>
+              <label class="check-row">
+                <input type="checkbox" name="recibe_alertas" checked />
+                <span>Recibe los avisos automáticos</span>
+              </label>
+              <button class="btn btn--primary btn--sm btn--block" type="submit">＋ Agregar contacto</button>
+            </form>
           </div>
         </div>
 

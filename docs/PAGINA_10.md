@@ -12,8 +12,10 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
 - [ ] Repaso final de contraste y tamaños en mobile.
 
 ## 🔔 Funcional — lo que el admin tiene que poder cargar/ver
-- [ ] **Contactos de emergencia completos**: varios, con orden de escalamiento y
-  "recibe alertas" sí/no; agregar / editar / borrar desde el detalle. *(núcleo de los avisos)*
+- ✅ **Contactos de emergencia completos**: agregar varios desde el detalle con orden
+  de escalamiento (1º/2º/3º) y "recibe avisos" sí/no, y quitarlos (endpoint DELETE con
+  autorización + auditoría) — `api/patients.py`, `static/*`. *(núcleo de los avisos)*
+  (Editar = quitar y volver a agregar por ahora.)
 - [ ] **Historial de avisos enviados** (`GET /pacientes/{id}/notificaciones`): a quién,
   por qué canal, cuándo, si se envió.
 - [ ] **Sugerencias del agente** (`GET /pacientes/{id}/sugerencias`): panel de

@@ -153,6 +153,14 @@ def test_rutina_y_contactos():
     assert contactos[0]["telefono"] == "+5491162521635"
     assert contactos[0]["relacion"] == "hijo"
 
+    # Se puede quitar el contacto (gestión completa de la lista de avisos).
+    cid = contactos[0]["id"]
+    assert client.delete(f"/pacientes/{pid}/contactos/{cid}", headers=headers).status_code == 204
+    assert client.get(f"/pacientes/{pid}/contactos", headers=headers).json() == []
+    # Un tercero no puede borrar contactos de este paciente.
+    otro = _register("contacto_intruso@test.com")
+    assert client.delete(f"/pacientes/{pid}/contactos/999", headers=otro).status_code == 404
+
 
 def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
     from datetime import datetime, timedelta, timezone

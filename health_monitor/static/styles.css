@@ -235,7 +235,16 @@ body {
 .kv__row span:last-child { font-weight: 600; text-align: right; }
 .stacklist { display: grid; gap: 10px; }
 .stack-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm); font-size: 1rem; }
+.stack-item__main { flex: 1; min-width: 0; }
 .stack-item small { color: var(--slate); }
+.icon-btn {
+  flex: none; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
+  background: #fff; color: var(--slate); cursor: pointer; font-size: 1rem; line-height: 1;
+  display: grid; place-items: center; transition: background .15s, color .15s, border-color .15s;
+}
+.icon-btn:hover { background: #fdecec; color: var(--red); border-color: #f5c6c6; }
+.check-row { display: flex; align-items: center; gap: 10px; padding: 4px 2px; font-size: .98rem; color: var(--slate); cursor: pointer; }
+.check-row input { width: 20px; height: 20px; accent-color: var(--teal-600); }
 .empty { color: var(--slate-400); font-size: .95rem; font-style: italic; }
 
 /* ---------- Timeline historial ---------- */
