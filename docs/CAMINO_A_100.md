@@ -117,33 +117,21 @@ El orden está pensado por **riesgo primero, después profundidad, después esca
 
 ---
 
-## PENDIENTES DE DECISIÓN (del usuario)
+## DECISIONES TOMADAS (confirmadas por el usuario)
 
-Cosas que el loop autónomo dejó anotadas porque necesitan tu criterio (no las
-decide solo). Mientras tanto sigue con lo que no depende de esto.
+1. **Escala de ánimo (GDS-15): gatillada por señales.** Se explora el ánimo con tacto
+   (estilo GDS-15) SOLO cuando viene bajo en varias llamadas; no en cada charla.
+2. **Derivación: aviso al familiar.** Ante depresión persistente/riesgo, se le
+   recomienda al familiar una consulta con salud mental (+ línea de ayuda); el familiar
+   coordina (no hay red propia para agendar solos).
+3. **Triaje por patología: plantillas.** Umbrales preconfigurados conservadores por
+   condición (HTA, diabetes, EPOC, ICC), editables por el admin.
+4. **Disclosure: transparente si preguntan.** Habla natural y no aclara que es asistente,
+   pero si le preguntan directo, admite con suavidad que es un asistente automático.
+5. **Línea de crisis:** Centro de Asistencia al Suicida (AR): 135 / (011) 5275-1135.
 
-1. **Cadencia de la escala validada (PHQ-9 / GDS-15).** Administrar 9 preguntas
-   tipo cuestionario en CADA llamada choca con tu pedido de charla natural de
-   5-10 min "sin obligar a hablar". Opciones: (a) periódica (p. ej. cada 14 días),
-   (b) solo cuando hay señales (ánimo en baja varias llamadas), (c) nunca rígida:
-   inferir de la conversación. *Default propuesto si no decidís: (b) gatillada por
-   señales, tejida con naturalidad.*
-2. **Derivación a profesional:** ¿a quién deriva y cómo? (¿la prepaga tiene red de
-   salud mental? ¿el familiar coordina?) Sin esto, la "derivación automática"
-   queda como un aviso al familiar.
-3. **Línea de ayuda en crisis (135):** confirmar que es la que querés usar
-   (hoy: Centro de Asistencia al Suicida, AR).
-4. **¿Cuánto se le oculta al paciente que es un asistente automático?** Ya hice que
-   el acompañante hable con total naturalidad y NO se presente como bot/IA, y que si
-   le preguntan responda con calidez "soy parte del equipo que te acompaña". Falta tu
-   decisión sobre el límite: si pregunta de forma directa e insistente "¿sos una
-   máquina?", ¿igual lo evade? Mi recomendación profesional: que el **consentimiento
-   del apoderado** deje claro que es un asistente automático (lo cubre legalmente), y
-   que con el paciente se mantenga la experiencia natural sin mentir activamente si
-   confronta. Es la postura más segura ética y legalmente con personas vulnerables.
-5. **Parametrización (ver `PARAMETRIZACION.md`):** priorizar qué configurables nuevos
-   construir primero (sugiero: personalidad/voz por paciente, duración de la charla,
-   y umbrales clínicos por plantilla de patología).
+### Fase 3 — Clínico básico completo (🚧 en curso)
+- ✅ **Temperatura**: se extrae (heurística + LLM) y se tría (febrícula → AMARILLA,
 
 ### Fase 3 — Clínico básico completo (🚧 en curso)
 - ✅ **Temperatura**: se extrae (heurística + LLM) y se tría (febrícula → AMARILLA,
