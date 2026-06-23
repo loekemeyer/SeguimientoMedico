@@ -31,6 +31,22 @@ class AdherenceState(str, Enum):
     DESCONOCIDO = "desconocido"
 
 
+class EmotionalRisk(str, Enum):
+    """Riesgo emocional detectado en la conversación (seguridad psicológica).
+
+    Es una dimensión SEPARADA del estado de ánimo: el ánimo describe cómo está la
+    persona; esto marca una señal de seguridad que puede requerir contención y
+    aviso inmediato. Se evalúa con criterio conservador (ante la duda, NINGUNO).
+    """
+
+    NINGUNO = "ninguno"
+    # Angustia/crisis aguda, desesperanza marcada o soledad extrema, SIN contenido
+    # explícito de querer morir o hacerse daño.
+    ANGUSTIA_AGUDA = "angustia_aguda"
+    # Ideación o intención suicida, deseo de morir, o autolesión (explícito).
+    RIESGO_SUICIDA = "riesgo_suicida"
+
+
 class ClinicalReadout(BaseModel):
     """Variables médicas estructuradas de una llamada de seguimiento.
 
@@ -53,6 +69,8 @@ class ClinicalReadout(BaseModel):
     # Estado subjetivo / conductual
     adherencia_medicacion: AdherenceState = AdherenceState.DESCONOCIDO
     estado_animo: MoodState = MoodState.DESCONOCIDO
+    # Seguridad emocional: señal de crisis/riesgo (independiente del ánimo).
+    riesgo_emocional: EmotionalRisk = EmotionalRisk.NINGUNO
 
     # Síntomas reportados (texto libre normalizado)
     sintomas: list[str] = Field(default_factory=list)

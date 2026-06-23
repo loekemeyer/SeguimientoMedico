@@ -44,13 +44,14 @@ def _fmt_metricas(readout: dict) -> list[str]:
         "saturacion_oxigeno": "Saturación O₂",
         "adherencia_medicacion": "Adherencia a la medicación",
         "estado_animo": "Estado de ánimo",
+        "riesgo_emocional": "🆘 Riesgo emocional",
         "sintomas": "Síntomas",
         "sintomas_alarma": "⚠️  Síntomas de alarma",
     }
     lineas: list[str] = []
     for clave, etiqueta in etiquetas.items():
         valor = readout.get(clave)
-        if valor in (None, "", [], "desconocido"):
+        if valor in (None, "", [], "desconocido", "ninguno"):
             continue
         if isinstance(valor, list):
             valor = ", ".join(str(v) for v in valor)

@@ -92,12 +92,18 @@ El orden está pensado por **riesgo primero, después profundidad, después esca
 ### Fase 0 — Higiene (✅ hecho)
 - Fix: el reporte se persiste siempre al terminar la llamada.
 
-### Fase 1 — Seguridad médica y emocional (lo no negociable)
-- **Detección de riesgo suicida / crisis emocional** + protocolo de escalada
-  inmediata (`escalar_a_familia` ya existe como herramienta; falta el disparador
-  y el criterio). Definir límites éticos cristalinos en el prompt.
-- **Re-validación del dato crítico**: antes de cerrar en ROJA, el agente reconfirma
-  el valor con el paciente.
+### Fase 1 — Seguridad médica y emocional (✅ hecho)
+- **Detección de riesgo suicida / crisis emocional**: nueva dimensión
+  `riesgo_emocional` (ninguno / angustia_aguda / riesgo_suicida) en el readout,
+  detectada por el LLM y por heurística conservadora — `schemas/clinical.py`, `clinical.py`.
+- **Triaje**: riesgo suicida → ROJA; angustia aguda → AMARILLA — `triage/rules.py`.
+- **Escalada y contención**: aviso a la familia con tono de contención y línea de
+  ayuda (no médico) y, en vivo, el agente se queda conteniendo y NUNCA corta —
+  `supervisor.py`, `orchestrator.py`, `media_stream.py`.
+- **Límites éticos** cristalinos y **re-validación del dato crítico** antes de
+  alarmar, en el prompt del acompañante — `prompts.py`.
+- **Guion**: charla que apunta a 5-10 min para que se sienta acompañado, sin
+  obligar a hablar — `prompts.py`.
 
 ### Fase 2 — Técnica terapéutica real
 - **PHQ-9 / GDS-15** conversacional, con score histórico y triaje emocional propio.

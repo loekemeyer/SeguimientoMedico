@@ -2,6 +2,7 @@
 from health_monitor.schemas.clinical import (
     AdherenceState,
     ClinicalReadout,
+    EmotionalRisk,
     MoodState,
 )
 from health_monitor.triage import AlertLevel, ClinicalLimits, evaluate
@@ -57,6 +58,30 @@ def test_animo_angustiado_es_amarilla():
     readout = ClinicalReadout(paciente_id=1, estado_animo=MoodState.ANGUSTIADO)
     result = evaluate(readout, _limits())
     assert result.level == AlertLevel.AMARILLA
+
+
+def test_riesgo_suicida_es_roja():
+    readout = ClinicalReadout(paciente_id=1, riesgo_emocional=EmotionalRisk.RIESGO_SUICIDA)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.ROJA
+    assert any("suicida" in r.lower() for r in result.reasons)
+
+
+def test_angustia_aguda_es_amarilla():
+    readout = ClinicalReadout(paciente_id=1, riesgo_emocional=EmotionalRisk.ANGUSTIA_AGUDA)
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.AMARILLA
+
+
+def test_riesgo_suicida_gana_sobre_un_buen_animo():
+    # Aunque el ánimo diga "bien", una señal de riesgo manda y es ROJA.
+    readout = ClinicalReadout(
+        paciente_id=1,
+        estado_animo=MoodState.BIEN,
+        riesgo_emocional=EmotionalRisk.RIESGO_SUICIDA,
+    )
+    result = evaluate(readout, _limits())
+    assert result.level == AlertLevel.ROJA
 
 
 def test_jerarquia_gana_el_nivel_mas_grave():

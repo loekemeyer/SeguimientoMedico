@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from health_monitor.schemas.clinical import (
     AdherenceState,
     ClinicalReadout,
+    EmotionalRisk,
     MoodState,
 )
 
@@ -140,6 +141,19 @@ def evaluate(readout: ClinicalReadout, limits: ClinicalLimits) -> TriageResult:
         findings.append((AlertLevel.AMARILLA, "No tomó la medicación prescrita"))
     elif readout.adherencia_medicacion == AdherenceState.TOMO_PARCIAL:
         findings.append((AlertLevel.AMARILLA, "Adherencia parcial a la medicación"))
+
+    # --- Seguridad emocional (riesgo psicológico) → prioridad máxima ---
+    # Va antes que el ánimo: una señal de riesgo pesa más que el ánimo general.
+    if readout.riesgo_emocional == EmotionalRisk.RIESGO_SUICIDA:
+        findings.append((
+            AlertLevel.ROJA,
+            "Riesgo emocional grave: posible ideación suicida o autolesión",
+        ))
+    elif readout.riesgo_emocional == EmotionalRisk.ANGUSTIA_AGUDA:
+        findings.append((
+            AlertLevel.AMARILLA,
+            "Crisis emocional aguda / angustia marcada",
+        ))
 
     # --- Estado de ánimo ---
     if readout.estado_animo == MoodState.ANGUSTIADO:

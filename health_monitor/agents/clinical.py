@@ -14,6 +14,7 @@ from health_monitor.agents.prompts import CLINICAL_EXTRACTION_PROMPT, RELATO_PRO
 from health_monitor.schemas.clinical import (
     AdherenceState,
     ClinicalReadout,
+    EmotionalRisk,
     MoodState,
 )
 from shared.config import get_settings
@@ -31,6 +32,35 @@ _SINTOMAS_ALARMA = {
     "no me sale hablar": "posible ACV",
     "se me dobló la cara": "posible ACV",
 }
+
+# Frases que sugieren ideación/intención suicida o autolesión. Se eligen
+# deliberadamente ESPECÍFICAS para no confundir modismos ("me muero de hambre",
+# "me mata la espalda"). La detección fina la hace el LLM; esto es el respaldo.
+_FRASES_RIESGO_SUICIDA = (
+    "no quiero vivir", "no quiero seguir viviendo", "ya no quiero vivir",
+    "quiero morir", "quiero morirme", "me quiero morir", "ojalá me muera",
+    "quiero matarme", "me quiero matar", "voy a matarme", "pensé en matarme",
+    "quitarme la vida", "sacarme la vida", "terminar con mi vida", "acabar con mi vida",
+    "hacerme daño", "lastimarme", "no vale la pena vivir", "estaría mejor muerto",
+    "estaría mejor muerta", "para qué seguir viviendo", "mejor desaparecer",
+)
+# Frases de crisis/angustia aguda o desesperanza, SIN contenido suicida explícito.
+_FRASES_ANGUSTIA_AGUDA = (
+    "no aguanto más", "no doy más", "no puedo más", "no puedo seguir así",
+    "estoy desesperad", "no le encuentro sentido", "no tiene sentido nada",
+    "estoy muy solo", "estoy muy sola", "me siento muy solo", "me siento muy sola",
+    "nadie me quiere", "soy una carga", "no le importo a nadie",
+    "no paro de llorar", "ataque de pánico", "una crisis",
+)
+
+
+def _detectar_riesgo_emocional(text: str) -> EmotionalRisk:
+    """Clasifica la señal de seguridad emocional (conservador: ante la duda, NINGUNO)."""
+    if any(frase in text for frase in _FRASES_RIESGO_SUICIDA):
+        return EmotionalRisk.RIESGO_SUICIDA
+    if any(frase in text for frase in _FRASES_ANGUSTIA_AGUDA):
+        return EmotionalRisk.ANGUSTIA_AGUDA
+    return EmotionalRisk.NINGUNO
 
 
 def extract_readout(paciente_id: int, transcript: str) -> ClinicalReadout:
@@ -105,6 +135,9 @@ def _extract_heuristic(paciente_id: int, transcript: str) -> ClinicalReadout:
     for frase, etiqueta in _SINTOMAS_ALARMA.items():
         if frase in text and etiqueta not in readout.sintomas_alarma:
             readout.sintomas_alarma.append(etiqueta)
+
+    # Seguridad emocional (crisis / riesgo suicida).
+    readout.riesgo_emocional = _detectar_riesgo_emocional(text)
 
     return readout
 

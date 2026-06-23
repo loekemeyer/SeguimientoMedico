@@ -73,6 +73,10 @@ def build_resumen(
     return f"{encabezado} {detalle.capitalize()}."
 
 
+# Línea de ayuda en crisis emocional (Argentina): Centro de Asistencia al Suicida.
+_LINEA_CRISIS_AR = "Centro de Asistencia al Suicida: línea 135 (CABA/GBA) o (011) 5275-1135"
+
+
 def dispatch_alerts(
     result: TriageResult,
     *,
@@ -80,11 +84,14 @@ def dispatch_alerts(
     ficha_resumen: str,
     paciente_nombre: str = "",
     emergencia_webhook: str | None = None,
+    riesgo_suicida: bool = False,
 ) -> list[dict]:
     """Ejecuta el protocolo de notificación y devuelve el registro de cada envío.
 
     `contactos` es una lista de dicts: {telefono, label, recibe_alertas}.
     Cada elemento del resultado: {canal, nivel, destino, destino_label, contenido, enviado}.
+    `riesgo_suicida` cambia el tono del aviso ROJO a uno de contención emocional
+    (no médico), con la línea de ayuda en crisis.
     """
     quien = paciente_nombre.strip() if paciente_nombre.strip() else "el paciente"
     nivel = result.level.name
@@ -96,7 +103,7 @@ def dispatch_alerts(
         motivo = result.reasons[0] if result.reasons else "ver ficha clínica"
         url = emergencia_webhook or get_settings().emergency_webhook
         payload = {
-            "tipo": "alerta_roja",
+            "tipo": "alerta_roja_emocional" if riesgo_suicida else "alerta_roja",
             "paciente_id": result.paciente_id,
             "paciente_nombre": paciente_nombre,
             "motivos": result.reasons,
@@ -108,11 +115,20 @@ def dispatch_alerts(
             "contenido": f"Alerta roja: {motivo}",
             "enviado": fire_webhook(url, payload),
         })
-        msg = (
-            f"🔴 URGENTE — {quien}: en la llamada de seguimiento de hoy detectamos "
-            f"un signo de alarma ({motivo}). Ya dimos aviso al servicio de emergencias. "
-            f"Por favor, comunicate con {quien} o con emergencias cuanto antes."
-        )
+        if riesgo_suicida:
+            msg = (
+                f"🔴 {quien} necesita compañía AHORA. En la llamada de hoy expresó "
+                f"mucho malestar emocional y señales de que la está pasando muy mal. "
+                f"Por favor, comunicate o andá a verlo cuanto antes y no lo dejes solo. "
+                f"Si está en peligro, llamá al 911 o a una línea de ayuda "
+                f"({_LINEA_CRISIS_AR})."
+            )
+        else:
+            msg = (
+                f"🔴 URGENTE — {quien}: en la llamada de seguimiento de hoy detectamos "
+                f"un signo de alarma ({motivo}). Ya dimos aviso al servicio de emergencias. "
+                f"Por favor, comunicate con {quien} o con emergencias cuanto antes."
+            )
         for c in destinatarios:
             registros.append({
                 "canal": "whatsapp", "nivel": nivel,

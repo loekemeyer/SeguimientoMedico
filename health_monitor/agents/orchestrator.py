@@ -16,7 +16,7 @@ import logging
 from dataclasses import dataclass, field
 
 from health_monitor.agents import clinical, supervisor
-from health_monitor.schemas.clinical import ClinicalReadout
+from health_monitor.schemas.clinical import ClinicalReadout, EmotionalRisk
 from health_monitor.triage import AlertLevel, ClinicalLimits, TriageResult
 
 logger = logging.getLogger(__name__)
@@ -76,6 +76,7 @@ def node_dispatch(state: CallState) -> CallState:
         contactos=state.contactos,
         ficha_resumen=state.ficha_resumen,
         paciente_nombre=state.paciente_nombre,
+        riesgo_suicida=(state.readout.riesgo_emocional == EmotionalRisk.RIESGO_SUICIDA),
     )
     state.finished = True
     return state
@@ -116,13 +117,20 @@ def _try_build_langgraph():
         return None
 
 
-def live_critical_check(state: CallState, partial_transcript: str) -> bool:
-    """Chequeo en vivo durante la llamada: ¿hay que interrumpir YA?
+def live_critical_check(state: CallState, partial_transcript: str) -> str:
+    """Chequeo en vivo durante la llamada: ¿hay que actuar YA, y de qué tipo?
 
-    Se ejecuta sobre transcripción parcial mientras el paciente habla. Devuelve
-    True si el supervisor detecta nivel ROJA (síntoma de alarma o crítico).
+    Se ejecuta sobre transcripción parcial mientras el paciente habla. Devuelve:
+      - "emocional" si hay señal de riesgo emocional grave (ideación suicida),
+      - "medico"    para el resto de las ROJAS (síntoma de alarma o valor crítico),
+      - ""          si no hay urgencia.
+    Distinguir el tipo importa: ante una crisis emocional NO se corta la llamada,
+    se contiene; ante una urgencia médica se avisa y se acompaña.
     """
     state.transcript = partial_transcript
     readout = clinical.extract_readout(state.paciente_id, partial_transcript)
+    # El riesgo emocional grave se atiende distinto (contención), aunque también sea ROJA.
+    if readout.riesgo_emocional == EmotionalRisk.RIESGO_SUICIDA:
+        return "emocional"
     triage = supervisor.assess(readout, state.limits)
-    return triage.level == AlertLevel.ROJA
+    return "medico" if triage.level == AlertLevel.ROJA else ""

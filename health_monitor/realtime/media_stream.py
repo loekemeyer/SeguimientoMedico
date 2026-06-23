@@ -192,26 +192,42 @@ class MediaStreamBridge:
                     return  # end_call → terminar el reenvío
 
     async def _maybe_interrupt(self) -> None:
-        """Chequeo crítico en vivo: si el supervisor marca ROJA, interrumpe."""
+        """Chequeo crítico en vivo. Ante una urgencia, inyecta una guía de contención.
+
+        Distingue crisis emocional (NO cortar, quedarse y contener) de urgencia
+        médica (avisar y acompañar). Nunca cuelga de golpe.
+        """
         partial = " ".join(self.transcript_parts)
         # El chequeo es síncrono y liviano; se corre en un thread para no bloquear.
-        critical = await asyncio.to_thread(
+        kind = await asyncio.to_thread(
             orchestrator.live_critical_check, self.state, partial
         )
-        if critical and not self.state.interrupted:
-            self.state.interrupted = True
-            logger.warning("Evento crítico en vivo (paciente %s): interrumpiendo.",
+        if not kind or self.state.interrupted:
+            return
+        self.state.interrupted = True
+        if kind == "emocional":
+            logger.warning("Riesgo emocional en vivo (paciente %s): contención + aviso.",
                            self.state.paciente_id)
-            await self._openai_ws.send(json.dumps({
-                "type": "response.create",
-                "response": {
-                    "instructions": (
-                        "Con calma y contención, decile que notaste algo importante "
-                        "y que vas a avisar ahora mismo a quien puede ayudarlo. "
-                        "Despedite con calidez."
-                    ),
-                },
-            }))
+            instrucciones = (
+                "La persona expresó algo muy delicado a nivel emocional. Con muchísima "
+                "calma y cariño, QUEDATE con ella: validá lo que siente, agradecele que "
+                "te lo haya confiado, y preguntale con suavidad si en este momento está "
+                "a salvo y si tiene a alguien cerca. NO cortes la llamada por ningún "
+                "motivo. Si confirmás que está en riesgo, usá la herramienta "
+                "`escalar_a_familia` para avisar ahora mismo. Seguí acompañando."
+            )
+        else:
+            logger.warning("Evento crítico médico en vivo (paciente %s): contención.",
+                           self.state.paciente_id)
+            instrucciones = (
+                "Con calma y contención, decile que notaste algo importante para su "
+                "salud y que vas a avisar ahora mismo a quien puede ayudarlo. No lo "
+                "alarmes de más. Quedate acompañándolo; no cortes de golpe."
+            )
+        await self._openai_ws.send(json.dumps({
+            "type": "response.create",
+            "response": {"instructions": instrucciones},
+        }))
 
     async def _hangup(self) -> None:
         """Cuelga la llamada vía la API REST de Twilio (cuando el asistente cierra)."""

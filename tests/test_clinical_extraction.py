@@ -1,6 +1,6 @@
 """Tests del extractor heurístico del Agente Clínico (sin LLM)."""
 from health_monitor.agents.clinical import _extract_heuristic
-from health_monitor.schemas.clinical import AdherenceState, MoodState
+from health_monitor.schemas.clinical import AdherenceState, EmotionalRisk, MoodState
 
 
 def test_extrae_presion():
@@ -39,6 +39,23 @@ def test_conservador_sin_datos():
     assert r.presion_sistolica is None
     assert r.glucemia is None
     assert r.sintomas_alarma == []
+    assert r.riesgo_emocional == EmotionalRisk.NINGUNO
+
+
+def test_detecta_riesgo_suicida():
+    r = _extract_heuristic(1, "Para qué seguir, ya no quiero vivir más.")
+    assert r.riesgo_emocional == EmotionalRisk.RIESGO_SUICIDA
+
+
+def test_detecta_angustia_aguda():
+    r = _extract_heuristic(1, "No doy más, me siento muy solo y no paro de llorar.")
+    assert r.riesgo_emocional == EmotionalRisk.ANGUSTIA_AGUDA
+
+
+def test_no_confunde_modismo_con_riesgo_suicida():
+    # "me muero de hambre/risa" NO debe disparar riesgo: detección conservadora.
+    r = _extract_heuristic(1, "Me muero de hambre, ¿comemos algo? Ja, me mata la espalda.")
+    assert r.riesgo_emocional == EmotionalRisk.NINGUNO
 
 
 def test_relato_empatico_sin_apikey_es_vacio():
