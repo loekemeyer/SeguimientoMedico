@@ -26,6 +26,7 @@ from health_monitor.schemas.api import (
     EvolucionOut,
     PacienteIn,
     PacienteOut,
+    PersonalidadAcompanante,
     ProgramacionLlamada,
     RutinaItemIn,
     RutinaItemOut,
@@ -64,6 +65,14 @@ def _to_out(p: Paciente, cipher: FieldCipher) -> PacienteOut:
             llamada_dias=p.llamada_dias or [],
             nivel_insistencia=p.nivel_insistencia,
         ),
+        personalidad=PersonalidadAcompanante(
+            voz=p.voz,
+            velocidad=p.voz_velocidad,
+            trato=p.trato,
+            acompanante_nombre=p.acompanante_nombre,
+            temas_preferidos=p.temas_preferidos,
+            temas_evitar=p.temas_evitar,
+        ),
         activo=p.activo,
     )
 
@@ -74,6 +83,15 @@ def _apply_programacion(p: Paciente, prog: ProgramacionLlamada) -> None:
     p.llamada_zona = prog.llamada_zona
     p.llamada_dias = prog.llamada_dias
     p.nivel_insistencia = prog.nivel_insistencia
+
+
+def _apply_personalidad(p: Paciente, pers: PersonalidadAcompanante) -> None:
+    p.voz = pers.voz
+    p.voz_velocidad = pers.velocidad
+    p.trato = pers.trato
+    p.acompanante_nombre = pers.acompanante_nombre.strip()
+    p.temas_preferidos = pers.temas_preferidos.strip()
+    p.temas_evitar = pers.temas_evitar.strip()
 
 
 # --- Pacientes ---
@@ -99,6 +117,7 @@ def crear_paciente(
     )
     p.ficha = FichaClinica(limites=data.limites, patologias=data.patologias)
     _apply_programacion(p, data.programacion)
+    _apply_personalidad(p, data.personalidad)
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -143,6 +162,7 @@ def actualizar_paciente(
     p.ficha.limites = data.limites
     p.ficha.patologias = data.patologias
     _apply_programacion(p, data.programacion)
+    _apply_personalidad(p, data.personalidad)
     db.commit()
     db.refresh(p)
     return _to_out(p, cipher)

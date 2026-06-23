@@ -44,15 +44,15 @@
   vía plantilla por patología
 - **Preguntas de seguimiento personalizadas** ✅ (tipo "pregunta")
 
-### D. Personalidad y voz del acompañante (lo que lo hace sentir humano) — 🆕
-*Hoy la voz, la velocidad y el tono están fijos en el código. Para un 10/10 esto debería
-ser configurable por paciente, y es lo que más mueve la aguja en "no parece un bot".*
-- **Voz** (femenina/masculina, opciones) y **velocidad** 🆕 (hoy `coral` / `speed 0.9` fijos)
-- **Trato**: de "vos" o de "usted" 🆕
-- **Cómo se presenta** (nombre del acompañante, p. ej. "Sofía, del equipo que te cuida") 🆕
-- **Temas que le gustan** para charlar con naturalidad (fútbol, los nietos, el jardín,
-  la novela) y **temas a evitar** 🆕 — alimentan la memoria/charla y elevan la calidez
-- **¿Se presenta como asistente o no?** 🆕 — ver *Pendientes de decisión* (tiene aristas éticas/legales)
+### D. Personalidad y voz del acompañante (lo que lo hace sentir humano) — ✅ backend / 🔶 UI
+*Lo que más mueve la aguja en "no parece un bot". Ya es configurable por paciente en el
+modelo y la API (`PersonalidadAcompanante`); falta exponerlo en la pantalla.*
+- **Voz** (8 voces) y **velocidad** ✅ API (antes `coral` / `speed 0.9` fijos en el código)
+- **Trato**: de "vos" o de "usted" ✅ API → el guion lo respeta
+- **Cómo se presenta** (nombre del acompañante, p. ej. "Sofía") ✅ API → saludo y guion
+- **Temas que le gustan** (fútbol, los nietos, el jardín) y **temas a evitar** ✅ API → guion
+- Falta: 🔶 mostrarlo en la UI (modo avanzado) y 🆕 llevarlo también al modo WhatsApp por voz
+- **¿Se presenta como asistente o no?** — ver *PENDIENTES DE DECISIÓN* en `CAMINO_A_100.md` (aristas éticas/legales)
 
 ### E. Seguridad y alertas (a quién y cuándo avisar) — ✅/🔶/🆕
 - **Contactos** con orden de escalamiento y quién recibe alertas ✅ `ContactoEmergencia`

@@ -137,6 +137,12 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
         rutina_resumen=rutina_resumen,
         historial_resumen=historial_resumen,
         nivel_insistencia=paciente.nivel_insistencia,
+        voz=paciente.voz,
+        voz_velocidad=paciente.voz_velocidad,
+        trato=paciente.trato,
+        acompanante_nombre=paciente.acompanante_nombre,
+        temas_preferidos=paciente.temas_preferidos,
+        temas_evitar=paciente.temas_evitar,
     )
     return state, nombre
 

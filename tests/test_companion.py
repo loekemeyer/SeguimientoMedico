@@ -47,3 +47,25 @@ def test_historial_se_inyecta_en_las_instrucciones():
     )["instructions"]
     assert "Última llamada" in ins
     assert "AMARILLA" in ins
+
+
+def test_voz_y_velocidad_configurables_por_paciente():
+    out = _session(voice="verse", speed=1.1)["audio"]["output"]
+    assert out["voice"] == "verse"
+    assert out["speed"] == 1.1
+
+
+def test_trato_de_usted_se_refleja():
+    ins = _session(trato="usted")["instructions"]
+    assert "USTED" in ins
+
+
+def test_acompanante_nombre_y_temas_en_instrucciones():
+    ins = _session(
+        acompanante_nombre="Sofía",
+        temas_preferidos="fútbol, los nietos",
+        temas_evitar="política",
+    )["instructions"]
+    assert "Sofía" in ins
+    assert "fútbol" in ins
+    assert "política" in ins

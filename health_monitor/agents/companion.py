@@ -31,9 +31,23 @@ _INSISTENCIA = {
 
 
 def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: int = 2,
-                        historial: str = "") -> str:
-    """Suma a la persona base el contexto del paciente (nombre, rutina, insistencia, historial)."""
+                        historial: str = "", *, trato: str = "vos",
+                        acompanante_nombre: str = "", temas_preferidos: str = "",
+                        temas_evitar: str = "") -> str:
+    """Suma a la persona base el contexto y la personalización del paciente."""
     datos = ["\n\nDATOS DE ESTA LLAMADA:", f"- Persona: {nombre or 'la persona'}."]
+    if acompanante_nombre:
+        datos.append(f"- Te presentás como {acompanante_nombre}, del equipo que lo acompaña.")
+    if trato == "usted":
+        datos.append("- Tratá a la persona de USTED (con respeto y calidez).")
+    else:
+        datos.append("- Tratá a la persona de VOS (cercano y cálido).")
+    if temas_preferidos:
+        datos.append(
+            f"- Temas que le gustan (usalos para charlar con naturalidad): {temas_preferidos}."
+        )
+    if temas_evitar:
+        datos.append(f"- Temas a EVITAR (no los saques): {temas_evitar}.")
     if historial:
         datos.append(
             f"- {historial}. Tenelo en cuenta para abrir la charla y para "
@@ -53,12 +67,14 @@ def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: i
 def build_realtime_session_config(
     voice: str = "coral", language: str = "es",
     *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2, historial: str = "",
+    speed: float = 0.9, trato: str = "vos", acompanante_nombre: str = "",
+    temas_preferidos: str = "", temas_evitar: str = "",
 ) -> dict[str, Any]:
     """Config de sesión para la Realtime API (OpenAI) con la persona del contenedor.
 
     El formato de audio mulaw/8000 coincide con el de Twilio Media Streams, así
-    se evita el resampleo y se minimiza la latencia. `nombre` y `rutina` permiten
-    personalizar la llamada con los datos puntuales del paciente.
+    se evita el resampleo y se minimiza la latencia. `voice`, `speed`, `trato`,
+    `acompanante_nombre` y los `temas_*` personalizan la voz y el estilo por paciente.
     """
     # Formato GA de la Realtime API: el audio va anidado en session.audio.{input,output}
     # con audio/pcmu (= g711 u-law, el formato de Twilio). El modelo va en la URL del WS.
@@ -67,7 +83,11 @@ def build_realtime_session_config(
         "session": {
             "type": "realtime",
             "output_modalities": ["audio"],
-            "instructions": _build_instructions(nombre, rutina, nivel_insistencia, historial),
+            "instructions": _build_instructions(
+                nombre, rutina, nivel_insistencia, historial,
+                trato=trato, acompanante_nombre=acompanante_nombre,
+                temas_preferidos=temas_preferidos, temas_evitar=temas_evitar,
+            ),
             "audio": {
                 "input": {
                     "format": {"type": "audio/pcmu"},
@@ -80,7 +100,7 @@ def build_realtime_session_config(
                 "output": {
                     "format": {"type": "audio/pcmu"},
                     "voice": voice,
-                    "speed": 0.9,  # levemente pausado pero natural, no robótico (0.25–1.5)
+                    "speed": speed,  # configurable por paciente (0.25–1.5)
                 },
             },
             # Herramienta para que el asistente corte la llamada solo al despedirse.
@@ -119,10 +139,11 @@ def build_realtime_session_config(
     }
 
 
-def opening_line(nombre: str | None = None) -> str:
-    """Saludo inicial que abre la llamada con calidez."""
+def opening_line(nombre: str | None = None, acompanante_nombre: str = "") -> str:
+    """Saludo inicial que abre la llamada con calidez (humano, nunca como un bot)."""
     saludo = f"Hola, {nombre}" if nombre else "Hola"
+    quien = f"soy {acompanante_nombre}" if acompanante_nombre else "soy tu acompañante de siempre"
     return (
-        f"{saludo}, soy tu acompañante de siempre. Te llamo para ver cómo venís hoy. "
+        f"{saludo}, {quien}. Te llamo para ver cómo venís hoy. "
         "Contame, ¿cómo andás?"
     )

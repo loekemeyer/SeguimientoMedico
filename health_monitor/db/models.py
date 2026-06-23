@@ -18,6 +18,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -86,6 +87,15 @@ class Paciente(Base):
     llamada_dias: Mapped[list] = mapped_column(JSON, default=list)
     # Insistencia del asistente en la charla: 1=pasivo, 2=recordar, 3=insistir amable.
     nivel_insistencia: Mapped[int] = mapped_column(Integer, default=2)
+
+    # Personalidad y voz del acompañante (personalización por paciente). Hace que la
+    # charla suene a su medida y menos "robótica".
+    voz: Mapped[str] = mapped_column(String(20), default="coral")
+    voz_velocidad: Mapped[float] = mapped_column(Float, default=0.9)  # 0.25–1.5
+    trato: Mapped[str] = mapped_column(String(8), default="vos")  # vos | usted
+    acompanante_nombre: Mapped[str] = mapped_column(String(40), default="")  # cómo se presenta
+    temas_preferidos: Mapped[str] = mapped_column(Text, default="")  # temas que le gustan
+    temas_evitar: Mapped[str] = mapped_column(Text, default="")  # temas a evitar
 
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

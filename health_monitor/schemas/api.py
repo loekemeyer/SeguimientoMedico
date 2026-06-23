@@ -71,6 +71,38 @@ class ProgramacionLlamada(BaseModel):
         return v if v in (1, 2, 3) else 2
 
 
+_VOCES_VALIDAS = {"alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse"}
+
+
+class PersonalidadAcompanante(BaseModel):
+    """Cómo es y cómo suena el acompañante para este paciente (personalización).
+
+    Es lo que más ayuda a que la charla se sienta a medida y no robótica.
+    """
+
+    voz: str = "coral"
+    velocidad: float = 0.9  # 0.25–1.5 (más bajo = más pausado)
+    trato: str = "vos"  # vos | usted
+    acompanante_nombre: str = ""  # cómo se presenta, ej "Sofía"
+    temas_preferidos: str = ""  # temas que le gustan, texto libre (ej "fútbol, los nietos")
+    temas_evitar: str = ""  # temas a evitar, texto libre
+
+    @field_validator("voz")
+    @classmethod
+    def _valid_voz(cls, v: str) -> str:
+        return v if v in _VOCES_VALIDAS else "coral"
+
+    @field_validator("velocidad")
+    @classmethod
+    def _valid_velocidad(cls, v: float) -> float:
+        return min(1.5, max(0.25, float(v)))
+
+    @field_validator("trato")
+    @classmethod
+    def _valid_trato(cls, v: str) -> str:
+        return v if v in ("vos", "usted") else "vos"
+
+
 class PacienteIn(BaseModel):
     nombre: str
     telefono_whatsapp: str
@@ -79,6 +111,7 @@ class PacienteIn(BaseModel):
     patologias: list[str] = Field(default_factory=list)
     limites: dict = Field(default_factory=dict)
     programacion: ProgramacionLlamada = Field(default_factory=ProgramacionLlamada)
+    personalidad: PersonalidadAcompanante = Field(default_factory=PersonalidadAcompanante)
 
 
 class PacienteOut(BaseModel):
@@ -90,6 +123,7 @@ class PacienteOut(BaseModel):
     patologias: list[str] = Field(default_factory=list)
     limites: dict = Field(default_factory=dict)
     programacion: ProgramacionLlamada = Field(default_factory=ProgramacionLlamada)
+    personalidad: PersonalidadAcompanante = Field(default_factory=PersonalidadAcompanante)
     activo: bool = True
 
 

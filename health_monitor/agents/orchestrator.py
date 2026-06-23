@@ -35,6 +35,13 @@ class CallState:
     rutina_resumen: str = ""  # texto con la rutina del paciente para guiar la charla
     historial_resumen: str = ""  # qué pasó en la última llamada (contexto para el agente)
     nivel_insistencia: int = 2  # 1=pasivo, 2=recordar, 3=insistir (lo fija el admin)
+    # Personalización de la voz/estilo del acompañante (lo fija el admin por paciente).
+    voz: str = "coral"
+    voz_velocidad: float = 0.9
+    trato: str = "vos"  # vos | usted
+    acompanante_nombre: str = ""
+    temas_preferidos: str = ""
+    temas_evitar: str = ""
 
     transcript: str = ""
     readout: ClinicalReadout | None = None
