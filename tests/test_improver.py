@@ -48,6 +48,14 @@ def test_sin_seguimiento_hace_dias():
 def test_riesgo_suicida_sugerencia_alta():
     s = analizar([_evo(0, riesgo_emocional="riesgo_suicida")], ahora=_NOW, usar_llm=False)
     assert any(x["tipo"] == "emocional" and x["prioridad"] == "alta" for x in s)
+    assert any("135" in x["texto"] for x in s)  # incluye la línea de crisis
+
+
+def test_animo_bajo_sostenido_sugiere_derivacion():
+    evos = [_evo(0, estado_animo="decaido"), _evo(1, estado_animo="angustiado"),
+            _evo(2, estado_animo="decaido")]
+    s = analizar(evos, ahora=_NOW, usar_llm=False)
+    assert any(x["tipo"] == "derivacion" and x["prioridad"] == "alta" for x in s)
 
 
 def test_caidas_recurrentes_es_alta():

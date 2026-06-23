@@ -89,10 +89,16 @@ def _reglas(evoluciones: list[dict], quien: str, ahora: datetime) -> list[dict]:
                      "Conviene consultarlo con su médico.",
         })
 
-    # Ánimo decaído/angustiado repetido.
+    # Ánimo decaído/angustiado repetido → recomendación de derivación al familiar.
     animo_bajo = sum(1 for e in recientes
                      if (e.get("readout") or {}).get("estado_animo") in ("decaido", "angustiado"))
-    if animo_bajo >= 2:
+    if animo_bajo >= 3:
+        sugerencias.append({
+            "tipo": "derivacion", "prioridad": "alta",
+            "texto": f"El ánimo de {quien} viene bajo de forma sostenida. Recomendamos "
+                     "coordinar una consulta con un profesional de salud mental.",
+        })
+    elif animo_bajo >= 2:
         sugerencias.append({
             "tipo": "animo", "prioridad": "media",
             "texto": f"El ánimo de {quien} viene decaído en varias llamadas. "
@@ -104,8 +110,9 @@ def _reglas(evoluciones: list[dict], quien: str, ahora: datetime) -> list[dict]:
            for e in recientes):
         sugerencias.append({
             "tipo": "emocional", "prioridad": "alta",
-            "texto": f"Se detectó una señal de riesgo emocional grave en {quien}. "
-                     "Asegurá compañía y una consulta con salud mental cuanto antes.",
+            "texto": f"Se detectó una señal de riesgo emocional grave en {quien}. Asegurá "
+                     "compañía y una consulta con salud mental cuanto antes. Línea de "
+                     "ayuda (AR): Centro de Asistencia al Suicida 135 / (011) 5275-1135.",
         })
     elif sum(1 for e in recientes
              if (e.get("readout") or {}).get("riesgo_emocional") == "angustia_aguda") >= 2:
