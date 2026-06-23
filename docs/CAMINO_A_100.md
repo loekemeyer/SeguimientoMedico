@@ -109,6 +109,9 @@ El orden está pensado por **riesgo primero, después profundidad, después esca
 - ✅ **Memoria emocional con tendencia**: el acompañante recibe la trayectoria del
   ánimo de las últimas llamadas (mejora / baja / se mantiene) para retomar con
   sensibilidad — `agents/mood.py`, `services.py:_load_historial_resumen`.
+- ✅ **Sugerencias proactivas ampliadas**: el agente de mejora detecta caídas
+  recurrentes y señales de riesgo emocional y se las sugiere al familiar —
+  `agents/improver.py`.
 - [ ] **PHQ-9 / GDS-15** conversacional, con score histórico y triaje emocional propio.
 - [ ] Derivación automática a profesional con criterios (no solo "considerá consulta").
 

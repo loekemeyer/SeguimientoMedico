@@ -99,6 +99,38 @@ def _reglas(evoluciones: list[dict], quien: str, ahora: datetime) -> list[dict]:
                      "Considerá un acompañamiento o consultarlo con un profesional.",
         })
 
+    # Riesgo emocional grave (señal de seguridad).
+    if any((e.get("readout") or {}).get("riesgo_emocional") == "riesgo_suicida"
+           for e in recientes):
+        sugerencias.append({
+            "tipo": "emocional", "prioridad": "alta",
+            "texto": f"Se detectó una señal de riesgo emocional grave en {quien}. "
+                     "Asegurá compañía y una consulta con salud mental cuanto antes.",
+        })
+    elif sum(1 for e in recientes
+             if (e.get("readout") or {}).get("riesgo_emocional") == "angustia_aguda") >= 2:
+        sugerencias.append({
+            "tipo": "emocional", "prioridad": "media",
+            "texto": f"{quien} mostró angustia marcada en varias llamadas. "
+                     "Considerá acompañamiento más frecuente o una consulta profesional.",
+        })
+
+    # Caídas (riesgo de lesión y de recurrencia).
+    caidas = sum(1 for e in recientes if (e.get("readout") or {}).get("caida_reportada"))
+    if caidas >= 2:
+        sugerencias.append({
+            "tipo": "caidas", "prioridad": "alta",
+            "texto": f"{quien} reportó caídas en {caidas} de las últimas llamadas. "
+                     "Revisá el entorno (alfombras, iluminación, el baño) y consultá al "
+                     "médico por una evaluación de riesgo de caídas.",
+        })
+    elif caidas == 1:
+        sugerencias.append({
+            "tipo": "caidas", "prioridad": "media",
+            "texto": f"{quien} reportó una caída hace poco. Conviene chequear que no haya "
+                     "quedado una molestia y prevenir nuevas caídas en casa.",
+        })
+
     # Sin seguimiento hace varios días.
     ult = _fecha(evoluciones[0].get("fecha"))
     if ult and (ahora - ult).days >= 3:

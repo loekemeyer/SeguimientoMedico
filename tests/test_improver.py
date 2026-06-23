@@ -45,6 +45,22 @@ def test_sin_seguimiento_hace_dias():
     assert any(x["tipo"] == "seguimiento" for x in s)
 
 
+def test_riesgo_suicida_sugerencia_alta():
+    s = analizar([_evo(0, riesgo_emocional="riesgo_suicida")], ahora=_NOW, usar_llm=False)
+    assert any(x["tipo"] == "emocional" and x["prioridad"] == "alta" for x in s)
+
+
+def test_caidas_recurrentes_es_alta():
+    evos = [_evo(0, caida_reportada=True), _evo(2, caida_reportada=True)]
+    s = analizar(evos, ahora=_NOW, usar_llm=False)
+    assert any(x["tipo"] == "caidas" and x["prioridad"] == "alta" for x in s)
+
+
+def test_una_caida_es_media():
+    s = analizar([_evo(0, caida_reportada=True)], ahora=_NOW, usar_llm=False)
+    assert any(x["tipo"] == "caidas" and x["prioridad"] == "media" for x in s)
+
+
 def test_ordena_por_prioridad():
     evos = [_evo(5, adherencia_medicacion="no_tomo"),
             _evo(6, adherencia_medicacion="no_tomo")]
