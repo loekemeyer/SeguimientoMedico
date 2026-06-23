@@ -112,8 +112,11 @@ El orden está pensado por **riesgo primero, después profundidad, después esca
 - ✅ **Sugerencias proactivas ampliadas**: el agente de mejora detecta caídas
   recurrentes y señales de riesgo emocional y se las sugiere al familiar —
   `agents/improver.py`.
-- [ ] **PHQ-9 / GDS-15** conversacional, con score histórico y triaje emocional propio.
-- [ ] Derivación automática a profesional con criterios (no solo "considerá consulta").
+- ✅ **GDS-15 gatillada por señales**: explora el ánimo con tacto (sueño, anhedonia,
+  soledad, desesperanza) SOLO cuando viene bajo en varias llamadas — `agents/mood.py`,
+  `agents/companion.py`, `services.py`.
+- ✅ **Derivación a salud mental (aviso al familiar)**: ánimo bajo sostenido o riesgo →
+  sugerencia de coordinar consulta (+ línea de crisis) — `agents/improver.py`.
 
 ---
 
@@ -145,8 +148,10 @@ El orden está pensado por **riesgo primero, después profundidad, después esca
 - ✅ **Peso + cambio brusco**: se extrae el peso y, comparado con la última medición,
   un aumento ≥ umbral en ≤7 días → AMARILLA (posible retención/ICC) — `clinical.py`,
   `triage/rules.py`, `services.py` (carga el peso anterior del historial).
-- [ ] **Contexto de medicación** y **reglas por patología** (un diabético no se tría
-  como un prediabético).
+- ✅ **Reglas por patología (plantillas)**: umbrales conservadores por condición
+  (HTA, diabetes 1/2, EPOC, ICC), editables por el admin (el manual gana) —
+  `triage/plantillas.py`, `services.py`.
+- [ ] **Contexto de medicación** (qué toma y cuándo).
 - [ ] Detección de **cambios agudos** del resto de los signos (presión en alza, etc.).
 
 ### Fase 4 — Operación confiable y vendible (🚧 en curso)

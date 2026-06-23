@@ -23,6 +23,7 @@ from health_monitor.db.models import (
     RutinaItem,
 )
 from health_monitor.triage import ClinicalLimits
+from health_monitor.triage.plantillas import aplicar_plantillas
 from shared.config import get_settings
 from shared.security import FieldCipher
 
@@ -44,9 +45,13 @@ def require_consent(paciente: Paciente) -> None:
 
 
 def _limits_from_ficha(paciente_id: int, ficha: FichaClinica | None) -> ClinicalLimits:
-    data = dict(ficha.limites) if ficha and ficha.limites else {}
-    data["paciente_id"] = paciente_id
-    return ClinicalLimits.model_validate(data)
+    # Orden de precedencia: defaults del modelo < plantillas por patología < manual.
+    manual = dict(ficha.limites) if ficha and ficha.limites else {}
+    manual["paciente_id"] = paciente_id
+    patologias = ficha.patologias if ficha and ficha.patologias else []
+    merged = aplicar_plantillas({}, patologias)
+    merged.update(manual)  # los límites manuales del admin ganan sobre la plantilla
+    return ClinicalLimits.model_validate(merged)
 
 
 def _load_contactos(db: Session, paciente_id: int) -> list[dict]:
