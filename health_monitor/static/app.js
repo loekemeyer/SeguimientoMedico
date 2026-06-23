@@ -186,6 +186,7 @@ $("#form-rutina").addEventListener("submit", async (e) => {
         tipo: f.get("tipo"), nombre: f.get("nombre"),
         frecuencia: f.get("frecuencia") || "", horario: f.get("horario") || "",
         dias: dias.length === 7 ? [] : dias, activa: true,
+        aviso: f.get("aviso") || "mensaje",
       },
     });
     e.target.reset();
@@ -202,7 +203,8 @@ function renderRutina(items) {
         const icon = TIPO_ICON[r.tipo] || "📌";
         const dias = (!r.dias || r.dias.length === 0 || r.dias.length === 7)
           ? "Todos los días" : r.dias.map((d) => DIA_NOMBRE[d]).join(", ");
-        const det = [r.frecuencia, r.horario, dias].filter(Boolean).join(" · ");
+        const avisoTxt = { llamada: "📞 llamada", mensaje: "💬 mensaje", ninguno: "🔕 sin aviso" }[r.aviso] || "";
+        const det = [r.frecuencia, r.horario, dias, avisoTxt].filter(Boolean).join(" · ");
         return `<div class="stack-item">${icon} <div><div>${escapeHtml(r.nombre || "")}</div><small>${escapeHtml(det)}</small></div></div>`;
       }).join("")
     : `<p class="empty">Todavía no cargaste la rutina. Empezá agregando un ítem abajo.</p>`;
@@ -276,6 +278,7 @@ function openEditModal() {        // edición del paciente abierto
   $("[name=patologias]", form).value = (currentPatient.patologias || []).join(", ");
   $("[name=llamada_hora]", form).value = currentPatient.programacion?.llamada_hora || "10:00";
   $("[name=consentimiento_firmado]", form).checked = !!currentPatient.consentimiento_firmado;
+  $("[name=nivel_insistencia]", form).value = String(currentPatient.programacion?.nivel_insistencia || 2);
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -293,12 +296,13 @@ form.addEventListener("submit", async (e) => {
   err.textContent = "";
   const f = new FormData(e.target);
   const patologias = (f.get("patologias") || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const nivel = Number(f.get("nivel_insistencia")) || 2;
   const body = {
     nombre: f.get("nombre"),
     telefono_whatsapp: f.get("telefono_whatsapp"),
     consentimiento_firmado: f.get("consentimiento_firmado") === "on",
     patologias,
-    programacion: { ...(currentPatient?.programacion || {}), llamada_hora: f.get("llamada_hora") || "10:00" },
+    programacion: { ...(currentPatient?.programacion || {}), llamada_hora: f.get("llamada_hora") || "10:00", nivel_insistencia: nivel },
   };
   try {
     if (editingId) {
@@ -307,7 +311,7 @@ form.addEventListener("submit", async (e) => {
       toast("Cambios guardados ✅");
       await openDetail(p.id);
     } else {
-      body.programacion = { llamada_hora: f.get("llamada_hora") || "10:00" };
+      body.programacion = { llamada_hora: f.get("llamada_hora") || "10:00", nivel_insistencia: nivel };
       const p = await api("/pacientes", { method: "POST", body });
       if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
         await api(`/pacientes/${p.id}/contactos`, {

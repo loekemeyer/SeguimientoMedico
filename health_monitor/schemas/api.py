@@ -103,6 +103,12 @@ class RutinaItemIn(BaseModel):
     horario: str = ""
     dias: list[int] = Field(default_factory=list)  # 0=lun..6=dom; vacío = todos
     activa: bool = True
+    aviso: str = "mensaje"  # mensaje (WhatsApp) | llamada | ninguno
+
+    @field_validator("aviso")
+    @classmethod
+    def _valid_aviso(cls, v: str) -> str:
+        return v if v in ("mensaje", "llamada", "ninguno") else "mensaje"
 
 
 class RutinaItemOut(RutinaItemIn):

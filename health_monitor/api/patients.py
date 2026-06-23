@@ -165,6 +165,7 @@ def _rutina_out(r: RutinaItem, cipher: FieldCipher) -> RutinaItemOut:
     return RutinaItemOut(
         id=r.id, tipo=r.tipo, nombre=cipher.decrypt(r.nombre_enc),
         frecuencia=r.frecuencia, horario=r.horario, dias=r.dias or [], activa=r.activa,
+        aviso=r.aviso,
     )
 
 
@@ -184,6 +185,7 @@ def agregar_rutina(
         horario=data.horario,
         dias=data.dias,
         activa=data.activa,
+        aviso=data.aviso,
     )
     db.add(r)
     db.commit()

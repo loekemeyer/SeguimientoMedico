@@ -83,6 +83,7 @@ def test_crear_y_leer_paciente():
     assert got.status_code == 200
     assert got.json()["telefono_whatsapp"] == "+5491131181594"
     assert got.json()["patologias"] == ["I10"]
+    assert got.json()["programacion"]["nivel_insistencia"] == 2  # default
 
 
 def test_aislamiento_entre_usuarios():
@@ -113,6 +114,7 @@ def test_rutina_y_contactos():
     assert rutina[0]["nombre"] == "Losartán 50mg"
     assert rutina[0]["tipo"] == "medicamento"
     assert rutina[0]["dias"] == [0, 2, 4]
+    assert rutina[0]["aviso"] == "mensaje"  # default (WhatsApp)
 
     con = client.post(f"/pacientes/{pid}/contactos",
                       json={"nombre": "Thomas", "telefono": "+5491162521635", "relacion": "hijo"},

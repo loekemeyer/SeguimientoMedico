@@ -145,6 +145,8 @@ class RutinaItem(Base):
     # Días en que se repite (0=lunes ... 6=domingo). Vacío = todos los días.
     dias: Mapped[list] = mapped_column(JSON, default=list)
     activa: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Cómo avisar sobre este ítem: "mensaje" (WhatsApp) | "llamada" | "ninguno".
+    aviso: Mapped[str] = mapped_column(String(12), default="mensaje")
 
     paciente: Mapped["Paciente"] = relationship(back_populates="rutina")
 

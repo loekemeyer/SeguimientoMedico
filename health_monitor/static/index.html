@@ -146,6 +146,13 @@
               <input name="frecuencia" placeholder="Frecuencia (ej: 1 vez al día)" />
               <input name="horario" type="time" />
             </div>
+            <div class="addform__row">
+              <select name="aviso" class="select">
+                <option value="mensaje">💬 Avisar por mensaje (WhatsApp)</option>
+                <option value="llamada">📞 Avisar por llamada</option>
+                <option value="ninguno">🔕 Sin aviso</option>
+              </select>
+            </div>
             <div class="days" id="rutina-days">
               <span class="days__label">Días:</span>
               <label><input type="checkbox" value="0" checked> Lun</label>
@@ -194,6 +201,13 @@
             <span>Tengo el consentimiento del apoderado legal</span>
           </label>
         </div>
+        <label class="field"><span>Insistencia del asistente en la llamada</span>
+          <select name="nivel_insistencia" class="select">
+            <option value="1">1 · Pasivo (solo escucha)</option>
+            <option value="2" selected>2 · Recordar</option>
+            <option value="3">3 · Insistir amablemente</option>
+          </select>
+        </label>
         <div id="contacto-section">
           <h3 class="form__section">Contacto de emergencia</h3>
           <div class="form__row">
