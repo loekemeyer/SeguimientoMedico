@@ -37,6 +37,14 @@ logger = logging.getLogger(__name__)
 OPENAI_REALTIME_URL = "wss://api.openai.com/v1/realtime?model={model}"
 
 
+def _arg(evt: dict, key: str, default: str = "") -> str:
+    """Lee un argumento (viene como JSON string) de un evento de function call."""
+    try:
+        return json.loads(evt.get("arguments") or "{}").get(key, default)
+    except Exception:
+        return default
+
+
 class MediaStreamBridge:
     """Conecta un WebSocket de Twilio con la sesión Realtime de OpenAI.
 
@@ -82,6 +90,7 @@ class MediaStreamBridge:
                 nombre=self.nombre or self.state.paciente_nombre,
                 rutina=self.state.rutina_resumen,
                 nivel_insistencia=self.state.nivel_insistencia,
+                historial=self.state.historial_resumen,
             )))
             await self._send_opening_line()
             logger.info("Sesión Realtime abierta y saludo enviado; conversación en curso.")
@@ -159,10 +168,9 @@ class MediaStreamBridge:
                     self.transcript_parts.append(text)
                     await self._maybe_interrupt()
 
-            elif etype == "response.function_call_arguments.done" and evt.get("name") == "end_call":
-                logger.info("El asistente pidió terminar la llamada (end_call).")
-                await self._hangup()
-                return
+            elif etype == "response.function_call_arguments.done":
+                if await self._handle_function_call(evt):
+                    return  # end_call → terminar el reenvío
 
     async def _maybe_interrupt(self) -> None:
         """Chequeo crítico en vivo: si el supervisor marca ROJA, interrumpe."""
@@ -204,6 +212,47 @@ class MediaStreamBridge:
             logger.info("Llamada %s finalizada por el asistente.", self.call_sid)
         except Exception as exc:
             logger.error("No se pudo colgar la llamada %s: %s", self.call_sid, exc)
+
+    async def _handle_function_call(self, evt: dict) -> bool:
+        """Ejecuta la herramienta que pidió el modelo. Devuelve True si hay que colgar."""
+        name = evt.get("name")
+        call_id = evt.get("call_id") or evt.get("item_id")
+        if name == "end_call":
+            logger.info("El asistente pidió terminar la llamada (end_call).")
+            await self._hangup()
+            return True
+        if name == "escalar_a_familia":
+            motivo = _arg(evt, "motivo", "una situación que necesita atención")
+            ok = await asyncio.to_thread(self._do_escalar, motivo)
+            salida = ("Listo: avisé a la familia." if ok
+                      else "No pude avisar a la familia en este momento.")
+            await self._send_function_output(call_id, salida)
+        return False
+
+    def _do_escalar(self, motivo: str) -> bool:
+        """Avisa en vivo a los contactos del paciente (lo dispara el agente)."""
+        from shared.notifications import send_whatsapp_message
+
+        quien = self.state.paciente_nombre or "el paciente"
+        msg = (f"🔴 {quien} — en la llamada de acompañamiento de hoy detectamos algo "
+               f"importante: {motivo}. Por favor, comunicate con {quien} cuanto antes.")
+        enviados = 0
+        for c in self.state.contactos:
+            if c.get("recibe_alertas", True) and c.get("telefono"):
+                if send_whatsapp_message(c["telefono"], msg):
+                    enviados += 1
+        logger.warning("Escalamiento en vivo (paciente %s): %s (%d aviso/s).",
+                       self.state.paciente_id, motivo, enviados)
+        return enviados > 0
+
+    async def _send_function_output(self, call_id: str | None, output: str) -> None:
+        """Devuelve a OpenAI el resultado de la herramienta y pide que el modelo siga."""
+        if call_id:
+            await self._openai_ws.send(json.dumps({
+                "type": "conversation.item.create",
+                "item": {"type": "function_call_output", "call_id": call_id, "output": output},
+            }))
+        await self._openai_ws.send(json.dumps({"type": "response.create"}))
 
     @property
     def full_transcript(self) -> str:

@@ -30,9 +30,15 @@ _INSISTENCIA = {
 }
 
 
-def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: int = 2) -> str:
-    """Suma a la persona base el contexto del paciente (nombre, rutina, insistencia)."""
+def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: int = 2,
+                        historial: str = "") -> str:
+    """Suma a la persona base el contexto del paciente (nombre, rutina, insistencia, historial)."""
     datos = ["\n\nDATOS DE ESTA LLAMADA:", f"- Persona: {nombre or 'la persona'}."]
+    if historial:
+        datos.append(
+            f"- {historial}. Tenelo en cuenta para abrir la charla y para "
+            "repreguntar con tacto lo que haya quedado pendiente la vez pasada."
+        )
     if rutina:
         datos.append(f"- Rutina de hoy para repasar, en orden: {rutina}.")
     else:
@@ -46,7 +52,7 @@ def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: i
 
 def build_realtime_session_config(
     voice: str = "alloy", language: str = "es",
-    *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2,
+    *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2, historial: str = "",
 ) -> dict[str, Any]:
     """Config de sesión para la Realtime API (OpenAI) con la persona del contenedor.
 
@@ -61,7 +67,7 @@ def build_realtime_session_config(
         "session": {
             "type": "realtime",
             "output_modalities": ["audio"],
-            "instructions": _build_instructions(nombre, rutina, nivel_insistencia),
+            "instructions": _build_instructions(nombre, rutina, nivel_insistencia, historial),
             "audio": {
                 "input": {
                     "format": {"type": "audio/pcmu"},
@@ -84,7 +90,26 @@ def build_realtime_session_config(
                         "Usala SOLO después de haberte despedido en voz."
                     ),
                     "parameters": {"type": "object", "properties": {}},
-                }
+                },
+                {
+                    "type": "function",
+                    "name": "escalar_a_familia",
+                    "description": (
+                        "Avisá YA a la familia si detectás algo preocupante que no "
+                        "puede esperar (un síntoma de alarma, mucha angustia, una "
+                        "caída). Seguí la charla con calma y contención después de usarla."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "motivo": {
+                                "type": "string",
+                                "description": "Qué detectaste, en una frase corta.",
+                            }
+                        },
+                        "required": ["motivo"],
+                    },
+                },
             ],
             "tool_choice": "auto",
         },

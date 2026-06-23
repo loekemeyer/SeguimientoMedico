@@ -35,3 +35,15 @@ def test_sin_rutina_hace_seguimiento_general():
 
 def test_nivel_invalido_cae_a_recordar():
     assert "Insistencia 2" in _session(nivel_insistencia=99)["instructions"]
+
+
+def test_tool_escalar_a_familia_presente():
+    assert any(t["name"] == "escalar_a_familia" for t in _session()["tools"])
+
+
+def test_historial_se_inyecta_en_las_instrucciones():
+    ins = _session(
+        historial="Última llamada (12/06, nivel AMARILLA): no tomó la medicación"
+    )["instructions"]
+    assert "Última llamada" in ins
+    assert "AMARILLA" in ins

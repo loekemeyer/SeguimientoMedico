@@ -85,6 +85,20 @@ def _load_rutina_resumen(db: Session, paciente_id: int, cipher: FieldCipher) -> 
     return "; ".join(partes)
 
 
+def _load_historial_resumen(db: Session, paciente_id: int) -> str:
+    """Resumen de la última llamada, para que el asistente abra con contexto."""
+    evo = db.scalars(
+        select(EvolucionDiaria)
+        .where(EvolucionDiaria.paciente_id == paciente_id)
+        .order_by(EvolucionDiaria.fecha.desc())
+    ).first()
+    if evo is None:
+        return ""
+    fecha = evo.fecha.strftime("%d/%m")
+    detalle = evo.resumen or "; ".join(evo.motivos or []) or "sin novedades"
+    return f"Última llamada ({fecha}, nivel {evo.nivel_alerta}): {detalle}"
+
+
 def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | None]:
     """Prepara el CallState de una llamada: límites, contactos y resumen de ficha."""
     paciente = db.get(Paciente, paciente_id)
@@ -101,6 +115,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     patologias = ", ".join(ficha.patologias) if ficha and ficha.patologias else "s/d"
     ficha_resumen = f"Paciente {paciente_id}. Patologías: {patologias}."
     rutina_resumen = _load_rutina_resumen(db, paciente_id, cipher)
+    historial_resumen = _load_historial_resumen(db, paciente_id)
 
     state = CallState(
         paciente_id=paciente_id,
@@ -109,6 +124,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
         contactos=contactos,
         ficha_resumen=ficha_resumen,
         rutina_resumen=rutina_resumen,
+        historial_resumen=historial_resumen,
         nivel_insistencia=paciente.nivel_insistencia,
     )
     return state, nombre
