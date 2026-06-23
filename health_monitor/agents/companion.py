@@ -24,7 +24,11 @@ def build_realtime_session_config(
         "type": "session.update",
         "session": {
             "modalities": ["audio", "text"],
-            "instructions": COMPANION_SYSTEM_PROMPT,
+            "instructions": (
+                COMPANION_SYSTEM_PROMPT
+                + "\n\nIMPORTANTE: hablá SIEMPRE en español rioplatense (de Argentina), "
+                "con voz cálida y cercana. Nunca cambies a inglés ni a otro idioma."
+            ),
             "voice": voice,
             "input_audio_format": "g711_ulaw",   # mulaw/8000 de Twilio
             "output_audio_format": "g711_ulaw",

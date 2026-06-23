@@ -69,14 +69,39 @@ class MediaStreamBridge:
             "Authorization": f"Bearer {settings.openai_api_key}",
             "OpenAI-Beta": "realtime=v1",
         }
-        async with websockets.connect(url, additional_headers=headers) as openai_ws:
-            self._openai_ws = openai_ws
+        logger.info("Conectando a OpenAI Realtime (modelo %s)...", settings.openai_realtime_model)
+        try:
+            openai_ws = await self._connect_openai(websockets, url, headers)
+        except Exception as exc:
+            logger.error("No se pudo conectar a OpenAI Realtime: %s", exc)
+            return
+
+        self._openai_ws = openai_ws
+        try:
             await openai_ws.send(json.dumps(build_realtime_session_config()))
             await self._send_opening_line()
+            logger.info("Sesión Realtime abierta y saludo enviado; conversación en curso.")
             await asyncio.gather(
                 self._twilio_to_openai(),
                 self._openai_to_twilio(),
             )
+        except Exception as exc:
+            logger.error("Error durante la conversación en vivo: %s", exc)
+        finally:
+            try:
+                await openai_ws.close()
+            except Exception:
+                pass
+
+    async def _connect_openai(self, websockets, url, headers):
+        """Abre el WS hacia OpenAI tolerando distintas versiones de `websockets`.
+
+        Las versiones nuevas usan `additional_headers`; las previas, `extra_headers`.
+        """
+        try:
+            return await websockets.connect(url, additional_headers=headers)
+        except TypeError:
+            return await websockets.connect(url, extra_headers=headers)
 
     async def _send_opening_line(self) -> None:
         """Indica al modelo que abra la conversación con el saludo del contenedor."""

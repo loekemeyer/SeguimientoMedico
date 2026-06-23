@@ -145,6 +145,7 @@ async def twilio_voice(request: Request) -> Response:
     duración, que el WebSocket exige antes de operar (el WS no lleva firma).
     """
     settings = get_settings()
+    logger.info("Twilio pidió /twilio/voice (paciente_id=%s).", request.query_params.get("paciente_id"))
     form = dict(await request.form())
     _verify_twilio_signature(request, form, settings)
 
@@ -167,10 +168,30 @@ async def twilio_voice(request: Request) -> Response:
 async def media_stream(ws: WebSocket) -> None:
     """WebSocket bidireccional: puentea el audio Twilio <-> Realtime API."""
     await ws.accept()
+    logger.info("WS media-stream: conexión aceptada; esperando el evento 'start'.")
 
-    # El primer mensaje "start" trae los custom parameters (paciente_id + token).
-    first = json.loads(await ws.receive_text())
-    custom = first.get("start", {}).get("customParameters", {})
+    # Twilio envía primero "connected" y luego "start" (que trae streamSid y los
+    # customParameters: paciente_id + token). Hay que ESPERAR el "start": leer solo
+    # el primer mensaje agarra "connected" y no trae los parámetros.
+    start: dict = {}
+    while True:
+        try:
+            msg = json.loads(await ws.receive_text())
+        except Exception:
+            logger.warning("WS media-stream: se cerró antes del 'start'.")
+            return
+        event = msg.get("event")
+        if event == "start":
+            start = msg.get("start", {})
+            break
+        if event in ("stop", "closed"):
+            logger.warning("WS media-stream: '%s' antes del 'start'; se cierra.", event)
+            await ws.close()
+            return
+        # "connected" u otros eventos previos: seguir esperando el "start".
+
+    custom = start.get("customParameters", {})
+    stream_sid = start.get("streamSid")
     paciente_id = int(custom.get("paciente_id", 0))
 
     # El WS no lleva firma de Twilio: exigimos el token emitido por /twilio/voice.
@@ -178,6 +199,7 @@ async def media_stream(ws: WebSocket) -> None:
         logger.warning("WS media-stream sin token válido (paciente %s); se cierra.", paciente_id)
         await ws.close(code=1008)  # 1008 = policy violation
         return
+    logger.info("WS media-stream OK: paciente %s, stream %s.", paciente_id, stream_sid)
 
     db = next(get_session())
     try:
@@ -188,6 +210,7 @@ async def media_stream(ws: WebSocket) -> None:
         return
 
     bridge = MediaStreamBridge(ws, state, nombre=nombre)
+    bridge.stream_sid = stream_sid  # ya lo obtuvimos del evento 'start'
     try:
         await bridge.run()
     finally:
