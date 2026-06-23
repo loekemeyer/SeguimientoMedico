@@ -94,10 +94,29 @@ class MediaStreamBridge:
             )))
             await self._send_opening_line()
             logger.info("Sesión Realtime abierta y saludo enviado; conversación en curso.")
-            await asyncio.gather(
-                self._twilio_to_openai(),
-                self._openai_to_twilio(),
-            )
+            # Cuando UNA de las dos corrutinas termina —p. ej. el paciente cuelga y
+            # Twilio cierra el WS (Starlette se traga el WebSocketDisconnect, así que
+            # _twilio_to_openai simplemente retorna)— hay que CANCELAR la otra. Si se
+            # usara `gather`, quedaría esperando para siempre a la corrutina que sigue
+            # leyendo de OpenAI, y el bloque que persiste el reporte (en main.py)
+            # nunca correría. Por eso esperamos a la PRIMERA que termina y cancelamos.
+            tasks = [
+                asyncio.create_task(self._twilio_to_openai()),
+                asyncio.create_task(self._openai_to_twilio()),
+            ]
+            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            for task in pending:
+                task.cancel()
+            for task in pending:
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+                except Exception as exc:  # error al cerrar la otra punta: no es fatal
+                    logger.debug("Tarea de reenvío cancelada con: %s", exc)
+            for task in done:
+                if task.exception() is not None:
+                    logger.error("Reenvío de audio terminó con error: %s", task.exception())
         except Exception as exc:
             logger.error("Error durante la conversación en vivo: %s", exc)
         finally:
