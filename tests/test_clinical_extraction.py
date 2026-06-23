@@ -39,3 +39,10 @@ def test_conservador_sin_datos():
     assert r.presion_sistolica is None
     assert r.glucemia is None
     assert r.sintomas_alarma == []
+
+
+def test_relato_empatico_sin_apikey_es_vacio():
+    # Sin OPENAI_API_KEY degrada a "" (el sistema sigue con el resumen métrico).
+    from health_monitor.agents.clinical import relato_empatico
+
+    assert relato_empatico("Dormí mal y estoy un poco triste.") == ""

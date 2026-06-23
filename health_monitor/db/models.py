@@ -184,6 +184,8 @@ class EvolucionDiaria(Base):
     motivos: Mapped[list] = mapped_column(JSON, default=list)
     # Resumen legible de la llamada, para que el familiar lo lea en la app.
     resumen: Mapped[str] = mapped_column(Text, default="")
+    # Relato narrativo/emocional de lo que contó el paciente (para darle contención).
+    relato: Mapped[str] = mapped_column(Text, default="")
     transcripcion_enc: Mapped[str | None] = mapped_column(Text)  # cifrada
 
     paciente: Mapped["Paciente"] = relationship(back_populates="evoluciones")

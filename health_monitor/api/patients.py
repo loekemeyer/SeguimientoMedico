@@ -269,7 +269,7 @@ def historial_llamadas(
     ).all()
     return [
         EvolucionOut(id=e.id, fecha=e.fecha, nivel_alerta=e.nivel_alerta,
-                     motivos=e.motivos, readout=e.readout)
+                     motivos=e.motivos, readout=e.readout, relato=e.relato)
         for e in rows
     ]
 

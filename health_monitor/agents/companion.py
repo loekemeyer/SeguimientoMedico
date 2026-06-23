@@ -71,7 +71,10 @@ def build_realtime_session_config(
             "audio": {
                 "input": {
                     "format": {"type": "audio/pcmu"},
-                    "turn_detection": {"type": "server_vad"},
+                    # silence_duration_ms alto: deja que la persona haga pausas largas
+                    # (hasta ~3,5 s) sin que el asistente la interrumpa. Clave para
+                    # adultos mayores que hablan pausado.
+                    "turn_detection": {"type": "server_vad", "silence_duration_ms": 3500},
                     "transcription": {"model": "whisper-1"},
                 },
                 "output": {

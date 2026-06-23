@@ -141,6 +141,7 @@ def persist_evolucion(db: Session, state: CallState) -> EvolucionDiaria:
         nivel_alerta=state.triage.level_name if state.triage else "VERDE",
         motivos=state.triage.reasons if state.triage else [],
         resumen=state.resumen,
+        relato=state.relato,
         transcripcion_enc=cipher.encrypt(state.transcript) if state.transcript else None,
     )
     db.add(evo)

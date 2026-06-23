@@ -137,3 +137,4 @@ class EvolucionOut(BaseModel):
     nivel_alerta: str
     motivos: list[str] = Field(default_factory=list)
     readout: dict = Field(default_factory=dict)
+    relato: str = ""  # qué contó el paciente (narrativo/emocional)

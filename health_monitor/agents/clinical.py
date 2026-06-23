@@ -10,7 +10,7 @@ import json
 import logging
 import re
 
-from health_monitor.agents.prompts import CLINICAL_EXTRACTION_PROMPT
+from health_monitor.agents.prompts import CLINICAL_EXTRACTION_PROMPT, RELATO_PROMPT
 from health_monitor.schemas.clinical import (
     AdherenceState,
     ClinicalReadout,
@@ -107,3 +107,31 @@ def _extract_heuristic(paciente_id: int, transcript: str) -> ClinicalReadout:
             readout.sintomas_alarma.append(etiqueta)
 
     return readout
+
+
+def relato_empatico(transcript: str) -> str:
+    """Resumen NARRATIVO de lo que contó el paciente (lo emocional/cualitativo).
+
+    Sirve para que el familiar entienda cómo se siente la persona y pueda darle
+    contención. Usa el LLM; sin API key o ante una falla devuelve "" (el sistema
+    sigue funcionando con el resumen métrico del supervisor).
+    """
+    settings = get_settings()
+    if not (settings.openai_api_key and transcript.strip()):
+        return ""
+    try:
+        from openai import OpenAI  # import perezoso
+
+        client = OpenAI(api_key=settings.openai_api_key)
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.4,
+            messages=[
+                {"role": "system", "content": RELATO_PROMPT},
+                {"role": "user", "content": transcript},
+            ],
+        )
+        return (resp.choices[0].message.content or "").strip()
+    except Exception as exc:  # degradación elegante
+        logger.warning("Relato empático falló (%s).", exc)
+        return ""

@@ -40,6 +40,7 @@ class CallState:
     readout: ClinicalReadout | None = None
     triage: TriageResult | None = None
     resumen: str = ""
+    relato: str = ""  # resumen narrativo/emocional de lo que contó el paciente
     interrupted: bool = False
     # Lista de registros de notificación enviados (para persistir y mostrar).
     alerts_dispatched: list[dict] | None = None
@@ -49,8 +50,9 @@ class CallState:
 # --- Nodos del grafo (funciones puras sobre el estado) ---
 
 def node_extract(state: CallState) -> CallState:
-    """Agente 2: extrae métricas de la transcripción acumulada."""
+    """Agente 2: extrae métricas + un relato empático de la transcripción."""
     state.readout = clinical.extract_readout(state.paciente_id, state.transcript)
+    state.relato = clinical.relato_empatico(state.transcript)
     return state
 
 

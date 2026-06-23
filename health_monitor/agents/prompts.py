@@ -64,6 +64,17 @@ dificultad para hablar).
 No agregues explicaciones fuera del JSON.
 """
 
+# --- Relato empático: resume en lenguaje natural lo que CONTÓ el paciente ---
+RELATO_PROMPT = """\
+Resumí, en pocas frases y con calidez, lo que CONTÓ una persona mayor en su \
+llamada de seguimiento. Enfocate en lo cualitativo y emocional: cómo se siente, \
+por qué, qué le preocupa o qué le pasó (por ej. "durmió mal porque...", "está \
+triste por..."). NO te enfoques en los números ni des diagnósticos.
+
+Escribí en tercera persona, español rioplatense, de 1 a 3 frases, con tono humano \
+y respetuoso. Si no contó nada relevante, devolvé una frase muy breve. No inventes.
+"""
+
 # --- Agente de Mejora Continua (sugerencias proactivas para el admin/familiar) ---
 IMPROVER_PROMPT = """\
 Sos un analista de cuidado que revisa el historial de seguimiento de un paciente \

@@ -242,10 +242,10 @@ function renderDetail(p, contactos, rutina, evos) {
 function historyRow(e) {
   const fecha = new Date(e.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
   const nivel = (e.nivel_alerta || "VERDE").toLowerCase();
-  const resumen = e.readout?.resumen || (e.motivos || []).join("; ") || "Sin novedades";
+  const relato = e.relato || (e.motivos || []).join("; ") || "Sin novedades";
   return `<div class="tl-item">
     <div class="tl-date">${fecha}</div>
-    <div><div class="tl-summary">${escapeHtml(resumen)}</div>
+    <div><div class="tl-summary">${escapeHtml(relato)}</div>
       ${(e.motivos || []).length ? `<div class="tl-reasons">${escapeHtml(e.motivos.join(" · "))}</div>` : ""}</div>
     <span class="badge badge--${nivel}">${e.nivel_alerta}</span>
   </div>`;
