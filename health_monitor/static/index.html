@@ -61,6 +61,30 @@
           <label class="field"><span>Contraseña</span>
             <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
           </label>
+          <div class="field"><span>¿Cómo querés entrar?</span>
+            <div class="segmented" id="reg-tipo">
+              <label><input type="radio" name="tipo_cuenta" value="privado" checked /> 🙋 Cuenta privada</label>
+              <label><input type="radio" name="tipo_cuenta" value="obra_social" /> 🏥 Mi obra social</label>
+            </div>
+          </div>
+          <div id="reg-obrasocial" class="is-hidden">
+            <div class="form__row">
+              <label class="field"><span>Obra social / prepaga</span>
+                <select name="obra_social" class="select">
+                  <option value="CEMIC" selected>CEMIC</option>
+                  <option value="OSDE">OSDE</option>
+                  <option value="Swiss Medical">Swiss Medical</option>
+                  <option value="Galeno">Galeno</option>
+                  <option value="Medifé">Medifé</option>
+                  <option value="Otra">Otra</option>
+                </select>
+              </label>
+              <label class="field"><span>Número de afiliado</span>
+                <input type="text" name="nro_afiliado" placeholder="El de tu credencial" />
+              </label>
+            </div>
+            <p class="hint">Validamos tu cobertura con la cartilla. Si sos afiliado, el seguimiento corre por cuenta de tu prestador.</p>
+          </div>
           <button class="btn btn--primary btn--block" type="submit">Crear mi cuenta</button>
           <p class="form__error" data-error></p>
         </form>

@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import re
 
+# Prestadores ofrecidos en el onboarding. CEMIC es el principal (primero en la lista).
+OBRAS_SOCIALES = ["CEMIC", "OSDE", "Swiss Medical", "Galeno", "Medifé", "Otra"]
+
 
 def validar_afiliacion(obra_social: str, nro_afiliado: str) -> bool:
     """¿La afiliación es válida? Por ahora chequea formato; la integración real va acá."""

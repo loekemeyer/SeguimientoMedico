@@ -64,6 +64,14 @@ $("#form-login").addEventListener("submit", async (e) => {
   } catch (ex) { err.textContent = ex.message; }
 });
 
+// Onboarding: mostrar los campos de obra social solo si se elige esa opción.
+$$('#reg-tipo input[name="tipo_cuenta"]').forEach((radio) =>
+  radio.addEventListener("change", () => {
+    const esObraSocial = $('#reg-tipo input[name="tipo_cuenta"]:checked').value === "obra_social";
+    $("#reg-obrasocial").classList.toggle("is-hidden", !esObraSocial);
+  })
+);
+
 $("#form-register").addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
@@ -72,7 +80,12 @@ $("#form-register").addEventListener("submit", async (e) => {
   try {
     const r = await api("/auth/register", {
       method: "POST", auth: false,
-      body: { nombre: f.get("nombre"), email: f.get("email"), password: f.get("password") },
+      body: {
+        nombre: f.get("nombre"), email: f.get("email"), password: f.get("password"),
+        tipo_cuenta: f.get("tipo_cuenta") || "privado",
+        obra_social: f.get("obra_social") || "",
+        nro_afiliado: f.get("nro_afiliado") || "",
+      },
     });
     localStorage.setItem(TOKEN_KEY, r.access_token);
     await enterApp();

@@ -40,13 +40,16 @@ obra social/prepaga** o **por privado**. Decisiones presumidas con defaults sens
 
 ## Orden sugerido de construcción
 1. ✅ Cimiento de cuenta: tipo (privado/obra social) + afiliación en el registro.
-2. [ ] Onboarding en la UI: elegir "Mi obra social" vs "Cuenta privada".
+2. ✅ Onboarding en la UI: selector "Cuenta privada" vs "Mi obra social" (con CEMIC),
+   campos de obra social + número de afiliado que aparecen al elegir esa opción.
 3. [ ] PWA: manifest + service worker + íconos (instalable).
 4. [ ] Módulo de pagos: interfaz `PaymentProvider` + Mercado Pago + pantalla "Mi
    suscripción" + webhook. 🔑
 5. [ ] Integración real de cartillas por prestador. 🔑
 
-## Pendientes de decisión / externos
-- 🔑 Pasarela de pago y credenciales (default propuesto: Mercado Pago).
-- 🔑 Con qué obra social/prepaga se arranca y cómo valida (API o padrón).
-- 🔑 PWA ahora vs app nativa después (default: PWA ahora).
+## Decisiones del usuario
+- **Pagos:** Mercado Pago (default). Aún SIN credenciales → se arma todo el esqueleto y
+  queda esperando las claves. 🔑 (pendiente: credenciales de Mercado Pago).
+- **Obra social: CEMIC** es el prestador principal del onboarding. 🔑 (pendiente: cómo
+  valida CEMIC la cartilla — API propia o padrón).
+- **App: PWA ahora** (web instalable en el celular). Nativa, más adelante si hace falta.
