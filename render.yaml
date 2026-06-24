@@ -1,0 +1,34 @@
+# render.yaml — Blueprint de Render para SeguimientoMedico.
+#
+# Deploy en (casi) 1 clic: Render lee este archivo y crea la web + una base
+# PostgreSQL, genera el JWT_SECRET y deja la app en una URL pública fija
+# (https://...onrender.com), sin levantar nada en Codespaces ni rm/run_app.sh.
+# Lo único a mano: cargar ENCRYPTION_KEY cuando te lo pida (ver docs/DEPLOY.md).
+databases:
+  - name: seguimiento-db
+    plan: free
+    databaseName: seguimiento
+    user: seguimiento
+
+services:
+  - type: web
+    name: seguimientomedico
+    runtime: python
+    plan: free
+    branch: claude/charming-knuth-ud3pq5
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn health_monitor.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL          # la base PostgreSQL se enchufa sola
+        fromDatabase:
+          name: seguimiento-db
+          property: connectionString
+      - key: ENCRYPTION_KEY        # AES-256 (base64, 32 bytes): se carga a mano
+        sync: false
+      - key: JWT_SECRET            # se genera solo
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.11"

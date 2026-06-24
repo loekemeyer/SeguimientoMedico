@@ -17,6 +17,10 @@ def _init() -> None:
     global _engine, _SessionLocal
     if _engine is None:
         url = get_settings().database_url
+        # Algunos hosts (ej. Render) entregan la URL como postgres://; SQLAlchemy 2.0
+        # exige el esquema postgresql://.
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
         # SQLite con FastAPI corre los endpoints en varios hilos: hay que permitir
         # usar la conexión entre hilos. En PostgreSQL no aplica.
         connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
