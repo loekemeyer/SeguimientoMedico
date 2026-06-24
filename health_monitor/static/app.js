@@ -767,6 +767,30 @@ $('#form-rutina select[name="tipo"]')?.addEventListener("change", (e) => {
 let editingId = null;
 const form = $("#form-patient");
 
+/* Catálogo de voces del acompañante, curado y agrupado por sexo. Los `value`
+   deben ser voces válidas de OpenAI Realtime (coinciden con _VOCES_VALIDAS del
+   backend), porque es el string que se manda como voice= en la llamada real. */
+const VOCES = [
+  { value: "coral", sexo: "femenina", label: "Coral — cálida" },
+  { value: "shimmer", sexo: "femenina", label: "Shimmer — suave" },
+  { value: "sage", sexo: "femenina", label: "Sage — serena" },
+  { value: "ash", sexo: "masculina", label: "Ash — firme" },
+  { value: "echo", sexo: "masculina", label: "Echo — clara" },
+  { value: "ballad", sexo: "masculina", label: "Ballad — cálida" },
+  { value: "verse", sexo: "masculina", label: "Verse — cercana" },
+];
+function sexoDeVoz(voz) {
+  return (VOCES.find((v) => v.value === voz) || VOCES[0]).sexo;
+}
+function poblarVoces(sexo, vozSeleccionada) {
+  const sel = $("#voz-select");
+  if (!sel) return;
+  const lista = VOCES.filter((v) => v.sexo === sexo);
+  sel.innerHTML = lista.map((v) => `<option value="${v.value}">${v.label}</option>`).join("");
+  sel.value = lista.some((v) => v.value === vozSeleccionada) ? vozSeleccionada : lista[0].value;
+}
+$("#voz-sexo")?.addEventListener("change", (e) => poblarVoces(e.target.value));
+
 function openModal() {            // alta
   editingId = null;
   $("#modal-title").textContent = "Agregar persona a cuidar";
@@ -775,6 +799,8 @@ function openModal() {            // alta
   $("[name=llamada_hora]", form).value = "10:00";
   $$("#patient-days input").forEach((c) => (c.checked = true));
   setPatologiasChips([]);
+  if ($("#voz-sexo")) $("#voz-sexo").value = "femenina";
+  poblarVoces("femenina", "coral");
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -795,7 +821,10 @@ function openEditModal() {        // edición del paciente abierto
   const pers = currentPatient.personalidad || {};
   $("[name=trato]", form).value = pers.trato || "vos";
   $("[name=acompanante_nombre]", form).value = pers.acompanante_nombre || "";
-  $("[name=voz]", form).value = pers.voz || "coral";
+  const _voz = pers.voz || "coral";
+  const _sexoVoz = sexoDeVoz(_voz);
+  if ($("#voz-sexo")) $("#voz-sexo").value = _sexoVoz;
+  poblarVoces(_sexoVoz, _voz);
   $("[name=velocidad]", form).value = String(pers.velocidad ?? 0.9);
   $("[name=temas_preferidos]", form).value = pers.temas_preferidos || "";
   $("[name=temas_evitar]", form).value = pers.temas_evitar || "";

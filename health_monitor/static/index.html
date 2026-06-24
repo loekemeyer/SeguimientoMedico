@@ -550,27 +550,28 @@
             </label>
           </div>
           <div class="form__row">
-            <label class="field"><span>Voz</span>
-              <select name="voz" class="select">
-                <option value="coral" selected>Coral (cálida)</option>
-                <option value="alloy">Alloy</option>
-                <option value="echo">Echo</option>
-                <option value="shimmer">Shimmer</option>
-                <option value="ash">Ash</option>
-                <option value="ballad">Ballad</option>
-                <option value="sage">Sage</option>
-                <option value="verse">Verse</option>
+            <label class="field"><span>Sexo de la voz</span>
+              <select name="voz_sexo" class="select" id="voz-sexo">
+                <option value="femenina" selected>👩 Femenina</option>
+                <option value="masculina">👨 Masculina</option>
               </select>
             </label>
-            <label class="field"><span>Velocidad de la voz</span>
-              <select name="velocidad" class="select">
-                <option value="0.8">Más lenta</option>
-                <option value="0.9" selected>Pausada</option>
-                <option value="1">Normal</option>
-                <option value="1.1">Más rápida</option>
+            <label class="field"><span>Voz</span>
+              <select name="voz" class="select" id="voz-select">
+                <option value="coral" selected>Coral — cálida</option>
+                <option value="shimmer">Shimmer — suave</option>
+                <option value="sage">Sage — serena</option>
               </select>
             </label>
           </div>
+          <label class="field"><span>Velocidad de la voz</span>
+            <select name="velocidad" class="select">
+              <option value="0.8">Más lenta</option>
+              <option value="0.9" selected>Pausada</option>
+              <option value="1">Normal</option>
+              <option value="1.1">Más rápida</option>
+            </select>
+          </label>
           <label class="field"><span>Temas que le gustan (para charlar)</span>
             <input type="text" name="temas_preferidos" placeholder="Ej: fútbol, los nietos, el jardín" />
           </label>
