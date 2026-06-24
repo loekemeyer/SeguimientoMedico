@@ -297,6 +297,7 @@ async function openDetail(id) {
     ]);
     currentPatient = p;
     renderDetail(p, contactos, rutina, evos);
+    renderEstadoHoy(evos);
     renderSugerencias(sugerencias);
     renderNotificaciones(notifs);
     startClaveRotativa(id);
@@ -437,6 +438,31 @@ $("#detail-rutina")?.addEventListener("click", async (e) => {
     toast("Ítem quitado");
   } catch (ex) { toast(ex.message, true); }
 });
+
+function renderEstadoHoy(evos) {
+  const card = $("#detail-estado-hoy");
+  if (!card) return;
+  const e = (evos || [])[0];
+  if (!e) {
+    card.className = "card estado-hoy";
+    card.innerHTML = `<div class="estado-hoy__row"><span class="estado-hoy__emoji">🕊️</span>
+      <div class="estado-hoy__main"><div class="estado-hoy__title">Sin seguimientos todavía</div>
+      <div class="estado-hoy__sub">Cuando haya una llamada o una charla, vas a ver acá cómo está hoy.</div></div></div>`;
+    return;
+  }
+  const nivel = (e.nivel_alerta || "VERDE").toLowerCase();
+  const emoji = { verde: "🟢", amarilla: "🟡", roja: "🔴" }[nivel] || "🟢";
+  const fecha = new Date(e.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "long" });
+  const relato = e.relato || (e.motivos || []).join("; ") || "Sin novedades.";
+  card.className = "card estado-hoy estado-hoy--" + nivel;
+  card.innerHTML = `<div class="estado-hoy__row">
+    <span class="estado-hoy__emoji">${emoji}</span>
+    <div class="estado-hoy__main">
+      <div class="estado-hoy__title">¿Cómo está? <small>${fecha}</small></div>
+      <div class="estado-hoy__sub">${escapeHtml(relato)}</div>
+      ${metricasChips(e.readout)}
+    </div></div>`;
+}
 
 function renderDetail(p, contactos, rutina, evos) {
   $("#detail-avatar").textContent = (p.nombre || "?").trim()[0].toUpperCase();
