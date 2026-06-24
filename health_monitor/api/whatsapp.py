@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from health_monitor.agents.orchestrator import run_post_call
 from health_monitor.api.deps import require_active_subscription
+from health_monitor.api.twilio_guard import verify_twilio_request
 from health_monitor.db.models import ConversacionWhatsApp, Paciente, Usuario
 from health_monitor.db.session import get_session
 from health_monitor.services import build_call_state, persist_evolucion
@@ -104,6 +105,7 @@ def iniciar(
 async def incoming(request: Request, db: Session = Depends(get_session)) -> Response:
     """Webhook de Twilio: llegó un mensaje de voz del paciente."""
     form = dict(await request.form())
+    verify_twilio_request(request, form)  # endpoint público que muta la HCE: exige firma
     settings = get_settings()
     desde = (form.get("From") or "").replace("whatsapp:", "").strip()
 

@@ -41,8 +41,8 @@ from health_monitor.services import (
 from shared.auth import signing_secret
 from shared.config import get_settings
 from shared.tracing import TraceIdFilter, set_trace_id
+from health_monitor.api.twilio_guard import verify_twilio_request
 from shared.twilio_security import (
-    is_valid_twilio_signature,
     make_stream_token,
     verify_stream_token,
 )
@@ -159,33 +159,6 @@ def initiate_call(
     return JSONResponse({"call_sid": call.sid, "paciente_id": paciente_id})
 
 
-def _twilio_public_url(request: Request, settings) -> str:
-    """Reconstruye la URL pública exacta que Twilio firmó (base + path + query)."""
-    url = (settings.public_base_url or "").rstrip("/") + request.url.path
-    if request.url.query:
-        url += "?" + request.url.query
-    return url
-
-
-def _verify_twilio_signature(request: Request, params: dict, settings) -> None:
-    """Valida el header X-Twilio-Signature; 403 si no coincide.
-
-    En desarrollo (sin TWILIO_AUTH_TOKEN configurado) se omite con advertencia,
-    para no frenar la demo ni los tests locales.
-    """
-    if not settings.twilio_validate_signature:
-        logger.warning("Validación de firma de Twilio DESACTIVADA (twilio_validate_signature=false).")
-        return
-    if not settings.twilio_auth_token:
-        logger.warning("TWILIO_AUTH_TOKEN ausente; se omite validación de firma (modo dev).")
-        return
-    signature = request.headers.get("X-Twilio-Signature", "")
-    url = _twilio_public_url(request, settings)
-    if not is_valid_twilio_signature(settings.twilio_auth_token, signature, url, params):
-        logger.warning("Firma de Twilio inválida en %s", request.url.path)
-        raise HTTPException(status_code=403, detail="Firma de Twilio inválida")
-
-
 @app.post("/twilio/voice")
 async def twilio_voice(request: Request) -> Response:
     """Webhook TwiML: instruye a Twilio a abrir el Media Stream hacia el WS.
@@ -196,7 +169,7 @@ async def twilio_voice(request: Request) -> Response:
     settings = get_settings()
     logger.info("Twilio pidió /twilio/voice (paciente_id=%s).", request.query_params.get("paciente_id"))
     form = dict(await request.form())
-    _verify_twilio_signature(request, form, settings)
+    verify_twilio_request(request, form)
 
     paciente_id = request.query_params.get("paciente_id", "")
     base = settings.public_base_url.rstrip("/")
