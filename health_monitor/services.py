@@ -191,6 +191,26 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     return state, nombre
 
 
+def build_demo_call_state() -> tuple[CallState, str | None]:
+    """CallState de PRUEBA para el botón 'Probar llamada' del dueño (paciente_id=0).
+
+    No involucra a ningún paciente real ni a su consentimiento: es el dueño
+    llamándose a sí mismo para verificar que el audio con la IA funciona de punta a
+    punta. El WebSocket NO persiste evolución ni dispara alertas cuando el
+    paciente_id es 0, así que esta llamada de prueba no deja datos ni notifica a
+    nadie. (Sin esto, build_call_state(0) lanzaba ValueError y Twilio cortaba con
+    "an application error has occurred".)
+    """
+    state = CallState(
+        paciente_id=0,
+        limits=ClinicalLimits(paciente_id=0),
+        paciente_nombre="",
+        ficha_resumen="Llamada de prueba del sistema (sin paciente real).",
+        acompanante_nombre="Sofía",
+    )
+    return state, None
+
+
 def persist_evolucion(db: Session, state: CallState) -> EvolucionDiaria:
     """Guarda el registro de la llamada (resumen, triaje, transcripción cifrada)
     y asienta cada notificación enviada para el seguimiento del familiar."""

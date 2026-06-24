@@ -35,6 +35,7 @@ from health_monitor.db.session import get_session
 from health_monitor.realtime.media_stream import MediaStreamBridge
 from health_monitor.services import (
     build_call_state,
+    build_demo_call_state,
     persist_evolucion,
     require_consent,
 )
@@ -268,7 +269,12 @@ async def media_stream(ws: WebSocket) -> None:
 
     db = next(get_session())
     try:
-        state, nombre = build_call_state(db, paciente_id)
+        # paciente_id == 0 => llamada de PRUEBA del dueño (botón "Probar llamada").
+        # No hay paciente real: armamos un estado demo y no persistimos nada.
+        if paciente_id == 0:
+            state, nombre = build_demo_call_state()
+        else:
+            state, nombre = build_call_state(db, paciente_id)
     except Exception as exc:
         logger.error("No se pudo preparar la llamada %s: %s", paciente_id, exc)
         await ws.close()
@@ -280,10 +286,12 @@ async def media_stream(ws: WebSocket) -> None:
     try:
         await bridge.run()
     finally:
-        # Al cerrar la llamada: extracción + triaje + alertas + persistencia.
-        state.transcript = bridge.full_transcript
-        state = run_post_call(state)
-        persist_evolucion(db, state)
+        # La llamada de prueba (paciente_id 0) no deja registro ni dispara alertas.
+        if paciente_id != 0:
+            # Al cerrar la llamada: extracción + triaje + alertas + persistencia.
+            state.transcript = bridge.full_transcript
+            state = run_post_call(state)
+            persist_evolucion(db, state)
         db.close()
 
 

@@ -78,3 +78,17 @@ def test_run_no_se_cuelga_cuando_el_paciente_corta(monkeypatch):
     asyncio.run(_run_con_timeout())
 
     assert fake_openai.closed  # se cerró la sesión de OpenAI al terminar
+
+
+def test_build_demo_call_state_no_requiere_paciente():
+    """La llamada de PRUEBA del dueño (paciente_id=0) arma un estado válido sin DB.
+
+    Antes, el WS hacía build_call_state(0) -> ValueError -> Twilio cortaba con
+    "an application error has occurred". El estado demo evita ese crasheo.
+    """
+    from health_monitor.services import build_demo_call_state
+
+    state, nombre = build_demo_call_state()
+    assert state.paciente_id == 0
+    assert state.limits.paciente_id == 0
+    assert nombre is None
