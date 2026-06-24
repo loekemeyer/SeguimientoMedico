@@ -125,6 +125,20 @@ async function loadPatients() {
     ? `${pacientes.length} persona${pacientes.length > 1 ? "s" : ""} en seguimiento.`
     : "Cargá a tu familiar para empezar el seguimiento.";
 
+  if (!pacientes.length) {
+    const empty = document.createElement("div");
+    empty.className = "emptystate";
+    empty.innerHTML = `
+      <div class="emptystate__icon">👵</div>
+      <h2 class="emptystate__title">Empecemos por la persona a cuidar</h2>
+      <p class="emptystate__text">Cargá a tu familiar (papá, mamá, la abuela…) y en un par de
+        minutos queda andando el acompañamiento diario por teléfono, con avisos a la familia.</p>
+      <button class="btn btn--primary" id="empty-add">＋ Agregar persona</button>`;
+    grid.appendChild(empty);
+    $("#empty-add", empty).addEventListener("click", openModal);
+    return;
+  }
+
   pacientes.forEach((p) => grid.appendChild(patientCard(p)));
 
   const add = document.createElement("button");

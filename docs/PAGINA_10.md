@@ -6,7 +6,8 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
 ## 🎨 Visual / accesibilidad (40+)
 - ✅ Pase de accesibilidad: escala 17px, tipografía y controles más grandes, badges
   de alerta más visibles, foco/contraste — `styles.css`.
-- [ ] Estados vacíos más guiados (qué cargar primero) y microayudas.
+- ✅ Estado vacío guiado en la lista (primera vez): ícono + título + explicación +
+  botón grande "Agregar persona". `.empty` también más visible (recuadro punteado).
 - ✅ Semáforo del último seguimiento (VERDE/AMARILLA/ROJA) en la tarjeta de cada
   persona — se ve de un vistazo quién necesita atención (`PacienteOut.ultimo_nivel`).
 - [ ] Repaso final de contraste y tamaños en mobile.

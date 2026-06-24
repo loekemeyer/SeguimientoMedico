@@ -248,7 +248,17 @@ body {
 .icon-btn:hover { background: #fdecec; color: var(--red); border-color: #f5c6c6; }
 .check-row { display: flex; align-items: center; gap: 10px; padding: 4px 2px; font-size: .98rem; color: var(--slate); cursor: pointer; }
 .check-row input { width: 20px; height: 20px; accent-color: var(--teal-600); }
-.empty { color: var(--slate-400); font-size: .95rem; font-style: italic; }
+.empty { color: var(--slate); font-size: .95rem; background: var(--bg); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 14px 16px; }
+
+/* Estado vacío guiado (primera vez, sin personas cargadas) */
+.emptystate {
+  grid-column: 1 / -1; text-align: center; padding: 52px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.emptystate__icon { font-size: 3.2rem; line-height: 1; }
+.emptystate__title { font-family: var(--font-head); font-weight: 800; font-size: 1.4rem; color: var(--ink); letter-spacing: -.01em; }
+.emptystate__text { color: var(--slate); max-width: 440px; font-size: 1.05rem; }
+.emptystate .btn { margin-top: 6px; }
 
 /* ---------- Timeline historial ---------- */
 .timeline { display: grid; gap: 2px; }
