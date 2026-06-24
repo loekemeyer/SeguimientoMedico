@@ -162,6 +162,11 @@ def test_rutina_y_contactos():
     assert rutina[0]["dias"] == [0, 2, 4]
     assert rutina[0]["aviso"] == "mensaje"  # default (WhatsApp)
 
+    # Se puede quitar un ítem de la rutina.
+    rid = rutina[0]["id"]
+    assert client.delete(f"/pacientes/{pid}/rutina/{rid}", headers=headers).status_code == 204
+    assert client.get(f"/pacientes/{pid}/rutina", headers=headers).json() == []
+
     con = client.post(f"/pacientes/{pid}/contactos",
                       json={"nombre": "Thomas", "telefono": "+5491162521635", "relacion": "hijo"},
                       headers=headers)

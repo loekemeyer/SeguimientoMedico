@@ -25,7 +25,8 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
 - ✅ **Métricas clínicas en el historial**: cada seguimiento muestra chips con presión,
   glucemia, saturación, temperatura, FC, dolor, peso, adherencia, caída y riesgo
   emocional (los que aparezcan), además del relato — `static/app.js` (metricasChips).
-- [ ] **Borrar/editar** ítems de rutina y contactos (faltan endpoints DELETE testeados).
+- ✅ **Borrar** ítems de rutina y contactos desde el detalle (endpoints DELETE con
+  autorización + auditoría, testeados). (Editar = quitar y volver a agregar por ahora.)
 - [ ] **Estado del consentimiento** y apoderado, más claro.
 - [ ] (Opc.) Exportar FHIR / ver auditoría para la prepaga.
 

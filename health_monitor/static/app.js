@@ -277,10 +277,30 @@ function renderRutina(items) {
           ? "Todos los días" : r.dias.map((d) => DIA_NOMBRE[d]).join(", ");
         const avisoTxt = { llamada: "📞 llamada", mensaje: "💬 mensaje", ninguno: "🔕 sin aviso" }[r.aviso] || "";
         const det = [r.frecuencia, r.horario, dias, avisoTxt].filter(Boolean).join(" · ");
-        return `<div class="stack-item">${icon} <div><div>${escapeHtml(r.nombre || "")}</div><small>${escapeHtml(det)}</small></div></div>`;
+        return `<div class="stack-item">${icon}
+          <div class="stack-item__main"><div>${escapeHtml(r.nombre || "")}</div><small>${escapeHtml(det)}</small></div>
+          <button class="icon-btn" data-del-rutina="${r.id}" title="Quitar de la rutina">✕</button>
+        </div>`;
       }).join("")
     : `<p class="empty">Todavía no cargaste la rutina. Empezá agregando un ítem abajo.</p>`;
 }
+
+async function reloadRutina() {
+  if (!currentPatient) return;
+  const rutina = await api(`/pacientes/${currentPatient.id}/rutina`).catch(() => []);
+  renderRutina(rutina);
+}
+
+$("#detail-rutina").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-del-rutina]");
+  if (!btn || !currentPatient) return;
+  if (!confirm("¿Quitar este ítem de la rutina?")) return;
+  try {
+    await api(`/pacientes/${currentPatient.id}/rutina/${btn.dataset.delRutina}`, { method: "DELETE" });
+    await reloadRutina();
+    toast("Ítem quitado");
+  } catch (ex) { toast(ex.message, true); }
+});
 
 function renderDetail(p, contactos, rutina, evos) {
   $("#detail-avatar").textContent = (p.nombre || "?").trim()[0].toUpperCase();

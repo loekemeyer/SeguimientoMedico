@@ -241,6 +241,23 @@ def listar_rutina(
     return [_rutina_out(r, cipher) for r in rows]
 
 
+@router.delete("/{paciente_id}/rutina/{rutina_id}", status_code=204)
+def borrar_rutina(
+    paciente_id: int,
+    rutina_id: int,
+    user: Usuario = Depends(require_active_subscription),
+    db: Session = Depends(get_session),
+) -> None:
+    """Quita un ítem de la rutina del paciente (solo el dueño)."""
+    _owned_paciente(db, user, paciente_id)
+    r = db.get(RutinaItem, rutina_id)
+    if r is None or r.paciente_id != paciente_id:
+        raise HTTPException(status_code=404, detail="Ítem de rutina no encontrado")
+    db.delete(r)
+    _auditar(db, user.id, "baja", "rutina", paciente_id, "baja de ítem de rutina")
+    db.commit()
+
+
 # --- Contactos de emergencia ---
 
 @router.post("/{paciente_id}/contactos", response_model=ContactoOut, status_code=201)
