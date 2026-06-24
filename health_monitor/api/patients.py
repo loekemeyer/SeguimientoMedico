@@ -61,9 +61,20 @@ def _auditar(db: Session, usuario_id: int, accion: str, recurso: str,
                     recurso_id=recurso_id, detalle=detalle))
 
 
-def _to_out(p: Paciente, cipher: FieldCipher) -> PacienteOut:
+def _ultimo_nivel(db: Session, paciente_id: int) -> str | None:
+    """Nivel de alerta del último seguimiento (para el semáforo de la tarjeta)."""
+    return db.scalar(
+        select(EvolucionDiaria.nivel_alerta)
+        .where(EvolucionDiaria.paciente_id == paciente_id)
+        .order_by(EvolucionDiaria.fecha.desc())
+        .limit(1)
+    )
+
+
+def _to_out(p: Paciente, cipher: FieldCipher, ultimo_nivel: str | None = None) -> PacienteOut:
     return PacienteOut(
         id=p.id,
+        ultimo_nivel=ultimo_nivel,
         nombre=cipher.decrypt(p.nombre_enc) if p.nombre_enc else "",
         telefono_whatsapp=cipher.decrypt(p.telefono_whatsapp_enc) if p.telefono_whatsapp_enc else "",
         consentimiento_firmado=p.consentimiento_firmado,
@@ -145,7 +156,7 @@ def listar_pacientes(
 ) -> list[PacienteOut]:
     cipher = _cipher()
     rows = db.scalars(select(Paciente).where(Paciente.usuario_id == user.id)).all()
-    return [_to_out(p, cipher) for p in rows]
+    return [_to_out(p, cipher, _ultimo_nivel(db, p.id)) for p in rows]
 
 
 @router.get("/{paciente_id}", response_model=PacienteOut)
@@ -154,7 +165,8 @@ def ver_paciente(
     user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> PacienteOut:
-    return _to_out(_owned_paciente(db, user, paciente_id), _cipher())
+    p = _owned_paciente(db, user, paciente_id)
+    return _to_out(p, _cipher(), _ultimo_nivel(db, p.id))
 
 
 @router.put("/{paciente_id}", response_model=PacienteOut)

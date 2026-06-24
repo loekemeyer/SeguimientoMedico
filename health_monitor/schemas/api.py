@@ -137,6 +137,8 @@ class PacienteOut(BaseModel):
     programacion: ProgramacionLlamada = Field(default_factory=ProgramacionLlamada)
     personalidad: PersonalidadAcompanante = Field(default_factory=PersonalidadAcompanante)
     activo: bool = True
+    # Nivel del último seguimiento (VERDE/AMARILLA/ROJA), para el semáforo de la tarjeta.
+    ultimo_nivel: str | None = None
 
 
 # --- Medicación ---

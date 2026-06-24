@@ -7,8 +7,8 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
 - ✅ Pase de accesibilidad: escala 17px, tipografía y controles más grandes, badges
   de alerta más visibles, foco/contraste — `styles.css`.
 - [ ] Estados vacíos más guiados (qué cargar primero) y microayudas.
-- [ ] Indicadores de alerta más prominentes en la tarjeta de cada persona (semáforo
-  del último seguimiento).
+- ✅ Semáforo del último seguimiento (VERDE/AMARILLA/ROJA) en la tarjeta de cada
+  persona — se ve de un vistazo quién necesita atención (`PacienteOut.ultimo_nivel`).
 - [ ] Repaso final de contraste y tamaños en mobile.
 
 ## 🔔 Funcional — lo que el admin tiene que poder cargar/ver

@@ -132,6 +132,27 @@ def test_programacion_dias_y_pausa_se_guardan():
     assert prog["llamada_hora"] == "09:00"
 
 
+def test_lista_muestra_nivel_del_ultimo_seguimiento():
+    from health_monitor.db.models import EvolucionDiaria
+    from health_monitor.db.session import get_session
+
+    headers = _register("semaforo@test.com")
+    pid = client.post("/pacientes", json={
+        "nombre": "Semáforo", "telefono_whatsapp": "+5490000000044",
+    }, headers=headers).json()["id"]
+    # Sin seguimientos: ultimo_nivel es None.
+    assert client.get("/pacientes", headers=headers).json()[0]["ultimo_nivel"] is None
+
+    db = next(get_session())
+    try:
+        db.add(EvolucionDiaria(paciente_id=pid, nivel_alerta="ROJA", readout={}))
+        db.commit()
+    finally:
+        db.close()
+    lista = client.get("/pacientes", headers=headers).json()
+    assert lista[0]["ultimo_nivel"] == "ROJA"
+
+
 def test_aislamiento_entre_usuarios():
     h1 = _register("owner@test.com")
     h2 = _register("intruso@test.com")
