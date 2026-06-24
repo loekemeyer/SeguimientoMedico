@@ -20,9 +20,8 @@ local). Cada `git push` a la rama vuelve a desplegar solo.
 
 3. Botón **New +** → **Blueprint**.
 
-4. Elegí el repo **loekemeyer/SeguimientoMedico** y la rama
-   **`claude/charming-knuth-ud3pq5`**. Render detecta `render.yaml` y muestra lo que
-   va a crear (1 web + 1 base PostgreSQL).
+4. Elegí el repo **loekemeyer/SeguimientoMedico** (rama **`main`**). Render detecta
+   `render.yaml` y muestra lo que va a crear (1 web + 1 base PostgreSQL).
 
 5. Te va a pedir el valor de **ENCRYPTION_KEY** (es la única variable manual): pegá la
    que generaste en el paso 1. `JWT_SECRET` y la base de datos se crean solos.
@@ -44,4 +43,4 @@ local). Cada `git push` a la rama vuelve a desplegar solo.
 - **Mercado Pago:** los links de los dos planes ya vienen por defecto. Para cambiarlos,
   cargá `MERCADOPAGO_SUSCRIPCION_URL` (App) y `MERCADOPAGO_SUSCRIPCION_URL_TELEFONO`
   (Teléfono) como variables de entorno en Render.
-- **Rama, no main:** el deploy sale de `claude/charming-knuth-ud3pq5` (no toqué main).
+- **Rama:** el deploy sale de `main` y se actualiza solo con cada push a esa rama.
