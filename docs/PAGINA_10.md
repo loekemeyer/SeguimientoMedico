@@ -17,8 +17,12 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
   nombre) que se actualiza al elegir la prepaga — `.os-card`. *(El distintivo es un
   monograma estilizado, NO el logo oficial de la obra social. Para el logo real hace
   falta el archivo/URL de marca del prestador — 🔑.)*
-- [ ] (Requiere vistazo visual) Login mobile-first sin el split de escritorio.
-- [ ] (Requiere vistazo visual) Transiciones entre pantallas + pulido final de touch.
+- ✅ Login mobile-first: en mobile el hero (con el carrusel de funcionalidades) va
+  ARRIBA y el formulario abajo (se va el split de escritorio) — `styles.css` @media.
+- ✅ Transiciones suaves al cambiar de pantalla (fade + slide-in de `.page`), con
+  `prefers-reduced-motion` respetado.
+- [ ] (Requiere vistazo visual) Headers contextuales por pantalla (título + atrás en
+  el detalle dentro del topbar) y pulido final de touch targets.
 
 ## ▶️ Cómo correr la app en local (sin configurar nada)
 - `bash scripts/run_app.sh` → usa **SQLite** (`local.db`) y **genera secretos de dev

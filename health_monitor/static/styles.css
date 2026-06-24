@@ -236,6 +236,13 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 /* ---------- Páginas ---------- */
 .main { max-width: none; margin: 0; padding: 20px 18px;
   padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+/* Transición suave al cambiar de pantalla (estilo app nativa) */
+.page:not(.is-hidden) { animation: pageIn .26s ease both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .page:not(.is-hidden) { animation: none; }
+  .carousel__track { transition: none; }
+}
 .page__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
 .page__title { font-family: var(--font-head); font-weight: 800; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -.02em; }
 .page__subtitle { color: var(--slate); margin-top: 4px; }
