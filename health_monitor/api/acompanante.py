@@ -34,7 +34,11 @@ router = APIRouter(prefix="/acompanante", tags=["acompanante"])
 def _nombre(p: Paciente) -> str:
     if not p.nombre_enc:
         return ""
-    return FieldCipher(get_settings().encryption_key).decrypt(p.nombre_enc)
+    try:
+        return FieldCipher(get_settings().encryption_key).decrypt(p.nombre_enc)
+    except Exception:
+        # Dato corrupto / clave rotada: que el login no se caiga por el nombre.
+        return ""
 
 
 def _memoria(p: Paciente) -> str:
