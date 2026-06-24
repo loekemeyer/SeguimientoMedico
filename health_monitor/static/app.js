@@ -341,6 +341,12 @@ $("#diag-openai")?.addEventListener("click", (e) => ocupado(e.currentTarget, asy
   catch (err) { diagOut("Error: " + (err.message || "")); }
 }));
 
+$("#diag-realtime")?.addEventListener("click", (e) => ocupado(e.currentTarget, async () => {
+  diagOut("Probando la conexión de voz en vivo (Realtime)… puede tardar unos segundos.");
+  try { diagOut(await api("/bi/probar-realtime")); }
+  catch (err) { diagOut("Error: " + (err.message || "")); }
+}));
+
 $("#diag-whatsapp")?.addEventListener("click", (e) => ocupado(e.currentTarget, async () => {
   const tel = telDiag();
   if (!tel) return;

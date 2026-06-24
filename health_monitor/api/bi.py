@@ -246,6 +246,74 @@ def probar_openai(owner: Usuario = Depends(require_owner)) -> dict:
     }
 
 
+@router.get("/probar-realtime")
+async def probar_realtime(owner: Usuario = Depends(require_owner)) -> dict:
+    """Prueba la conexión WebSocket REAL a la Realtime API (lo que usa la llamada).
+
+    `/probar-openai` solo verifica la REST `/v1/models`; la llamada abre el WS de
+    Realtime, que puede fallar igual (modelo sin acceso por WS, header faltante,
+    red). Esto lo abre de verdad —con y sin el header `OpenAI-Beta`— y dice cuál
+    anda, así sabemos EXACTAMENTE qué corregir en vez de adivinar.
+    """
+    import asyncio
+    import json as _json
+
+    s = get_settings()
+    if not s.openai_api_key:
+        return {"ok": False, "detalle": "OPENAI_API_KEY no está configurada."}
+    try:
+        import websockets
+    except ImportError:
+        return {"ok": False, "detalle": "El paquete 'websockets' no está instalado en el servidor."}
+
+    url = f"wss://api.openai.com/v1/realtime?model={s.openai_realtime_model}"
+
+    async def _probar(con_beta: bool) -> dict:
+        headers = {"Authorization": f"Bearer {s.openai_api_key}"}
+        if con_beta:
+            headers["OpenAI-Beta"] = "realtime=v1"
+
+        async def _connect():
+            try:
+                return await websockets.connect(url, additional_headers=headers)
+            except TypeError:  # versiones viejas de 'websockets'
+                return await websockets.connect(url, extra_headers=headers)
+
+        try:
+            ws = await asyncio.wait_for(_connect(), timeout=15)
+        except Exception as exc:
+            return {"ok": False, "detalle": f"{type(exc).__name__}: {exc}"}
+        try:
+            primer = await asyncio.wait_for(ws.recv(), timeout=10)
+            return {"ok": True, "primer_evento": _json.loads(primer).get("type", "?")}
+        except Exception as exc:
+            return {"ok": False, "detalle": f"Conectó pero sin primer evento: {type(exc).__name__}: {exc}"}
+        finally:
+            try:
+                await ws.close()
+            except Exception:
+                pass
+
+    sin_beta = await _probar(False)
+    con_beta = ({"ok": True, "detalle": "no hizo falta probar"} if sin_beta["ok"]
+                else await _probar(True))
+
+    if sin_beta["ok"]:
+        reco = "La conexión de voz anda. Si la llamada falla igual, el problema es otro (mirá los logs de Render)."
+    elif con_beta.get("ok"):
+        reco = "Conecta solo con el header OpenAI-Beta. El bridge ya reintenta con él, así que la llamada debería andar."
+    else:
+        reco = f"La Realtime API rechaza la conexión: {con_beta.get('detalle') or sin_beta.get('detalle')}"
+
+    return {
+        "ok": bool(sin_beta["ok"] or con_beta.get("ok")),
+        "modelo": s.openai_realtime_model,
+        "sin_beta": sin_beta,
+        "con_beta": con_beta,
+        "recomendacion": reco,
+    }
+
+
 class ProbarContactoIn(BaseModel):
     telefono: str
 

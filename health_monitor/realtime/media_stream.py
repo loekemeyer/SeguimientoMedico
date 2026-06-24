@@ -74,14 +74,21 @@ class MediaStreamBridge:
             return
 
         url = OPENAI_REALTIME_URL.format(model=settings.openai_realtime_model)
-        headers = {
-            "Authorization": f"Bearer {settings.openai_api_key}",
-        }
+        base_headers = {"Authorization": f"Bearer {settings.openai_api_key}"}
         logger.info("Conectando a OpenAI Realtime (modelo %s)...", settings.openai_realtime_model)
-        try:
-            openai_ws = await self._connect_openai(websockets, url, headers)
-        except Exception as exc:
-            logger.error("No se pudo conectar a OpenAI Realtime: %s", exc)
+        # Probamos primero SIN el header OpenAI-Beta (formato GA) y, si la API
+        # rechaza la conexión, reintentamos CON el header (compatibilidad con
+        # variantes que todavía lo exigen). Así la llamada conecta sin depender de
+        # adivinar cuál corresponde.
+        openai_ws = None
+        for extra in ({}, {"OpenAI-Beta": "realtime=v1"}):
+            intento = "con beta" if extra else "sin beta"
+            try:
+                openai_ws = await self._connect_openai(websockets, url, {**base_headers, **extra})
+                break
+            except Exception as exc:
+                logger.error("No se pudo conectar a OpenAI Realtime (%s): %s", intento, exc)
+        if openai_ws is None:
             return
 
         self._openai_ws = openai_ws
