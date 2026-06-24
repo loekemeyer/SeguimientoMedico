@@ -22,8 +22,9 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
   (se muestra solo si hay), con prioridad en color.
 - ✅ **Programación completa**: en el form del paciente, días de llamada (Lun-Dom),
   pausar/reanudar (llamadas activas) y zona horaria; se guardan y se ven en el detalle.
-- [ ] **Métricas clínicas en el historial**: presión, glucemia, temperatura, dolor,
-  peso, caída, riesgo emocional (hoy solo se ve el relato).
+- ✅ **Métricas clínicas en el historial**: cada seguimiento muestra chips con presión,
+  glucemia, saturación, temperatura, FC, dolor, peso, adherencia, caída y riesgo
+  emocional (los que aparezcan), además del relato — `static/app.js` (metricasChips).
 - [ ] **Borrar/editar** ítems de rutina y contactos (faltan endpoints DELETE testeados).
 - [ ] **Estado del consentimiento** y apoderado, más claro.
 - [ ] (Opc.) Exportar FHIR / ver auditoría para la prepaga.

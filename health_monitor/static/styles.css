@@ -256,6 +256,8 @@ body {
 .tl-date { font-size: .9rem; color: var(--slate); font-weight: 600; }
 .tl-summary { font-size: 1.02rem; color: var(--ink); }
 .tl-reasons { font-size: .9rem; color: var(--slate); margin-top: 4px; }
+.tl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font-size: .85rem; font-weight: 600; color: var(--slate); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; white-space: nowrap; }
 
 /* ====================================================================
    Modal + toast

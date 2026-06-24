@@ -337,6 +337,25 @@ function renderNotificaciones(notifs) {
     : `<p class="empty">Todavía no se enviaron avisos. Aparecen acá cuando el sistema alerta a la familia.</p>`;
 }
 
+function metricasChips(r) {
+  if (!r) return "";
+  const chips = [];
+  if (r.presion_sistolica && r.presion_diastolica) chips.push(`🩺 ${r.presion_sistolica}/${r.presion_diastolica}`);
+  if (r.glucemia != null) chips.push(`🩸 ${r.glucemia} mg/dL`);
+  if (r.saturacion_oxigeno != null) chips.push(`🫁 ${r.saturacion_oxigeno}%`);
+  if (r.temperatura != null) chips.push(`🌡️ ${r.temperatura}°`);
+  if (r.frecuencia_cardiaca != null) chips.push(`❤️ ${r.frecuencia_cardiaca} lpm`);
+  if (r.dolor != null) chips.push(`💢 dolor ${r.dolor}/10`);
+  if (r.peso != null) chips.push(`⚖️ ${r.peso} kg`);
+  if (r.adherencia_medicacion === "no_tomo") chips.push("💊 no tomó");
+  else if (r.adherencia_medicacion === "tomo_parcial") chips.push("💊 tomó parcial");
+  if (r.caida_reportada) chips.push("🤕 caída");
+  if (r.riesgo_emocional === "riesgo_suicida") chips.push("🆘 riesgo emocional");
+  else if (r.riesgo_emocional === "angustia_aguda") chips.push("😟 angustia");
+  if (!chips.length) return "";
+  return `<div class="tl-chips">${chips.map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("")}</div>`;
+}
+
 function historyRow(e) {
   const fecha = new Date(e.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
   const nivel = (e.nivel_alerta || "VERDE").toLowerCase();
@@ -344,7 +363,8 @@ function historyRow(e) {
   return `<div class="tl-item">
     <div class="tl-date">${fecha}</div>
     <div><div class="tl-summary">${escapeHtml(relato)}</div>
-      ${(e.motivos || []).length ? `<div class="tl-reasons">${escapeHtml(e.motivos.join(" · "))}</div>` : ""}</div>
+      ${(e.motivos || []).length ? `<div class="tl-reasons">${escapeHtml(e.motivos.join(" · "))}</div>` : ""}
+      ${metricasChips(e.readout)}</div>
     <span class="badge badge--${nivel}">${e.nivel_alerta}</span>
   </div>`;
 }
