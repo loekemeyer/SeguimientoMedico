@@ -65,7 +65,12 @@ def _enviar_voz(telefono: str, texto: str) -> bool:
 
 def _telefono(db: Session, paciente_id: int) -> str:
     p = db.get(Paciente, paciente_id)
-    return FieldCipher(get_settings().encryption_key).decrypt(p.telefono_whatsapp_enc)
+    if p is None or not p.telefono_whatsapp_enc:
+        return ""
+    try:
+        return FieldCipher(get_settings().encryption_key).decrypt(p.telefono_whatsapp_enc)
+    except Exception:
+        return ""
 
 
 @router.get("/audio/{token}")
@@ -170,7 +175,15 @@ async def incoming(request: Request, db: Session = Depends(get_session)) -> Resp
             logger.error("No se pudo bajar/transcribir el audio: %s", exc)
     user_text = user_text or (form.get("Body") or "").strip()
 
-    state, nombre = build_call_state(db, conv.paciente_id)
+    try:
+        state, nombre = build_call_state(db, conv.paciente_id)
+    except Exception as exc:
+        # Paciente dado de baja / sin consentimiento / datos inconsistentes: cerramos
+        # la conversación y cortamos limpio (evita 500 y la tormenta de reintentos de Twilio).
+        logger.warning("Conversación %s sin paciente válido (%s): se cierra.", conv.id, exc)
+        conv.estado = "cerrada"
+        db.commit()
+        return Response(status_code=204)
     historial_previo = list(conv.historial or [])
     respuesta, terminado = voice_chat.next_assistant_message(
         historial_previo, user_text,
