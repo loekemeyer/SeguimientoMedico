@@ -163,6 +163,34 @@ def test_lista_muestra_nivel_del_ultimo_seguimiento():
     assert lista[0]["ultimo_nivel"] == "ROJA"
 
 
+def test_lista_nivel_toma_el_ultimo_por_paciente():
+    """El listado (sin N+1) toma, por paciente, el nivel del seguimiento MÁS reciente."""
+    from datetime import datetime, timedelta, timezone
+
+    from health_monitor.db.models import EvolucionDiaria
+    from health_monitor.db.session import get_session
+
+    headers = _register("semaforo2@test.com")
+    pid_a = client.post("/pacientes", json={
+        "nombre": "A", "telefono_whatsapp": "+5490000000046"}, headers=headers).json()["id"]
+    pid_b = client.post("/pacientes", json={
+        "nombre": "B", "telefono_whatsapp": "+5490000000047"}, headers=headers).json()["id"]
+    base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    db = next(get_session())
+    try:
+        # Paciente A: ROJA vieja + VERDE nueva → debe ganar la VERDE (más reciente).
+        db.add(EvolucionDiaria(paciente_id=pid_a, nivel_alerta="ROJA", readout={}, fecha=base))
+        db.add(EvolucionDiaria(paciente_id=pid_a, nivel_alerta="VERDE", readout={},
+                               fecha=base + timedelta(days=1)))
+        db.add(EvolucionDiaria(paciente_id=pid_b, nivel_alerta="AMARILLA", readout={}, fecha=base))
+        db.commit()
+    finally:
+        db.close()
+    por_id = {p["id"]: p["ultimo_nivel"] for p in client.get("/pacientes", headers=headers).json()}
+    assert por_id[pid_a] == "VERDE"      # el más reciente, no el ROJA viejo
+    assert por_id[pid_b] == "AMARILLA"   # cada paciente, su propio último nivel
+
+
 def test_aislamiento_entre_usuarios():
     h1 = _register("owner@test.com")
     h2 = _register("intruso@test.com")

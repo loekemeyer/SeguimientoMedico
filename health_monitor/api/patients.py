@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from health_monitor.api.deps import (
@@ -86,6 +86,33 @@ def _ultimo_nivel(db: Session, paciente_id: int) -> str | None:
         .order_by(EvolucionDiaria.fecha.desc())
         .limit(1)
     )
+
+
+def _ultimos_niveles(db: Session, paciente_ids: list[int]) -> dict[int, str]:
+    """Nivel de alerta del último seguimiento de CADA paciente, en UNA sola query.
+
+    Evita el N+1 de llamar a `_ultimo_nivel` por paciente en el listado (clave para
+    escalar a miles de pacientes). Una función ventana (row_number) toma, por
+    paciente, la fila de mayor fecha. Postgres (producción) y SQLite ≥3.25 (tests)
+    soportan window functions.
+    """
+    if not paciente_ids:
+        return {}
+    rn = func.row_number().over(
+        partition_by=EvolucionDiaria.paciente_id,
+        order_by=EvolucionDiaria.fecha.desc(),
+    ).label("rn")
+    sub = (
+        select(
+            EvolucionDiaria.paciente_id.label("pid"),
+            EvolucionDiaria.nivel_alerta.label("nivel"),
+            rn,
+        )
+        .where(EvolucionDiaria.paciente_id.in_(paciente_ids))
+        .subquery()
+    )
+    filas = db.execute(select(sub.c.pid, sub.c.nivel).where(sub.c.rn == 1)).all()
+    return {pid: nivel for pid, nivel in filas}
 
 
 logger = logging.getLogger(__name__)
@@ -205,7 +232,8 @@ def listar_pacientes(
 ) -> list[PacienteOut]:
     cipher = _cipher()
     rows = db.scalars(select(Paciente).where(Paciente.usuario_id == user.id)).all()
-    return [_to_out(p, cipher, _ultimo_nivel(db, p.id)) for p in rows]
+    niveles = _ultimos_niveles(db, [p.id for p in rows])  # 1 query en vez de N
+    return [_to_out(p, cipher, niveles.get(p.id)) for p in rows]
 
 
 @router.get("/{paciente_id}", response_model=PacienteOut)
