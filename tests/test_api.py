@@ -328,10 +328,12 @@ def test_billing_estado_y_suscribir_privado():
     e = client.get("/billing/estado", headers=headers)
     assert e.status_code == 200
     assert e.json()["plan_disponible"]["precio"] > 0
-    assert e.json()["proveedor_configurado"] is False  # sin credenciales en test
+    # Con el link de suscripción de Mercado Pago cargado, el pago ya está disponible.
+    assert e.json()["proveedor_configurado"] is True
     r = client.post("/billing/suscribir", headers=headers)
     assert r.status_code == 200
-    assert r.json()["status"] == "no_disponible"  # sin pasarela configurada
+    assert r.json()["status"] == "ok"
+    assert r.json()["checkout_url"].startswith("http")  # lleva al checkout
 
 
 def test_billing_obra_social_no_paga():

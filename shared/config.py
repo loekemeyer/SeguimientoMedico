@@ -44,8 +44,12 @@ class Settings(BaseSettings):
     # Triaje / alertas
     emergency_webhook: str = ""  # central de emergencias / médico de guardia
 
-    # Pagos / suscripción (pasarela: Mercado Pago por default). Sin token, el módulo
-    # de pagos queda inerte y la app igual funciona (el estado vive en Usuario).
+    # Pagos / suscripción (pasarela: Mercado Pago por default).
+    # Modo sin código: un link de plan de suscripción de Mercado Pago (mpago.la/...).
+    # Con esto el botón "Suscribirme" lleva al checkout sin necesidad de token/API.
+    mercadopago_suscripcion_url: str = "https://mpago.la/13873rm"
+    # Token de API (para la integración avanzada: webhook de confirmación que activa
+    # el plan solo). Opcional; sin él, el cobro igual funciona vía el link de arriba.
     mercadopago_access_token: str = ""
 
     # Operación

@@ -562,7 +562,11 @@ function renderSub(s) {
 async function suscribir() {
   try {
     const r = await api("/billing/suscribir", { method: "POST" });
-    if (r.checkout_url) { window.location.href = r.checkout_url; return; }
+    if (r.checkout_url) {
+      window.open(r.checkout_url, "_blank", "noopener");
+      toast("Te abrimos el pago de Mercado Pago 💳");
+      return;
+    }
     toast(r.detail || "Listo", r.status === "no_disponible");
   } catch (e) { toast(e.message, true); }
 }

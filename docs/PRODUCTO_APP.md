@@ -53,8 +53,10 @@ obra social/prepaga** o **por privado**. Decisiones presumidas con defaults sens
 5. [ ] Integración real de cartillas por prestador. 🔑
 
 ## Decisiones del usuario
-- **Pagos: EN PAUSA (por ahora sin Mercado Pago).** El esqueleto queda inerte y no se
-  avanza más en pagos hasta nuevo aviso. La pantalla "Mi suscripción" sigue, no molesta.
+- **Pagos: ANDANDO en modo sin código.** El usuario creó un plan de suscripción en
+  Mercado Pago y pasó el link (`mercadopago_suscripcion_url`). "Suscribirme" abre ese
+  checkout y cobra ya, sin token/API. Falta (avanzado, 🔑): webhook de confirmación que
+  active el `plan` del usuario automáticamente al pagar (hoy se actualiza aparte).
 - **Obra social: CEMIC** es el prestador principal del onboarding. 🔑 (pendiente: cómo
   valida CEMIC la cartilla — API propia o padrón).
 - **App: PWA ahora** (web instalable en el celular). Nativa, más adelante si hace falta.

@@ -44,20 +44,29 @@ class MercadoPagoProvider(PaymentProvider):
     nombre = "mercadopago"
 
     def configurado(self) -> bool:
-        return bool(get_settings().mercadopago_access_token)
+        s = get_settings()
+        return bool(s.mercadopago_suscripcion_url or s.mercadopago_access_token)
 
     def crear_checkout(self, usuario, plan: Plan) -> dict:
-        if not self.configurado():
+        s = get_settings()
+        # Modo sin código: link de plan de suscripción de Mercado Pago. Cobra ya.
+        if s.mercadopago_suscripcion_url:
+            return {
+                "status": "ok",
+                "detail": "Te llevamos al pago seguro de Mercado Pago.",
+                "checkout_url": s.mercadopago_suscripcion_url,
+            }
+        if not s.mercadopago_access_token:
             return {
                 "status": "no_disponible",
-                "detail": ("Los pagos todavía no están configurados. Cuando se carguen "
-                           "las credenciales de Mercado Pago, este botón te lleva al checkout."),
+                "detail": ("Los pagos todavía no están configurados. Cuando se cargue el "
+                           "link o las credenciales de Mercado Pago, este botón cobra."),
             }
-        # 🔑 Punto de integración: crear la preferencia en Mercado Pago y devolver
-        # su init_point como checkout_url. Requiere el SDK + el access token.
+        # 🔑 Integración avanzada (API): crear la preferencia/preapproval y devolver
+        # su init_point. Requiere el SDK + el access token + webhook de confirmación.
         return {
             "status": "pendiente",
-            "detail": "Integración de Mercado Pago pendiente de implementar.",
+            "detail": "Integración avanzada de Mercado Pago pendiente.",
             "checkout_url": "",
         }
 
