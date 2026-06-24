@@ -71,7 +71,7 @@ function showPage(page) {
 /* ====================================================================
    AUTENTICACIÓN
 ==================================================================== */
-/* Iniciar sesión es un pop-up (la pantalla empuja "Probar gratis"). */
+/* Iniciar sesión es un pop-up (la pantalla principal empuja crear cuenta + suscribirse). */
 function abrirLogin() {
   $("#modal-login")?.classList.remove("is-hidden");
   setTimeout(() => $('#form-login input[name="email"]')?.focus(), 50);
@@ -242,6 +242,7 @@ async function loadAdmin() {
   const kpis = $("#admin-kpis"), aseEl = $("#admin-asesor");
   const narEl = $("#admin-asesor-narrativa"), tabla = $("#admin-clientes");
   if (kpis) kpis.innerHTML = `<p class="hint">Cargando…</p>`;
+  loadDiagEstado();   // estado de integraciones (no bloquea los KPIs)
   try {
     const [res, cli, ase] = await Promise.all([
       api("/bi/resumen"),
@@ -295,6 +296,66 @@ async function activarCliente(uid, email) {
     loadAdmin();
   } catch (e) { toast(e.message, true); }
 }
+
+/* ---------- Diagnóstico de integraciones (sólo dueño) ----------
+   Muestra qué está configurado y permite probar OpenAI / WhatsApp / llamada
+   devolviendo el resultado EXACTO del proveedor, sin adivinar por qué "no anda". */
+function diagOut(obj) {
+  const out = $("#admin-diag-out");
+  if (!out) return;
+  out.classList.remove("is-hidden");
+  out.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+}
+
+async function ocupado(btn, fn) {
+  if (btn) btn.disabled = true;
+  try { return await fn(); }
+  finally { if (btn) btn.disabled = false; }
+}
+
+async function loadDiagEstado() {
+  const el = $("#admin-diag-estado");
+  if (!el) return;
+  try {
+    const d = await api("/bi/diagnostico");
+    const fila = (ok, txt) => `<div class="diag-item diag-item--${ok ? "ok" : "bad"}">${ok ? "✅" : "❌"} ${escapeHtml(txt)}</div>`;
+    el.innerHTML =
+      fila(d.chat_ia_listo, "Chat / voz con IA (OpenAI)") +
+      fila(d.whatsapp_listo, "WhatsApp (Twilio)") +
+      fila(d.llamada_de_voz_lista, "Llamada de voz (Twilio + URL pública)") +
+      `<div class="diag-sub">Voz desde: ${escapeHtml(d.twilio_voice_from)} · URL pública: ${escapeHtml(d.public_base_url)}</div>`;
+  } catch (e) {
+    el.innerHTML = `<p class="hint">No se pudo leer el estado: ${escapeHtml(e.message || "")}</p>`;
+  }
+}
+
+function telDiag() {
+  const tel = ($("#diag-tel")?.value || "").trim();
+  if (!tel) { toast("Escribí un número con código de país (+54…)", true); return null; }
+  return tel;
+}
+
+$("#diag-openai")?.addEventListener("click", (e) => ocupado(e.currentTarget, async () => {
+  diagOut("Consultando a OpenAI…");
+  try { diagOut(await api("/bi/probar-openai")); }
+  catch (err) { diagOut("Error: " + (err.message || "")); }
+}));
+
+$("#diag-whatsapp")?.addEventListener("click", (e) => ocupado(e.currentTarget, async () => {
+  const tel = telDiag();
+  if (!tel) return;
+  diagOut("Enviando WhatsApp de prueba…");
+  try { diagOut(await api("/bi/probar-whatsapp", { method: "POST", body: { telefono: tel } })); }
+  catch (err) { diagOut("Error: " + (err.message || "")); }
+}));
+
+$("#diag-llamada")?.addEventListener("click", (e) => ocupado(e.currentTarget, async () => {
+  const tel = telDiag();
+  if (!tel) return;
+  diagOut("Pidiendo la llamada de prueba…");
+  try { diagOut(await api("/bi/probar-llamada", { method: "POST", body: { telefono: tel } })); }
+  catch (err) { diagOut("Error: " + (err.message || "")); }
+}));
 
 async function loadPatients() {
   const grid = $("#patient-grid");
@@ -392,8 +453,8 @@ async function startClaveRotativa(id) {
   await _fetchClave(id);
   claveTimer = setInterval(async () => {
     const seg = $("#detail-clave-seg");
-    // Dos líneas, a la derecha del número (claveSeg es un número: seguro interpolarlo).
-    if (seg) seg.innerHTML = claveSeg > 0 ? `cambia en<br>${claveSeg}s` : "actualizando…";
+    // En una línea, al lado del número (claveSeg es un número: seguro interpolarlo).
+    if (seg) seg.textContent = claveSeg > 0 ? `cambia en ${claveSeg}s` : "actualizando…";
     claveSeg--;
     if (claveSeg < 0) await _fetchClave(clavePacienteId);
   }, 1000);
@@ -831,6 +892,7 @@ function openModal() {            // alta
   setPatologiasChips([]);
   if ($("#voz-sexo")) $("#voz-sexo").value = "femenina";
   poblarVoces("femenina", "coral");
+  goToStep(1);
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -868,6 +930,7 @@ function openEditModal() {        // edición del paciente abierto
   $$("#patient-days input").forEach((c) => {
     c.checked = dias.length === 0 || dias.includes(Number(c.value));
   });
+  goToStep(1);
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -878,6 +941,49 @@ function closeModal() {
 }
 $$("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
 $("#btn-edit")?.addEventListener("click", openEditModal);
+
+/* ---------- Alta/edición en 3 pasos (wizard) ----------
+   Cada paso entra en pantalla sin scroll; el form recién se envía en el paso 3.
+   Los campos de pasos ocultos siguen en el DOM (no disabled), así FormData los toma. */
+const WIZARD_LABELS = {
+  1: "Paso 1 de 3 · ¿A quién cuidamos?",
+  2: "Paso 2 de 3 · ¿Cuándo lo llamamos?",
+  3: "Paso 3 de 3 · ¿Cómo lo acompañamos?",
+};
+let wizardStep = 1;
+function goToStep(n) {
+  wizardStep = Math.max(1, Math.min(3, n));
+  $$(".wizard-step", form).forEach((s) =>
+    s.classList.toggle("is-hidden", Number(s.dataset.step) !== wizardStep));
+  $$(".wizard__dot", form).forEach((d) => {
+    const dn = Number(d.dataset.dot);
+    d.classList.toggle("is-active", dn === wizardStep);
+    d.classList.toggle("is-done", dn < wizardStep);
+  });
+  const lbl = $("#wizard-label"); if (lbl) lbl.textContent = WIZARD_LABELS[wizardStep] || "";
+  $("#wiz-back")?.classList.toggle("is-hidden", wizardStep === 1);
+  $("#wiz-cancel")?.classList.toggle("is-hidden", wizardStep !== 1);
+  $("#wiz-next")?.classList.toggle("is-hidden", wizardStep === 3);
+  const sub = $("#wiz-submit");
+  if (sub) {
+    sub.classList.toggle("is-hidden", wizardStep !== 3);
+    sub.textContent = editingId ? "Guardar cambios" : "Guardar persona";
+  }
+  const err = $("[data-error]", form); if (err) err.textContent = "";
+  const panel = form.closest(".modal__panel"); if (panel) panel.scrollTop = 0;
+}
+function validarPaso(n) {
+  const err = $("[data-error]", form);
+  if (n === 1) {
+    const nombre = ($("[name=nombre]", form).value || "").trim();
+    if (!nombre) { if (err) err.textContent = "Poné el nombre de la persona."; return false; }
+    const tel = ($('[name="telefono_whatsapp"]', form).value || "").replace(/\D/g, "");
+    if (tel.length < 6) { if (err) err.textContent = "Poné el WhatsApp de la persona (con característica)."; return false; }
+  }
+  return true;
+}
+$("#wiz-next")?.addEventListener("click", () => { if (validarPaso(wizardStep)) goToStep(wizardStep + 1); });
+$("#wiz-back")?.addEventListener("click", () => goToStep(wizardStep - 1));
 
 /* ---------- patologías como chips (con normalización automática) ---------- */
 const NORMALIZA_PATOLOGIA = {
@@ -956,8 +1062,13 @@ function getPatologias() {
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (wizardStep < 3) {                       // Enter en un paso intermedio = "Siguiente"
+    if (validarPaso(wizardStep)) goToStep(wizardStep + 1);
+    return;
+  }
   const err = $("[data-error]", e.target);
   err.textContent = "";
+  if (!validarPaso(1)) { goToStep(1); return; }   // validación final, por las dudas
   const f = new FormData(e.target);
   const patologias = getPatologias();
   const nivel = Number(f.get("nivel_insistencia")) || 2;

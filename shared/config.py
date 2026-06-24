@@ -60,9 +60,11 @@ class Settings(BaseSettings):
     # el plan solo). Opcional; sin él, el cobro igual funciona vía los links de arriba.
     mercadopago_access_token: str = ""
 
-    # Dueño del negocio: email con acceso al panel BI privado (/bi/*). Seguro por
-    # defecto: si está vacío, nadie entra al panel. Setear OWNER_EMAIL en producción.
-    owner_email: str = ""
+    # Dueño del negocio: email con acceso al panel BI privado (/bi/*). Trae un
+    # default para que el panel ande sin tocar variables de entorno; se puede
+    # sobreescribir con OWNER_EMAIL en el servidor. La cuenta igual exige login con
+    # ese email + contraseña, así que el panel sigue protegido por autenticación.
+    owner_email: str = "thomasloke7@gmail.com"
     # Tipo de cambio para mostrar costos (estimados en USD) junto al ingreso (ARS)
     # en el panel BI. Ajustable. Es estimación de gestión, no contabilidad.
     usd_ars: float = 1000.0

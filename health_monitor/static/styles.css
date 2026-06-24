@@ -121,6 +121,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .auth__sub { color: rgba(255,255,255,.82); font-size: 1.05rem; max-width: 400px; }
 .auth__price { margin-top: 12px; color: rgba(255,255,255,.92); font-size: 1.02rem; }
 .auth__price strong { font-weight: 800; }
+.auth__guarantee { margin-top: 6px; color: rgba(255,255,255,.82); font-size: .92rem; }
 .auth__bullets { list-style: none; margin-top: 30px; display: grid; gap: 14px; }
 .auth__bullets li { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.92); font-weight: 500; }
 .auth__bullets i {
@@ -150,6 +151,8 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .btn--login { flex: none; font-size: 1.02rem; font-weight: 700; padding: 11px 18px;
   background: #fff; color: var(--teal-700); border: 2px solid var(--teal-500); }
 .btn--login:hover { background: var(--teal-50); }
+/* Acceso del Acompañado: va justo debajo de "Iniciar sesión", separado del alta. */
+.btn--paciente { margin: 0 0 18px; }
 .check-hint { display: block; font-size: .82rem; color: var(--slate); font-weight: 400; margin-top: 2px; }
 
 .tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 22px; }
@@ -457,6 +460,25 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .admin-table tr.is-perdida { background: #fff5f5; }
 .admin-sub { font-size: .78rem; color: var(--slate-400); }
 
+/* Diagnóstico de integraciones (panel del dueño) */
+.admin-diag { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 12px; }
+.diag-item { font-size: .92rem; font-weight: 600; }
+.diag-item--ok { color: var(--teal-700); }
+.diag-item--bad { color: var(--red); }
+.diag-sub { font-size: .78rem; color: var(--slate-400); margin-top: 2px; word-break: break-all; }
+.admin-diag__actions { margin-bottom: 10px; }
+.admin-diag__lbl { display: block; font-size: .85rem; color: var(--slate); margin-bottom: 5px; }
+.admin-diag__row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.admin-diag__tel {
+  flex: 1 1 180px; min-width: 0; padding: 9px 12px; font-size: 1rem;
+  border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #fff;
+}
+.admin-diag__out {
+  margin-top: 12px; background: #0f172a; color: #e2e8f0; border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: .82rem; line-height: 1.5; white-space: pre-wrap;
+  word-break: break-word; max-height: 320px; overflow: auto;
+}
+
 /* Código de acceso del paciente (detalle) */
 .codigo-box {
   font-family: var(--font-head); font-weight: 800; font-size: 2rem;
@@ -464,8 +486,8 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   background: var(--teal-50); border: 1px dashed #bfe6df;
   border-radius: var(--radius-sm); padding: 16px 10px;
 }
-.clave-rot { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-.clave-rot__lbl { font-size: .9rem; color: var(--slate); }
+.clave-rot { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 14px; }
+.clave-rot__lbl { font-size: .9rem; color: var(--slate); font-weight: 600; }
 .clave-rot__val {
   font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; letter-spacing: .12em;
   color: #a16207; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 3px 14px;
@@ -478,7 +500,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .cuidado-item__acc { display: flex; gap: 8px; flex: none; }
 .cuidado-item__done { color: var(--teal-700); font-weight: 600; font-size: .95rem; }
 
-.clave-rot__box { display: inline-flex; flex-direction: row; align-items: center; gap: 9px; }
+.clave-rot__box { display: inline-flex; flex-direction: row; align-items: center; gap: 12px; }
 .clave-rot__seg { font-size: .74rem; color: var(--slate-400); line-height: 1.15; text-align: left; }
 
 /* "¿Cómo está hoy?" — tarjeta hero del detalle */
@@ -582,6 +604,15 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .modal__close:hover { background: #fdecec; color: var(--red); }
 .modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
+/* Wizard de alta/edición en 3 pasos: cada paso entra en pantalla sin scroll. */
+.wizard__head { margin-bottom: 18px; }
+.wizard__dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+.wizard__dot { width: 34px; height: 6px; border-radius: 999px; background: var(--line); transition: background .2s; }
+.wizard__dot.is-active { background: var(--teal-500); }
+.wizard__dot.is-done { background: var(--teal-700); }
+.wizard__label { text-align: center; font-family: var(--font-head); font-weight: 700; color: var(--slate); font-size: .95rem; }
+.wizard__nav { justify-content: space-between; }
+
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
   background: var(--ink); color: #fff; padding: 13px 20px; border-radius: 12px;
@@ -608,4 +639,8 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   .auth__formside { padding: 18px 22px 28px; }
   .form__row { grid-template-columns: 1fr; }
   .tl-item { grid-template-columns: 1fr; gap: 4px; }
+  /* En el detalle, las acciones (Editar / WhatsApp / Llamar) bajan a una fila
+     propia de ancho completo, así "Editar datos" no queda escondido ni apretado. */
+  .detail__actions { width: 100%; margin-left: 0; flex-wrap: wrap; }
+  .detail__actions .btn { flex: 1 1 auto; justify-content: center; }
 }

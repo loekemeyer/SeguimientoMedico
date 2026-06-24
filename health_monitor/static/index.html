@@ -30,7 +30,8 @@
           <span class="brand__name">Seguimiento<span>Medico</span></span>
         </div>
         <h1 class="auth__headline">Cuidamos a quienes<br/>más querés.</h1>
-        <p class="auth__price">Planes desde <strong>$10.000/mes</strong> · Probá 14 días gratis</p>
+        <p class="auth__price">Planes desde <strong>$10.000/mes</strong></p>
+        <p class="auth__guarantee">🛡️ Si no te convence, te devolvemos el 100%.</p>
         <div class="carousel" id="auth-carousel">
           <div class="carousel__track" id="carousel-track">
             <div class="carousel__slide">
@@ -71,6 +72,7 @@
             <h2 class="form__title">Empecemos 🌱</h2>
             <button type="button" class="btn btn--soft btn--login" id="abrir-login">Iniciar sesión</button>
           </div>
+          <button type="button" class="btn btn--soft btn--block btn--paciente" id="ir-paciente-login">👵 Ingreso de Acompañados →</button>
           <label class="field"><span>Tu nombre</span>
             <input type="text" name="nombre" placeholder="Nombre y apellido" />
           </label>
@@ -119,7 +121,6 @@
         </form>
         <p class="appver" aria-hidden="true"></p>
       </div>
-      <button type="button" class="auth__paciente-link" id="ir-paciente-login">👵 Ingreso de Acompañados →</button>
     </div>
   </section>
 
@@ -211,7 +212,7 @@
           </div>
           <span class="badge" id="detail-status">—</span>
           <div class="detail__actions">
-            <button class="btn btn--soft btn--sm" id="btn-edit">✏️ Editar</button>
+            <button class="btn btn--soft btn--sm" id="btn-edit">✏️ Editar datos y preferencias</button>
             <button class="btn btn--soft btn--sm" id="btn-whatsapp">💬 Charla por WhatsApp</button>
             <button class="btn btn--primary" id="btn-call-now">📞 Llamar ahora</button>
           </div>
@@ -395,6 +396,21 @@
           <button class="btn btn--ghost btn--sm" id="btn-admin-back">← Volver</button>
         </div>
         <div class="admin-kpis" id="admin-kpis"></div>
+        <div class="card" id="card-diagnostico">
+          <h3 class="card__title">🔧 Diagnóstico — ¿por qué no anda?</h3>
+          <p class="hint">Probá cada integración y mirá el resultado exacto (sin adivinar).</p>
+          <div id="admin-diag-estado" class="admin-diag"><p class="hint">Cargando estado…</p></div>
+          <div class="admin-diag__actions">
+            <button class="btn btn--soft btn--sm" id="diag-openai" type="button">🎙️ Probar OpenAI (voz IA)</button>
+          </div>
+          <label class="admin-diag__lbl" for="diag-tel">Probar envío a un número (con código de país):</label>
+          <div class="admin-diag__row">
+            <input type="tel" id="diag-tel" class="admin-diag__tel" placeholder="+5491112345678" inputmode="tel" autocomplete="off" />
+            <button class="btn btn--soft btn--sm" id="diag-whatsapp" type="button">💬 WhatsApp</button>
+            <button class="btn btn--soft btn--sm" id="diag-llamada" type="button">📞 Llamada</button>
+          </div>
+          <pre id="admin-diag-out" class="admin-diag__out is-hidden"></pre>
+        </div>
         <div class="card card--suggest">
           <h3 class="card__title">🧠 Asesor de rentabilidad</h3>
           <div id="admin-asesor"><p class="hint">Analizando…</p></div>
@@ -435,10 +451,21 @@
     <div class="modal__panel card">
       <button type="button" class="modal__close" data-close aria-label="Cerrar">✕</button>
       <h2 class="form__title" id="modal-title">Agregar persona a cuidar</h2>
-      <form id="form-patient" class="form">
+      <form id="form-patient" class="form form--wizard">
+        <div class="wizard__head">
+          <div class="wizard__dots" aria-hidden="true">
+            <span class="wizard__dot is-active" data-dot="1"></span>
+            <span class="wizard__dot" data-dot="2"></span>
+            <span class="wizard__dot" data-dot="3"></span>
+          </div>
+          <p class="wizard__label" id="wizard-label">Paso 1 de 3 · ¿A quién cuidamos?</p>
+        </div>
+
+        <!-- PASO 1 · La persona -->
+        <div class="wizard-step" data-step="1">
         <div class="form__row">
           <label class="field"><span>Nombre (real o cariñoso)</span>
-            <input type="text" name="nombre" placeholder="Ej: Papá, Abuela Rosa, Rosa Pérez…" required />
+            <input type="text" name="nombre" placeholder="Ej: Papá, Abuela Rosa, Rosa Pérez…" />
           </label>
           <label class="field"><span>WhatsApp del paciente</span>
             <div class="phone-input">
@@ -451,7 +478,7 @@
                 <option value="+1">🇺🇸 +1</option>
                 <option value="+34">🇪🇸 +34</option>
               </select>
-              <input type="text" inputmode="numeric" class="phone-num" name="telefono_whatsapp" placeholder="11 3118 1594" required />
+              <input type="text" inputmode="numeric" class="phone-num" name="telefono_whatsapp" placeholder="11 3118 1594" />
             </div>
           </label>
         </div>
@@ -462,6 +489,14 @@
           </div>
           <p class="seg-help">Poné cada una y apretá <strong>coma</strong> o <strong>Enter</strong>; cae abajo como etiqueta. Las normalizamos solas (ej: "le cuesta dormir" → "Insomnio").</p>
         </div>
+        <label class="field field--check">
+          <input type="checkbox" name="consentimiento_firmado" />
+          <span>Tengo el consentimiento del apoderado legal para este seguimiento</span>
+        </label>
+        </div><!-- /paso 1 -->
+
+        <!-- PASO 2 · Las llamadas -->
+        <div class="wizard-step is-hidden" data-step="2">
         <div class="form__row">
           <label class="field"><span>Hora de llamada</span>
             <input type="time" name="llamada_hora" value="10:00" />
@@ -488,16 +523,10 @@
             <label><input type="checkbox" value="6" checked> Dom</label>
           </div>
         </div>
-        <div class="form__row">
-          <label class="field field--check">
-            <input type="checkbox" name="llamada_activa" checked />
-            <span>Llamar a esta persona todos los días <small class="check-hint">(si destildás esta casilla, se pausan las llamadas)</small></span>
-          </label>
-          <label class="field field--check">
-            <input type="checkbox" name="consentimiento_firmado" />
-            <span>Tengo el consentimiento del apoderado legal</span>
-          </label>
-        </div>
+        <label class="field field--check">
+          <input type="checkbox" name="llamada_activa" checked />
+          <span>Llamar a esta persona todos los días <small class="check-hint">(si destildás esta casilla, se pausan las llamadas)</small></span>
+        </label>
         <label class="field field--check">
           <input type="checkbox" name="resumen_diario_familia" />
           <span>Avisarme cómo estuvo después de cada llamada (aunque esté todo bien)</span>
@@ -523,8 +552,10 @@
             </label>
           </div>
         </div>
-        <details class="form__advanced">
-          <summary>Personalidad del acompañante online (opcional)</summary>
+        </div><!-- /paso 2 -->
+
+        <!-- PASO 3 · El acompañante -->
+        <div class="wizard-step is-hidden" data-step="3">
           <p class="seg-help">El <strong>acompañante online</strong> es el asistente que charla con la persona (por la app o por teléfono). Acá elegís cómo se presenta y cómo suena.</p>
           <div class="form__row">
             <label class="field"><span>Trato</span>
@@ -570,7 +601,6 @@
           <label class="field"><span>Temas a evitar</span>
             <input type="text" name="temas_evitar" placeholder="Ej: política" />
           </label>
-        </details>
         <div id="contacto-section">
           <h3 class="form__section">Contacto de emergencia</h3>
           <div class="form__row">
@@ -593,9 +623,12 @@
             </label>
           </div>
         </div>
-        <div class="modal__actions">
-          <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
-          <button type="submit" class="btn btn--primary">Guardar persona</button>
+        </div><!-- /paso 3 -->
+        <div class="modal__actions wizard__nav">
+          <button type="button" class="btn btn--ghost" id="wiz-back">← Atrás</button>
+          <button type="button" class="btn btn--ghost" data-close id="wiz-cancel">Cancelar</button>
+          <button type="button" class="btn btn--primary" id="wiz-next">Siguiente →</button>
+          <button type="submit" class="btn btn--primary" id="wiz-submit">Guardar persona</button>
         </div>
         <p class="form__error" data-error></p>
       </form>
