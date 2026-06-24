@@ -34,6 +34,7 @@
    el sistema (que usa rem) crezca de forma consistente. */
 html { font-size: 17px; }
 html, body { height: 100%; }
+body { overflow-x: hidden; }  /* ninguna pantalla debe scrollear de costado */
 body {
   font-family: var(--font-body);
   color: var(--ink);
@@ -102,7 +103,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 /* ====================================================================
    PANTALLA DE ACCESO
 ==================================================================== */
-.auth { display: grid; grid-template-columns: 1.05fr .95fr; min-height: 100vh; }
+.auth { display: grid; grid-template-columns: 1.05fr .95fr; min-height: 100vh; overflow-x: hidden; }
 .auth__brandside {
   position: relative; overflow: hidden;
   background: radial-gradient(120% 120% at 0% 0%, var(--teal-600) 0%, var(--teal-900) 70%);
@@ -140,7 +141,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 }
 .carousel__dot.is-active { width: 26px; background: #fff; }
 
-.auth__formside { display: flex; align-items: center; justify-content: center; padding: 5vw; }
+.auth__formside { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 5vw; min-width: 0; }
 .auth__card { width: 100%; max-width: 410px; box-shadow: var(--shadow); }
 
 .tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 22px; }
@@ -578,14 +579,17 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
    Responsive
 ==================================================================== */
 @media (max-width: 860px) {
-  /* Login mobile: el hero (con el carrusel) va ARRIBA y el formulario abajo. */
+  /* Login mobile: el hero (con el carrusel) va ARRIBA y el formulario abajo.
+     Hero compacto para llegar al formulario con poco scroll. */
   .auth { display: block; }
-  .auth__brandside { padding: 26px 22px calc(26px + env(safe-area-inset-top)); }
-  .auth__headline { font-size: 1.55rem; margin: 16px 0 0; }
-  .carousel { margin-top: 16px; max-width: none; }
-  .carousel__title { font-size: 1.2rem; }
-  .carousel__text { font-size: .98rem; }
-  .auth__formside { padding: 22px; }
+  .auth__brandside { padding: 18px 22px calc(16px + env(safe-area-inset-top)); }
+  .auth__headline { font-size: 1.4rem; margin: 12px 0 0; }
+  .carousel { margin-top: 12px; max-width: none; }
+  .carousel__ico { font-size: 1.7rem; margin-bottom: 8px; }
+  .carousel__title { font-size: 1.15rem; margin-bottom: 4px; }
+  .carousel__text { font-size: .95rem; }
+  .carousel__dots { margin-top: 14px; }
+  .auth__formside { padding: 18px 22px 28px; }
   .form__row { grid-template-columns: 1fr; }
   .tl-item { grid-template-columns: 1fr; gap: 4px; }
 }
