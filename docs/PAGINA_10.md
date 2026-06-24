@@ -16,10 +16,10 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
   de escalamiento (1º/2º/3º) y "recibe avisos" sí/no, y quitarlos (endpoint DELETE con
   autorización + auditoría) — `api/patients.py`, `static/*`. *(núcleo de los avisos)*
   (Editar = quitar y volver a agregar por ahora.)
-- [ ] **Historial de avisos enviados** (`GET /pacientes/{id}/notificaciones`): a quién,
-  por qué canal, cuándo, si se envió.
-- [ ] **Sugerencias del agente** (`GET /pacientes/{id}/sugerencias`): panel de
-  recomendaciones proactivas (caídas, ánimo, adherencia, derivación).
+- ✅ **Historial de avisos enviados** (`/notificaciones`): tarjeta "Avisos enviados a la
+  familia" con canal, destino, nivel, fecha, si se envió y el texto.
+- ✅ **Sugerencias del agente** (`/sugerencias`): tarjeta "Sugerencias para el cuidado"
+  (se muestra solo si hay), con prioridad en color.
 - [ ] **Programación completa**: días de llamada, pausar/reanudar, zona horaria.
 - [ ] **Métricas clínicas en el historial**: presión, glucemia, temperatura, dolor,
   peso, caída, riesgo emocional (hoy solo se ve el relato).

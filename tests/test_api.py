@@ -269,6 +269,17 @@ def test_twilio_voice_no_lo_tapa_el_frontend():
     assert "<Stream" in r.text and "media-stream" in r.text
 
 
+def test_sugerencias_y_notificaciones_se_listan():
+    headers = _register("panel@test.com")
+    pid = client.post("/pacientes", json={
+        "nombre": "Panel", "telefono_whatsapp": "+5490000000066",
+    }, headers=headers).json()["id"]
+    s = client.get(f"/pacientes/{pid}/sugerencias", headers=headers)
+    assert s.status_code == 200 and isinstance(s.json(), list)
+    n = client.get(f"/pacientes/{pid}/notificaciones", headers=headers)
+    assert n.status_code == 200 and n.json() == []
+
+
 def test_pwa_manifest_y_service_worker_se_sirven():
     """La PWA necesita que el manifest y el service worker se sirvan en la raíz."""
     m = client.get("/manifest.webmanifest")

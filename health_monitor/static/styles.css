@@ -209,6 +209,8 @@ body {
 
 /* ---------- Detalle ---------- */
 .detail__actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.card--suggest { border-color: #cdeee8; background: linear-gradient(180deg, var(--teal-50), #fff); margin-bottom: 18px; }
+.card--suggest .stack-item { background: #fff; border: 1px solid var(--line); }
 
 /* Mini-formulario para agregar items (medicación) dentro de una tarjeta */
 .addform { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }

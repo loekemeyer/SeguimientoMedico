@@ -163,14 +163,18 @@ let currentPatient = null;   // paciente abierto en el detalle
 async function openDetail(id) {
   showPage("detail");
   try {
-    const [p, contactos, rutina, evos] = await Promise.all([
+    const [p, contactos, rutina, evos, sugerencias, notifs] = await Promise.all([
       api(`/pacientes/${id}`),
       api(`/pacientes/${id}/contactos`).catch(() => []),
       api(`/pacientes/${id}/rutina`).catch(() => []),
       api(`/pacientes/${id}/evoluciones`).catch(() => []),
+      api(`/pacientes/${id}/sugerencias`).catch(() => []),
+      api(`/pacientes/${id}/notificaciones`).catch(() => []),
     ]);
     currentPatient = p;
     renderDetail(p, contactos, rutina, evos);
+    renderSugerencias(sugerencias);
+    renderNotificaciones(notifs);
   } catch (e) { toast(e.message, true); }
 }
 
@@ -298,6 +302,39 @@ function renderDetail(p, contactos, rutina, evos) {
   $("#detail-history").innerHTML = evos.length
     ? evos.map(historyRow).join("")
     : `<p class="empty">Todavía no hay seguimientos registrados.</p>`;
+}
+
+/* ---------- sugerencias del agente + avisos enviados ---------- */
+const PRIO_BADGE = { alta: "roja", media: "amarilla", baja: "neutral" };
+
+function renderSugerencias(sugs) {
+  const card = $("#detail-sugerencias-card");
+  if (!sugs || !sugs.length) { card.classList.add("is-hidden"); return; }
+  card.classList.remove("is-hidden");
+  $("#detail-sugerencias").innerHTML = sugs.map((s) => {
+    const badge = PRIO_BADGE[s.prioridad] || "neutral";
+    return `<div class="stack-item">
+      <span class="badge badge--${badge}">${escapeHtml(s.prioridad || "")}</span>
+      <div class="stack-item__main">${escapeHtml(s.texto || "")}</div></div>`;
+  }).join("");
+}
+
+const CANAL_ICON = { whatsapp: "💬", webhook: "🛰️", sms: "✉️" };
+
+function renderNotificaciones(notifs) {
+  $("#detail-notificaciones").innerHTML = (notifs && notifs.length)
+    ? notifs.map((n) => {
+        const fecha = new Date(n.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+        const icon = CANAL_ICON[n.canal] || "🔔";
+        const nivel = (n.nivel_alerta || "VERDE").toLowerCase();
+        const estado = n.enviado ? "✓ enviado" : "✗ no enviado";
+        return `<div class="stack-item">${icon}
+          <div class="stack-item__main">
+            <div>${escapeHtml(n.destino || "Familia")} <span class="badge badge--${nivel}">${escapeHtml(n.nivel_alerta || "")}</span></div>
+            <small>${fecha} · ${estado} · ${escapeHtml(n.contenido || "")}</small>
+          </div></div>`;
+      }).join("")
+    : `<p class="empty">Todavía no se enviaron avisos. Aparecen acá cuando el sistema alerta a la familia.</p>`;
 }
 
 function historyRow(e) {
