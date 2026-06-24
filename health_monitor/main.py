@@ -150,8 +150,8 @@ def initiate_call(
 
     client = Client(settings.twilio_account_sid, settings.twilio_auth_token)
     call = client.calls.create(
-        to=f"whatsapp:{to_number}",
-        from_=settings.twilio_whatsapp_from,
+        to=to_number,
+        from_=settings.twilio_voice_from or settings.twilio_whatsapp_from,
         url=f"{settings.public_base_url}/twilio/voice?paciente_id={paciente_id}",
     )
     return JSONResponse({"call_sid": call.sid, "paciente_id": paciente_id})

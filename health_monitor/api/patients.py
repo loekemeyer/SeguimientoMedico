@@ -458,14 +458,15 @@ def llamar_ahora(
     require_consent(p)
 
     s = get_settings()
-    # Sin teléfono saliente / URL pública no se puede hacer la llamada de voz real.
-    if not (s.twilio_account_sid and s.twilio_auth_token and s.public_base_url):
+    # Sin teléfono saliente de voz / URL pública no se puede hacer la llamada real.
+    voice_from = s.twilio_voice_from or s.twilio_whatsapp_from
+    if not (s.twilio_account_sid and s.twilio_auth_token and s.public_base_url and s.twilio_voice_from):
         return {
             "status": "no_disponible",
             "detail": (
                 "La llamada de voz todavía no está configurada (falta el teléfono "
-                "saliente y la URL pública). Cuando se configure, este botón llama "
-                "al instante."
+                "saliente de voz y la URL pública). Cuando se configure, este botón "
+                "llama al instante."
             ),
         }
     try:
@@ -474,8 +475,8 @@ def llamar_ahora(
         to = _cipher().decrypt(p.telefono_whatsapp_enc)
         client = Client(s.twilio_account_sid, s.twilio_auth_token)
         call = client.calls.create(
-            to=f"whatsapp:{to}",
-            from_=s.twilio_whatsapp_from,
+            to=to,
+            from_=voice_from,
             url=f"{s.public_base_url}/twilio/voice?paciente_id={p.id}",
         )
         return {"status": "llamando", "detail": "Llamada iniciada.", "call_sid": call.sid}
