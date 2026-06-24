@@ -153,3 +153,28 @@ def clientes(
     # Ordenado por margen ascendente: lo que da pérdida primero.
     out.sort(key=lambda r: r["margen_ars"])
     return out
+
+
+@router.get("/asesor")
+def asesor(
+    dias: int = 30,
+    owner: Usuario = Depends(require_owner),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Asesor de rentabilidad: recomendaciones accionables sobre los agregados.
+
+    Siempre devuelve recomendaciones heurísticas (sin depender de la IA) y, si
+    hay OPENAI_API_KEY, agrega un análisis en prosa.
+    """
+    from health_monitor.bi_advisor import narrativa_llm, recomendaciones_heuristicas
+
+    res = resumen(dias=dias, _=owner, db=db)
+    cli = clientes(dias=dias, _=owner, db=db)
+    recs = recomendaciones_heuristicas(res, cli)
+    narrativa = narrativa_llm(res, cli)
+    return {
+        "dias": dias,
+        "recomendaciones": recs,
+        "narrativa": narrativa,
+        "configurado": narrativa is not None,
+    }

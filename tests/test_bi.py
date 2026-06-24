@@ -73,6 +73,20 @@ def test_bi_clientes_es_lista_ordenada():
     assert margenes == sorted(margenes)
 
 
+def test_bi_asesor_devuelve_recomendaciones():
+    h = _auth("dueno@test.com")
+    r = client.get("/bi/asesor", headers=h)
+    assert r.status_code == 200, r.text
+    j = r.json()
+    assert isinstance(j["recomendaciones"], list) and len(j["recomendaciones"]) >= 1
+    assert "configurado" in j
+
+
+def test_bi_asesor_niega_a_no_dueno():
+    h = _auth("cliente2@test.com")
+    assert client.get("/bi/asesor", headers=h).status_code == 403
+
+
 def test_bi_sin_owner_email_niega_a_todos(monkeypatch):
     # Si OWNER_EMAIL no está configurado, el panel se cierra (seguro por defecto).
     monkeypatch.setenv("OWNER_EMAIL", "")
