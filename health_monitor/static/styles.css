@@ -321,7 +321,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 
 /* Mini-formulario para agregar items (medicación) dentro de una tarjeta */
 .addform { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
-.addform__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.addform__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
 .addform__row > * { min-width: 0; }
 .time-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .time-field__label { font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .02em; padding-left: 2px; }
