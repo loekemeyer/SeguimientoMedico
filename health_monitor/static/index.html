@@ -387,6 +387,7 @@
           </div>
           <div class="kv" id="cuenta-kv"></div>
           <button class="btn btn--primary btn--block" id="btn-mi-suscripcion">💳 Mi suscripción</button>
+          <button class="btn btn--soft btn--block is-hidden" id="btn-admin">📊 Panel del dueño</button>
         </div>
         <div class="card">
           <h3 class="card__title">Cómo funciona</h3>
@@ -397,6 +398,28 @@
           <button class="btn btn--ghost btn--block" id="btn-logout">Cerrar sesión</button>
         </div>
         <p class="appver"></p>
+      </section>
+
+      <!-- ============ PANEL DEL DUEÑO (BI) ============ -->
+      <section id="page-admin" class="page is-hidden">
+        <div class="page__head">
+          <div>
+            <h1 class="page__title">Panel del dueño</h1>
+            <p class="page__subtitle">Rentabilidad del negocio: ingreso, costo y margen.</p>
+          </div>
+          <button class="btn btn--ghost btn--sm" id="btn-admin-back">← Volver</button>
+        </div>
+        <div class="admin-kpis" id="admin-kpis"></div>
+        <div class="card card--suggest">
+          <h3 class="card__title">🧠 Asesor de rentabilidad</h3>
+          <div id="admin-asesor"><p class="hint">Analizando…</p></div>
+          <div id="admin-asesor-narrativa" class="admin-narrativa"></div>
+        </div>
+        <div class="card">
+          <h3 class="card__title">👥 Clientes por rentabilidad</h3>
+          <p class="hint">Ordenados de menor a mayor margen (lo que da pérdida, primero).</p>
+          <div class="admin-table-wrap"><table class="admin-table" id="admin-clientes"></table></div>
+        </div>
       </section>
     </main>
 

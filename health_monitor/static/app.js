@@ -59,8 +59,10 @@ function showPage(page) {
   $("#page-list").classList.toggle("is-hidden", page !== "list");
   $("#page-detail").classList.toggle("is-hidden", page !== "detail");
   $("#page-cuenta").classList.toggle("is-hidden", page !== "cuenta");
+  $("#page-admin")?.classList.toggle("is-hidden", page !== "admin");
   // El detalle es parte del flujo "Personas", así que esa pestaña queda activa.
-  const navActive = page === "cuenta" ? "cuenta" : "personas";
+  // El panel del dueño cuelga de "Cuenta".
+  const navActive = (page === "cuenta" || page === "admin") ? "cuenta" : "personas";
   $$(".bnav__btn").forEach((b) => b.classList.toggle("is-active", b.dataset.nav === navActive));
   if (page !== "detail") stopClaveRotativa();
   window.scrollTo(0, 0);
@@ -218,6 +220,63 @@ async function loadCuenta() {
   } catch {
     $("#cuenta-kv").innerHTML =
       `<div class="kv__row"><span>Plan</span><span>${escapeHtml((currentUser && currentUser.plan) || "trial")}</span></div>`;
+  }
+  // El botón del panel del dueño sólo aparece si el backend nos reconoce como dueño.
+  try {
+    await api("/bi/resumen");
+    $("#btn-admin")?.classList.remove("is-hidden");
+  } catch {
+    $("#btn-admin")?.classList.add("is-hidden");
+  }
+}
+
+/* ====================================================================
+   PANEL DEL DUEÑO (BI)
+==================================================================== */
+$("#btn-admin")?.addEventListener("click", () => { showPage("admin"); loadAdmin(); });
+$("#btn-admin-back")?.addEventListener("click", () => { showPage("cuenta"); });
+
+const fmtARS = (n) => "$" + Math.round(n || 0).toLocaleString("es-AR");
+
+async function loadAdmin() {
+  const kpis = $("#admin-kpis"), aseEl = $("#admin-asesor");
+  const narEl = $("#admin-asesor-narrativa"), tabla = $("#admin-clientes");
+  if (kpis) kpis.innerHTML = `<p class="hint">Cargando…</p>`;
+  try {
+    const [res, cli, ase] = await Promise.all([
+      api("/bi/resumen"),
+      api("/bi/clientes").catch(() => []),
+      api("/bi/asesor").catch(() => ({ recomendaciones: [], narrativa: null })),
+    ]);
+    const margenCls = res.margen_ars >= 0 ? "kpi--ok" : "kpi--bad";
+    kpis.innerHTML = `
+      <div class="kpi"><div class="kpi__lbl">Ingreso mensual</div><div class="kpi__val">${fmtARS(res.ingreso_mensual_ars)}</div></div>
+      <div class="kpi"><div class="kpi__lbl">Costo (${res.dias}d)</div><div class="kpi__val">${fmtARS(res.costo_periodo_ars)}</div></div>
+      <div class="kpi ${margenCls}"><div class="kpi__lbl">Margen</div><div class="kpi__val">${fmtARS(res.margen_ars)}</div></div>
+      <div class="kpi"><div class="kpi__lbl">Clientes</div><div class="kpi__val">${res.clientes_activos}/${res.clientes_total}</div><div class="kpi__sub">activos / total</div></div>`;
+
+    if (aseEl) {
+      const recs = (ase.recomendaciones || []);
+      aseEl.innerHTML = recs.length
+        ? recs.map((r) => `<div class="admin-rec admin-rec--${escapeHtml(r.prioridad || "baja")}">
+            <div class="admin-rec__t">${escapeHtml(r.titulo || "")}</div>
+            <div class="admin-rec__d">${escapeHtml(r.detalle || "")}</div></div>`).join("")
+        : `<p class="hint">Sin recomendaciones por ahora.</p>`;
+    }
+    if (narEl) narEl.textContent = ase.narrativa || "";
+
+    if (tabla) {
+      const rows = (cli || []).map((c) => `
+        <tr class="${c.en_perdida ? "is-perdida" : ""}">
+          <td>${escapeHtml(c.nombre || c.email || "—")}<div class="admin-sub">${escapeHtml(c.plan)}${c.plan_tipo ? " · " + escapeHtml(c.plan_tipo) : ""}</div></td>
+          <td class="num">${fmtARS(c.ingreso_mensual_ars)}</td>
+          <td class="num">${fmtARS(c.costo_periodo_ars)}</td>
+          <td class="num ${c.margen_ars < 0 ? "neg" : "pos"}">${fmtARS(c.margen_ars)}</td>
+        </tr>`).join("");
+      tabla.innerHTML = `<thead><tr><th>Cliente</th><th class="num">Ingreso</th><th class="num">Costo</th><th class="num">Margen</th></tr></thead><tbody>${rows || `<tr><td colspan="4" class="hint">Sin clientes todavía.</td></tr>`}</tbody>`;
+    }
+  } catch (e) {
+    if (kpis) kpis.innerHTML = `<p class="hint">No se pudo cargar el panel: ${escapeHtml(e.message || "")}</p>`;
   }
 }
 

@@ -421,6 +421,32 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 #cuenta-kv { margin: 0 0 18px; }
 .appver { text-align: center; color: var(--slate-400); font-size: .8rem; margin-top: 14px; }
 
+/* Panel del dueño (BI) */
+.admin-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.kpi { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.kpi__lbl { font-size: .82rem; color: var(--slate); font-weight: 600; }
+.kpi__val { font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; margin-top: 4px; }
+.kpi__sub { font-size: .76rem; color: var(--slate-400); }
+.kpi--ok .kpi__val { color: var(--teal-700); }
+.kpi--bad .kpi__val { color: var(--red); }
+.admin-rec { border-left: 4px solid var(--line); background: #fff; border-radius: 10px; padding: 10px 13px; margin-bottom: 10px; }
+.admin-rec__t { font-weight: 700; }
+.admin-rec__d { font-size: .92rem; color: var(--slate); margin-top: 3px; }
+.admin-rec--alta { border-left-color: var(--red); }
+.admin-rec--media { border-left-color: #e0a107; }
+.admin-rec--baja { border-left-color: var(--teal-500); }
+.admin-narrativa { white-space: pre-wrap; font-size: .95rem; color: var(--ink); margin-top: 10px; }
+.admin-narrativa:empty { display: none; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.admin-table th { text-align: left; color: var(--slate); font-weight: 600; font-size: .82rem; padding: 6px 8px; border-bottom: 1.5px solid var(--line); }
+.admin-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); }
+.admin-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-table td.neg { color: var(--red); font-weight: 700; }
+.admin-table td.pos { color: var(--teal-700); }
+.admin-table tr.is-perdida { background: #fff5f5; }
+.admin-sub { font-size: .78rem; color: var(--slate-400); }
+
 /* Código de acceso del paciente (detalle) */
 .codigo-box {
   font-family: var(--font-head); font-weight: 800; font-size: 2rem;
