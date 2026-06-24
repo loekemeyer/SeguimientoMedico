@@ -1109,7 +1109,7 @@ function renderSub(s) {
     </div>`;
   });
   html += `</div>`;
-  html += `<p class="sub-garantia">🛡️ Garantía: si no te gusta, te devolvemos la plata dentro de los <strong>5 días</strong>.</p>`;
+  html += `<p class="sub-garantia">🛡️ <strong>Garantía:</strong> si después de 5 días de suscribirte no te convenció, no hay problema: te devolvemos el <strong>100%</strong>.</p>`;
   $("#sub-body").innerHTML = html;
   $$("[data-suscribir]", $("#sub-body")).forEach((b) =>
     b.addEventListener("click", () => suscribir(b.dataset.suscribir))

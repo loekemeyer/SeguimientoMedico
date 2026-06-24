@@ -200,6 +200,20 @@ async def twilio_voice(request: Request) -> Response:
     verify_twilio_request(request, form)
 
     paciente_id = request.query_params.get("paciente_id", "")
+    # Si la IA de voz no está configurada (falta OPENAI_API_KEY), NO conectamos un
+    # Media Stream que se va a cerrar enseguida — eso hace que Twilio diga "an
+    # application error has occurred". Decimos un mensaje cálido y cortamos prolijo.
+    if not settings.openai_api_key:
+        logger.warning("OPENAI_API_KEY ausente: respondo /twilio/voice con un mensaje hablado (sin IA).")
+        twiml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<Response><Say voice="Polly.Mia" language="es-MX">'
+            'Hola, te llamamos del sistema de acompañamiento de tu familia. '
+            'En un ratito vamos a poder charlar tranquilos. Que tengas un muy lindo día.'
+            '</Say><Hangup/></Response>'
+        )
+        return Response(content=twiml, media_type="application/xml")
+
     base = settings.public_base_url.rstrip("/")
     ws_url = f"{base.replace('https://', 'wss://')}/twilio/media-stream"
     token = make_stream_token(signing_secret(), int(paciente_id or 0))

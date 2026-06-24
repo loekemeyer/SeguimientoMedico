@@ -148,6 +148,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .btn--login { flex: none; font-size: 1.02rem; font-weight: 700; padding: 11px 18px;
   background: #fff; color: var(--teal-700); border: 2px solid var(--teal-500); }
 .btn--login:hover { background: var(--teal-50); }
+.check-hint { display: block; font-size: .82rem; color: var(--slate); font-weight: 400; margin-top: 2px; }
 
 .tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 22px; }
 .tabs__btn {
