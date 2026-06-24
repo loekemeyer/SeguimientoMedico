@@ -71,15 +71,14 @@ function showPage(page) {
 /* ====================================================================
    AUTENTICACIÓN
 ==================================================================== */
-$$(".tabs__btn").forEach((b) =>
-  b.addEventListener("click", () => {
-    $$(".tabs__btn").forEach((x) => x.classList.remove("is-active"));
-    b.classList.add("is-active");
-    const tab = b.dataset.tab;
-    $("#form-login").classList.toggle("is-hidden", tab !== "login");
-    $("#form-register").classList.toggle("is-hidden", tab !== "register");
-  })
-);
+/* Iniciar sesión es un pop-up (la pantalla empuja "Probar gratis"). */
+function abrirLogin() {
+  $("#modal-login")?.classList.remove("is-hidden");
+  setTimeout(() => $('#form-login input[name="email"]')?.focus(), 50);
+}
+function cerrarLogin() { $("#modal-login")?.classList.add("is-hidden"); }
+$("#abrir-login")?.addEventListener("click", abrirLogin);
+$$("[data-close-login]").forEach((el) => el.addEventListener("click", cerrarLogin));
 
 /* mostrar / ocultar contraseña */
 $$(".pw-toggle").forEach((btn) =>
@@ -105,6 +104,7 @@ $("#form-login")?.addEventListener("submit", async (e) => {
         body: { email: f.get("email"), password: f.get("password") },
       });
       localStorage.setItem(TOKEN_KEY, r.access_token);
+      cerrarLogin();
       await enterApp();
     } catch (ex) { err.textContent = ex.message; }
   });

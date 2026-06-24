@@ -65,26 +65,6 @@
 
     <div class="auth__formside">
       <div class="card auth__card">
-        <div class="tabs" role="tablist">
-          <button class="tabs__btn is-active" data-tab="register">Probar gratis</button>
-          <button class="tabs__btn" data-tab="login">Iniciar sesión</button>
-        </div>
-
-        <form id="form-login" class="form is-hidden">
-          <h2 class="form__title">Hola de nuevo 👋</h2>
-          <label class="field"><span>Email</span>
-            <input type="email" name="email" placeholder="tu@email.com" required />
-          </label>
-          <label class="field"><span>Contraseña</span>
-            <div class="pw-wrap">
-              <input type="password" name="password" placeholder="••••••••" required />
-              <button type="button" class="pw-toggle" aria-label="Mostrar contraseña">👁</button>
-            </div>
-          </label>
-          <button class="btn btn--primary btn--block" type="submit">Entrar</button>
-          <p class="form__error" data-error></p>
-        </form>
-
         <form id="form-register" class="form">
           <h2 class="form__title">Empecemos 🌱</h2>
           <label class="field"><span>Tu nombre</span>
@@ -133,6 +113,7 @@
           <button class="btn btn--primary btn--block" type="submit">Crear mi cuenta</button>
           <p class="form__error" data-error></p>
         </form>
+        <p class="auth__switch">¿Ya tenés cuenta? <button type="button" class="auth__switch-link" id="abrir-login">Iniciar sesión</button></p>
         <p class="appver" aria-hidden="true"></p>
       </div>
       <button type="button" class="auth__paciente-link" id="ir-paciente-login">¿Sos la persona acompañada? Entrá con tu código →</button>
@@ -609,6 +590,28 @@
           <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
           <button type="submit" class="btn btn--primary">Guardar persona</button>
         </div>
+        <p class="form__error" data-error></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: iniciar sesión ============ -->
+  <div id="modal-login" class="modal is-hidden">
+    <div class="modal__backdrop" data-close-login></div>
+    <div class="modal__panel card auth__card">
+      <button type="button" class="modal__close" data-close-login aria-label="Cerrar">✕</button>
+      <form id="form-login" class="form">
+        <h2 class="form__title">Hola de nuevo 👋</h2>
+        <label class="field"><span>Email</span>
+          <input type="email" name="email" placeholder="tu@email.com" required />
+        </label>
+        <label class="field"><span>Contraseña</span>
+          <div class="pw-wrap">
+            <input type="password" name="password" placeholder="••••••••" required />
+            <button type="button" class="pw-toggle" aria-label="Mostrar contraseña">👁</button>
+          </div>
+        </label>
+        <button class="btn btn--primary btn--block" type="submit">Entrar</button>
         <p class="form__error" data-error></p>
       </form>
     </div>
