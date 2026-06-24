@@ -48,8 +48,10 @@ def clave_valida(codigo_acceso: str, clave: str, *, ahora: float | None = None) 
         return False
     t = ahora if ahora is not None else time.time()
     clave = clave.strip()
-    if clave == clave_rotativa(codigo_acceso, ahora=t):
+    # compare_digest: comparación de tiempo constante (consistente con el resto del
+    # proyecto), aunque para 2 dígitos el riesgo de timing es marginal.
+    if hmac.compare_digest(clave, clave_rotativa(codigo_acceso, ahora=t)):
         return True
     if (int(t) % VENTANA_SEG) < GRACIA_BORDE_SEG:
-        return clave == clave_rotativa(codigo_acceso, ahora=t - VENTANA_SEG)
+        return hmac.compare_digest(clave, clave_rotativa(codigo_acceso, ahora=t - VENTANA_SEG))
     return False

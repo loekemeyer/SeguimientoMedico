@@ -53,10 +53,19 @@ def enforce(
     identity: str = "",
     limit: int,
     window: float,
+    include_ip: bool = True,
     detail: str = "Demasiados intentos. Esperá un momento y probá de nuevo.",
 ) -> None:
-    """Aplica el límite; lanza 429 si se excede. Clave = bucket + identidad + IP."""
-    key = f"{bucket}|{identity}|{client_ip(request)}"
+    """Aplica el límite; lanza 429 si se excede.
+
+    Clave = bucket + identidad (+ IP si `include_ip`). Con `include_ip=False` el
+    límite es GLOBAL por identidad y NO se puede evadir rotando `X-Forwarded-For`:
+    es lo que frena la fuerza bruta sobre un secreto de bajo espacio (la clave
+    rotativa de 2 dígitos) cuando se conoce el código de acceso.
+    """
+    key = f"{bucket}|{identity}"
+    if include_ip:
+        key = f"{key}|{client_ip(request)}"
     if not check_rate(key, limit=limit, window=window):
         raise HTTPException(status_code=429, detail=detail)
 

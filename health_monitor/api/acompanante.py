@@ -71,9 +71,16 @@ class AccesoIn(BaseModel):
 def login(data: AccesoIn, request: Request, db: Session = Depends(get_session)) -> dict:
     """Login del paciente: código de acceso + clave rotativa. Token sin vencimiento útil."""
     codigo = (data.codigo_acceso or "").strip()
-    # Anti-fuerza-bruta: la clave es de 2 dígitos. Limitamos por código y por IP.
+    # Anti-fuerza-bruta de la clave de 2 dígitos. Los límites POR CÓDIGO van sin IP
+    # (include_ip=False): si dependieran de la IP, un atacante que rota
+    # X-Forwarded-For tendría presupuesto nuevo por cada IP y podría adivinar la
+    # clave en segundos. Capamos por código (rápido y lento) y además por IP.
     enforce(request, bucket="paclogin", identity=codigo, limit=5, window=60,
+            include_ip=False,
             detail="Demasiados intentos. Esperá un momento y pedí la clave de nuevo.")
+    enforce(request, bucket="paclogin-lento", identity=codigo, limit=20, window=600,
+            include_ip=False,
+            detail="Demasiados intentos con este código. Esperá unos minutos.")
     enforce(request, bucket="paclogin-ip", limit=20, window=60,
             detail="Demasiados intentos. Esperá un momento y probá de nuevo.")
     p = db.scalar(select(Paciente).where(Paciente.codigo_acceso == codigo)) if codigo else None
@@ -116,7 +123,7 @@ def chat(
     # Gating de pago: la charla con IA es la feature paga. El saludo de apertura
     # (mensaje vacío) es siempre gratis; un turno real exige suscripción vigente
     # de la familia. Si no hay, respondemos con cariño y sin gastar API.
-    if (data.mensaje or "").strip() and not subscription_active(p.usuario):
+    if (data.mensaje or "").strip() and not (p.usuario and subscription_active(p.usuario)):
         return {
             "configurado": False,
             "respuesta": (
