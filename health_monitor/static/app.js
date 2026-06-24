@@ -245,14 +245,15 @@ function patientCard(p) {
   el.innerHTML = `
     <div class="pcard__top">
       <div class="avatar">${inicial}</div>
-      <div>
+      <div class="pcard__head">
         <div class="pcard__name">${escapeHtml(p.nombre || "Sin nombre")}</div>
         ${patHtml}
       </div>
+      ${estado}
     </div>
     <div class="pcard__row">🕒 Llamada diaria a las ${hora}</div>
     ${p.ultimo_nivel ? `<div class="pcard__row">Último seguimiento: <span class="badge badge--${p.ultimo_nivel.toLowerCase()}">${escapeHtml(p.ultimo_nivel)}</span></div>` : ""}
-    <div class="pcard__foot">${estado}<span class="pcard__tag">Ver detalle →</span></div>`;
+    <div class="pcard__foot"><span class="pcard__tag">Ver detalle →</span></div>`;
   el.addEventListener("click", () => openDetail(p.id));
   return el;
 }

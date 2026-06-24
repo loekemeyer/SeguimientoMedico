@@ -288,13 +288,15 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   transition: transform .15s ease, box-shadow .2s ease, border-color .2s;
 }
 .pcard:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: #d4e6e2; }
-.pcard__top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.pcard__top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.pcard__head { min-width: 0; flex: 1; }
+.pcard__top .badge { flex: none; margin-top: 2px; }
 .pcard__name { font-family: var(--font-head); font-weight: 700; font-size: 1.18rem; }
 .pcard__tag { font-size: .92rem; color: var(--slate); }
 .pat-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .pat-badge { font-size: .8rem; font-weight: 600; color: var(--teal-700); background: var(--teal-50); border: 1px solid #cdeee8; border-radius: 999px; padding: 3px 10px; }
 .pcard__row { display: flex; align-items: center; gap: 8px; color: var(--slate); font-size: .98rem; margin-top: 8px; }
-.pcard__foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.pcard__foot { display: flex; align-items: center; justify-content: flex-end; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 
 .pcard--add {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
