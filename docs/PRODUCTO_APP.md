@@ -46,8 +46,10 @@ obra social/prepaga** o **por privado**. Decisiones presumidas con defaults sens
    ícono SVG + metadatos. La web ya se puede "Agregar a la pantalla de inicio" como app.
    (Pendiente menor: íconos PNG 192/512 — no había rasterizador acá; el SVG cubre
    Chrome/Android. Requiere vistazo visual del usuario en el celular.)
-4. [ ] Módulo de pagos: interfaz `PaymentProvider` + Mercado Pago + pantalla "Mi
-   suscripción" + webhook. 🔑
+4. ✅ Esqueleto de pagos: interfaz `PaymentProvider` agnóstica + `MercadoPagoProvider`
+   (inerte sin credenciales) + router `/billing` (estado + suscribir; obra social no
+   paga) + pantalla "Mi suscripción" (al tocar el chip del plan). Falta la integración
+   real de Mercado Pago (crear preferencia + webhook). 🔑
 5. [ ] Integración real de cartillas por prestador. 🔑
 
 ## Decisiones del usuario

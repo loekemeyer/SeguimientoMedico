@@ -504,6 +504,54 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/* ====================================================================
+   MI SUSCRIPCIÓN
+==================================================================== */
+const subModal = $("#modal-sub");
+$("#plan-chip").addEventListener("click", openSubModal);
+$$("[data-close-sub]").forEach((el) =>
+  el.addEventListener("click", () => subModal.classList.add("is-hidden"))
+);
+
+async function openSubModal() {
+  subModal.classList.remove("is-hidden");
+  $("#sub-body").innerHTML = `<p class="empty">Cargando…</p>`;
+  try {
+    renderSub(await api("/billing/estado"));
+  } catch (e) {
+    $("#sub-body").innerHTML = `<p class="form__error">${escapeHtml(e.message)}</p>`;
+  }
+}
+
+function renderSub(s) {
+  const vence = s.suscripcion_vence
+    ? new Date(s.suscripcion_vence).toLocaleDateString("es-AR")
+    : "—";
+  const plan = s.plan_disponible || {};
+  let html = `<div class="kv">
+    <div class="kv__row"><span>Estado</span><span>${escapeHtml(s.plan || "trial")}</span></div>
+    <div class="kv__row"><span>Vigente hasta</span><span>${vence}</span></div>`;
+  if (s.tipo_cuenta === "obra_social") {
+    html += `<div class="kv__row"><span>Cobertura</span><span>${escapeHtml(s.obra_social || "Obra social")}</span></div></div>
+      <p class="hint">Tu seguimiento está cubierto por tu obra social. No tenés que pagar nada. 💚</p>`;
+  } else {
+    html += `</div>
+      <p class="hint">${escapeHtml(plan.nombre || "Plan")}: <strong>$${plan.precio || 0} ${escapeHtml(plan.moneda || "ARS")}</strong> por mes.</p>
+      <button class="btn btn--primary btn--block" id="btn-suscribir">Suscribirme</button>`;
+  }
+  $("#sub-body").innerHTML = html;
+  const btn = $("#btn-suscribir");
+  if (btn) btn.addEventListener("click", suscribir);
+}
+
+async function suscribir() {
+  try {
+    const r = await api("/billing/suscribir", { method: "POST" });
+    if (r.checkout_url) { window.location.href = r.checkout_url; return; }
+    toast(r.detail || "Listo", r.status === "no_disponible");
+  } catch (e) { toast(e.message, true); }
+}
+
 /* ---------- PWA: registrar el service worker (app instalable) ---------- */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () =>

@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     # Triaje / alertas
     emergency_webhook: str = ""  # central de emergencias / médico de guardia
 
+    # Pagos / suscripción (pasarela: Mercado Pago por default). Sin token, el módulo
+    # de pagos queda inerte y la app igual funciona (el estado vive en Usuario).
+    mercadopago_access_token: str = ""
+
     # Operación
     environment: str = "dev"  # dev | production (en production, JWT_SECRET es obligatorio)
     log_level: str = "INFO"

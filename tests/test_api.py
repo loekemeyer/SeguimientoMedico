@@ -302,6 +302,27 @@ def test_sugerencias_y_notificaciones_se_listan():
     assert n.status_code == 200 and n.json() == []
 
 
+def test_billing_estado_y_suscribir_privado():
+    headers = _register("billing@test.com")
+    e = client.get("/billing/estado", headers=headers)
+    assert e.status_code == 200
+    assert e.json()["plan_disponible"]["precio"] > 0
+    assert e.json()["proveedor_configurado"] is False  # sin credenciales en test
+    r = client.post("/billing/suscribir", headers=headers)
+    assert r.status_code == 200
+    assert r.json()["status"] == "no_disponible"  # sin pasarela configurada
+
+
+def test_billing_obra_social_no_paga():
+    r = client.post("/auth/register", json={
+        "email": "osbilling@test.com", "password": "secret123",
+        "tipo_cuenta": "obra_social", "obra_social": "CEMIC", "nro_afiliado": "123456789",
+    })
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    s = client.post("/billing/suscribir", headers=headers)
+    assert s.json()["status"] == "cubierto"
+
+
 def test_pwa_manifest_y_service_worker_se_sirven():
     """La PWA necesita que el manifest y el service worker se sirvan en la raíz."""
     m = client.get("/manifest.webmanifest")

@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from health_monitor import __version__
 from health_monitor.agents.orchestrator import run_post_call
 from health_monitor.api import auth as auth_routes
+from health_monitor.api import billing as billing_routes
 from health_monitor.api import patients as patients_routes
 from health_monitor.api import whatsapp as whatsapp_routes
 from health_monitor.api.deps import require_active_subscription
@@ -67,6 +68,7 @@ async def _trace_id_middleware(request: Request, call_next):
 app.include_router(auth_routes.router)
 app.include_router(patients_routes.router)
 app.include_router(whatsapp_routes.router)
+app.include_router(billing_routes.router)
 
 
 @app.on_event("startup")
