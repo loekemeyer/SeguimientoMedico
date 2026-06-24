@@ -143,10 +143,11 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 
 .auth__formside { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 5vw; min-width: 0; }
 .auth__card { width: 100%; max-width: 410px; box-shadow: var(--shadow); }
-.auth__switch { text-align: center; color: var(--slate); font-size: .95rem; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
-.auth__switch-link { background: none; border: none; cursor: pointer; padding: 0; font: inherit;
-  color: var(--teal-700); font-weight: 700; text-decoration: underline; }
-.auth__switch-link:hover { color: var(--teal-800); }
+.form__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+.form__head .form__title { margin: 0; min-width: 0; }
+.btn--login { flex: none; font-size: 1.02rem; font-weight: 700; padding: 11px 18px;
+  background: #fff; color: var(--teal-700); border: 2px solid var(--teal-500); }
+.btn--login:hover { background: var(--teal-50); }
 
 .tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 22px; }
 .tabs__btn {

@@ -66,7 +66,10 @@
     <div class="auth__formside">
       <div class="card auth__card">
         <form id="form-register" class="form">
-          <h2 class="form__title">Empecemos 🌱</h2>
+          <div class="form__head">
+            <h2 class="form__title">Empecemos 🌱</h2>
+            <button type="button" class="btn btn--soft btn--login" id="abrir-login">Iniciar sesión</button>
+          </div>
           <label class="field"><span>Tu nombre</span>
             <input type="text" name="nombre" placeholder="Nombre y apellido" />
           </label>
@@ -113,7 +116,6 @@
           <button class="btn btn--primary btn--block" type="submit">Crear mi cuenta</button>
           <p class="form__error" data-error></p>
         </form>
-        <p class="auth__switch">¿Ya tenés cuenta? <button type="button" class="auth__switch-link" id="abrir-login">Iniciar sesión</button></p>
         <p class="appver" aria-hidden="true"></p>
       </div>
       <button type="button" class="auth__paciente-link" id="ir-paciente-login">¿Sos la persona acompañada? Entrá con tu código →</button>
