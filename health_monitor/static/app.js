@@ -272,12 +272,28 @@ async function loadAdmin() {
           <td class="num">${fmtARS(c.ingreso_mensual_ars)}</td>
           <td class="num">${fmtARS(c.costo_periodo_ars)}</td>
           <td class="num ${c.margen_ars < 0 ? "neg" : "pos"}">${fmtARS(c.margen_ars)}</td>
+          <td class="num"><button class="btn btn--soft btn--xs admin-activar" data-uid="${c.usuario_id}" data-email="${escapeHtml(c.email || "")}">Activar</button></td>
         </tr>`).join("");
-      tabla.innerHTML = `<thead><tr><th>Cliente</th><th class="num">Ingreso</th><th class="num">Costo</th><th class="num">Margen</th></tr></thead><tbody>${rows || `<tr><td colspan="4" class="hint">Sin clientes todavía.</td></tr>`}</tbody>`;
+      tabla.innerHTML = `<thead><tr><th>Cliente</th><th class="num">Ingreso</th><th class="num">Costo</th><th class="num">Margen</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="hint">Sin clientes todavía.</td></tr>`}</tbody>`;
+      $$(".admin-activar", tabla).forEach((b) => b.addEventListener("click", () => activarCliente(b.dataset.uid, b.dataset.email)));
     }
   } catch (e) {
     if (kpis) kpis.innerHTML = `<p class="hint">No se pudo cargar el panel: ${escapeHtml(e.message || "")}</p>`;
   }
+}
+
+async function activarCliente(uid, email) {
+  const plan = prompt(`Activar suscripción de ${email}\n\nEscribí el plan: "app" o "telefono"`, "app");
+  if (!plan) return;
+  const plan_tipo = plan.trim().toLowerCase();
+  if (!["app", "telefono"].includes(plan_tipo)) { toast("Plan inválido (app/telefono)", true); return; }
+  const mesesTxt = prompt("¿Cuántos meses?", "1");
+  const meses = Math.max(1, parseInt(mesesTxt || "1", 10) || 1);
+  try {
+    await api("/bi/activar", { method: "POST", body: { usuario_id: Number(uid), plan_tipo, meses } });
+    toast("Cliente activado ✅");
+    loadAdmin();
+  } catch (e) { toast(e.message, true); }
 }
 
 async function loadPatients() {

@@ -12,12 +12,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from health_monitor.api.deps import require_owner
-from health_monitor.db.models import EventoUso, Paciente, Usuario
+from health_monitor.db.models import AuditLog, EventoUso, Paciente, Usuario
 from health_monitor.db.session import get_session
 from health_monitor.payments import PLANES
 from shared.config import get_settings
@@ -177,4 +178,44 @@ def asesor(
         "recomendaciones": recs,
         "narrativa": narrativa,
         "configurado": narrativa is not None,
+    }
+
+
+class ActivarIn(BaseModel):
+    usuario_id: int
+    plan_tipo: str = "app"  # app | telefono
+    meses: int = 1
+
+
+@router.post("/activar")
+def activar(
+    data: ActivarIn,
+    owner: Usuario = Depends(require_owner),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Activa manualmente la suscripción de un cliente (tras confirmar el pago).
+
+    Cierra el lazo de cobro mientras no esté el webhook de MercadoPago: el dueño
+    confirma el pago en MP y acá deja al cliente como pago. Idempotente por diseño
+    (vuelve a setear el estado). Queda asentado en AuditLog.
+    """
+    if data.plan_tipo not in PLANES:
+        raise HTTPException(status_code=400, detail="plan_tipo inválido (app|telefono)")
+    u = db.get(Usuario, data.usuario_id)
+    if u is None:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    meses = max(1, min(36, data.meses))
+    u.plan = "activo"
+    u.plan_tipo = data.plan_tipo
+    u.suscripcion_vence = datetime.now(timezone.utc) + timedelta(days=30 * meses)
+    db.add(AuditLog(
+        usuario_id=owner.id, accion="activar_suscripcion", recurso="usuario",
+        recurso_id=u.id, detalle=f"plan {data.plan_tipo} x{meses}m (manual)",
+    ))
+    db.commit()
+    return {
+        "usuario_id": u.id,
+        "plan": u.plan,
+        "plan_tipo": u.plan_tipo,
+        "suscripcion_vence": u.suscripcion_vence.isoformat(),
     }

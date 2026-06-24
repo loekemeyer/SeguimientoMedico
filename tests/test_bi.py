@@ -87,6 +87,26 @@ def test_bi_asesor_niega_a_no_dueno():
     assert client.get("/bi/asesor", headers=h).status_code == 403
 
 
+def test_bi_activar_suscripcion():
+    # creamos un cliente (no dueño) y lo activamos desde el panel del dueño
+    rc = client.post("/auth/register", json={"email": "porpagar@test.com", "password": "secret123", "nombre": "X"})
+    # obtener su id vía login + /auth/me
+    me = client.get("/auth/me", headers={"Authorization": f"Bearer {rc.json()['access_token']}"}).json()
+    uid = me["id"]
+
+    owner = _auth("dueno@test.com")
+    r = client.post("/bi/activar", headers=owner, json={"usuario_id": uid, "plan_tipo": "telefono", "meses": 2})
+    assert r.status_code == 200, r.text
+    assert r.json()["plan"] == "activo"
+    assert r.json()["plan_tipo"] == "telefono"
+
+    # plan_tipo inválido => 400; usuario inexistente => 404; no-dueño => 403
+    assert client.post("/bi/activar", headers=owner, json={"usuario_id": uid, "plan_tipo": "x"}).status_code == 400
+    assert client.post("/bi/activar", headers=owner, json={"usuario_id": 999999, "plan_tipo": "app"}).status_code == 404
+    cliente = _auth("nodueno@test.com")
+    assert client.post("/bi/activar", headers=cliente, json={"usuario_id": uid, "plan_tipo": "app"}).status_code == 403
+
+
 def test_bi_sin_owner_email_niega_a_todos(monkeypatch):
     # Si OWNER_EMAIL no está configurado, el panel se cierra (seguro por defecto).
     monkeypatch.setenv("OWNER_EMAIL", "")

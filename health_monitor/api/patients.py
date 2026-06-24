@@ -51,11 +51,19 @@ def _cipher() -> FieldCipher:
     return FieldCipher(get_settings().encryption_key)
 
 
-def _owned_paciente(db: Session, user: Usuario, paciente_id: int) -> Paciente:
-    """Devuelve el paciente solo si pertenece al usuario; si no, 404."""
+def _owned_paciente(
+    db: Session, user: Usuario, paciente_id: int, *, solo_activo: bool = False
+) -> Paciente:
+    """Devuelve el paciente solo si pertenece al usuario; si no, 404.
+
+    Con ``solo_activo=True`` también rechaza pacientes dados de baja (para las
+    acciones que los contactan: no se llama ni se le escribe a un paciente inactivo).
+    """
     p = db.get(Paciente, paciente_id)
     if p is None or p.usuario_id != user.id:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    if solo_activo and not p.activo:
+        raise HTTPException(status_code=404, detail="Paciente dado de baja")
     return p
 
 
@@ -460,7 +468,7 @@ def llamar_ahora(
     """Dispara una llamada de seguimiento inmediata (sin esperar el horario)."""
     from health_monitor.services import require_consent
 
-    p = _owned_paciente(db, user, paciente_id)
+    p = _owned_paciente(db, user, paciente_id, solo_activo=True)
     require_consent(p)
 
     s = get_settings()
