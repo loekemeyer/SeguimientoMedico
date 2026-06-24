@@ -215,7 +215,9 @@ def test_rutina_y_contactos():
     assert client.delete(f"/pacientes/{pid}/contactos/999", headers=otro).status_code == 404
 
 
-def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
+def test_suscripcion_vencida_permite_cargar_info_pero_no_contactar():
+    """Política: cargar info (CRUD) es gratis aun con la suscripción vencida; sólo
+    contactar (llamar/WhatsApp) requiere suscripción vigente."""
     from datetime import datetime, timedelta, timezone
 
     from sqlalchemy import select
@@ -234,15 +236,18 @@ def test_suscripcion_vencida_bloquea_escritura_pero_permite_lectura():
     finally:
         db.close()
 
-    # La lectura sigue permitida (puede ver sus datos y renovar).
+    # La lectura sigue permitida.
     assert client.get("/pacientes", headers=headers).status_code == 200
-    # La escritura se bloquea con 402 Payment Required.
+    # Cargar info (crear paciente) AHORA es gratis aun con la suscripción vencida.
     r = client.post(
         "/pacientes",
-        json={"nombre": "X", "telefono_whatsapp": "+5490000000001"},
+        json={"nombre": "X", "telefono_whatsapp": "+5490000000001", "consentimiento_firmado": True},
         headers=headers,
     )
-    assert r.status_code == 402, r.text
+    assert r.status_code == 201, r.text
+    # Pero contactar (llamar) requiere suscripción vigente => 402.
+    pid = r.json()["id"]
+    assert client.post(f"/pacientes/{pid}/llamar", headers=headers).status_code == 402
 
 
 def test_auditoria_registra_alta_y_edicion():
@@ -362,6 +367,37 @@ def test_billing_obra_social_no_paga():
     headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
     s = client.post("/billing/suscribir", headers=headers)
     assert s.json()["status"] == "cubierto"
+
+
+def test_cargar_info_gratis_pero_contactar_requiere_suscripcion():
+    """Cargar info (pacientes/rutina/contactos) es gratis; contactar (llamar) paga."""
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import select
+
+    import health_monitor.db.session as sess
+    from health_monitor.db.models import Usuario
+
+    headers = _register("gating@test.com")
+    p = client.post("/pacientes", headers=headers, json={
+        "nombre": "X", "telefono_whatsapp": "+5491100000000", "consentimiento_firmado": True})
+    assert p.status_code == 201
+    pid = p.json()["id"]
+
+    # Vencemos la suscripción del usuario directamente en la DB.
+    db = sess._SessionLocal()
+    u = db.scalar(select(Usuario).where(Usuario.email == "gating@test.com"))
+    u.suscripcion_vence = datetime.now(timezone.utc) - timedelta(days=1)
+    db.commit()
+    db.close()
+
+    # Con la suscripción vencida: cargar info SIGUE gratis...
+    r2 = client.post(f"/pacientes/{pid}/rutina", headers=headers,
+                     json={"tipo": "medicamento", "nombre": "Losartán"})
+    assert r2.status_code == 201, r2.text
+    # ...pero LLAMAR (contactar) requiere suscripción vigente => 402.
+    r3 = client.post(f"/pacientes/{pid}/llamar", headers=headers)
+    assert r3.status_code == 402, r3.text
 
 
 def test_pwa_manifest_y_service_worker_se_sirven():

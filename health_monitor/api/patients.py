@@ -133,7 +133,7 @@ def _apply_personalidad(p: Paciente, pers: PersonalidadAcompanante) -> None:
 @router.post("", response_model=PacienteOut, status_code=201)
 def crear_paciente(
     data: PacienteIn,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> PacienteOut:
     cipher = _cipher()
@@ -200,7 +200,7 @@ def codigo_rotativo_paciente(
 def actualizar_paciente(
     paciente_id: int,
     data: PacienteIn,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> PacienteOut:
     cipher = _cipher()
@@ -248,7 +248,7 @@ def _rutina_out(r: RutinaItem, cipher: FieldCipher) -> RutinaItemOut:
 def agregar_rutina(
     paciente_id: int,
     data: RutinaItemIn,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> RutinaItemOut:
     _owned_paciente(db, user, paciente_id)
@@ -284,7 +284,7 @@ def listar_rutina(
 def borrar_rutina(
     paciente_id: int,
     rutina_id: int,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> None:
     """Quita un ítem de la rutina del paciente (solo el dueño)."""
@@ -303,7 +303,7 @@ def borrar_rutina(
 def agregar_contacto(
     paciente_id: int,
     data: ContactoIn,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> ContactoOut:
     _owned_paciente(db, user, paciente_id)
@@ -349,7 +349,7 @@ def listar_contactos(
 def borrar_contacto(
     paciente_id: int,
     contacto_id: int,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> None:
     """Quita un contacto de emergencia del paciente (solo el dueño)."""
