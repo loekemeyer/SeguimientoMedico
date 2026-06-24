@@ -300,6 +300,7 @@ async function openDetail(id) {
     renderSugerencias(sugerencias);
     renderNotificaciones(notifs);
     startClaveRotativa(id);
+    resetAddForms();
   } catch (e) { toast(e.message, true); }
 }
 
@@ -531,6 +532,21 @@ function historyRow(e) {
 
 $("#btn-back")?.addEventListener("click", () => { showPage("list"); loadPatients(); });
 $("#btn-add")?.addEventListener("click", openModal);
+
+/* mostrar los formularios de "agregar contacto/rutina" solo al tocar (no abrumar) */
+function resetAddForms() {
+  $$(".addform-toggle").forEach((b) => {
+    b.classList.remove("is-hidden");
+    const f = $("#" + b.dataset.form);
+    if (f) f.classList.add("is-hidden");
+  });
+}
+$$(".addform-toggle").forEach((b) => b.addEventListener("click", () => {
+  const f = $("#" + b.dataset.form);
+  if (!f) return;
+  f.classList.remove("is-hidden");
+  b.classList.add("is-hidden");
+}));
 
 /* ---------- modal alta / edición de paciente ---------- */
 let editingId = null;

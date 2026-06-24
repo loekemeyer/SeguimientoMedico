@@ -521,7 +521,12 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   .auth { display: block; }
   .auth__brandside { padding: 26px 22px calc(26px + env(safe-area-inset-top)); }
   .auth__headline { font-size: 1.55rem; margin: 16px 0 0; }
-  .carousel { margin-top: 16px; max-width: none; }
+  /* Híbrido: en mobile los 5 beneficios van como lista vertical (mejor lectura),
+     no como carrusel que se mueve solo. En desktop sigue siendo carrusel. */
+  .carousel { margin-top: 16px; max-width: none; overflow: visible; }
+  .carousel__track { flex-direction: column; gap: 20px; transform: none !important; }
+  .carousel__slide { flex: none; }
+  .carousel__dots { display: none; }
   .carousel__title { font-size: 1.2rem; }
   .carousel__text { font-size: .98rem; }
   .auth__formside { padding: 22px; }
