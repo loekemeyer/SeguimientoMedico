@@ -10,7 +10,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from health_monitor.api.deps import get_current_user, require_active_subscription
+from health_monitor.api.deps import (
+    get_current_user,
+    require_active_subscription,
+    require_plan_telefono,
+)
 from health_monitor.db.models import (
     AuditLog,
     ContactoEmergencia,
@@ -450,7 +454,7 @@ def historial_notificaciones(
 @router.post("/{paciente_id}/llamar")
 def llamar_ahora(
     paciente_id: int,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(require_plan_telefono),
     db: Session = Depends(get_session),
 ) -> dict:
     """Dispara una llamada de seguimiento inmediata (sin esperar el horario)."""

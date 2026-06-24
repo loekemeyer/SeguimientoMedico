@@ -39,7 +39,13 @@ def subscription_active(user: Usuario, now: datetime | None = None) -> bool:
     cortesía/interna). Tolera fechas naive (SQLite no preserva la zona horaria).
     """
     now = now or datetime.now(timezone.utc)
-    if not user.activo or user.plan == "cancelado":
+    if not user.activo:
+        return False
+    # Obra social: la cobertura corre por cuenta del prestador, no por una
+    # suscripción paga. La cuenta opera siempre (no se la bloquea con 402).
+    if user.tipo_cuenta == "obra_social":
+        return True
+    if user.plan == "cancelado":
         return False
     vence = user.suscripcion_vence
     if vence is not None:
@@ -64,6 +70,27 @@ def require_active_subscription(
             detail=(
                 "Tu suscripción no está vigente. Renovala para seguir gestionando "
                 "pacientes y llamadas."
+            ),
+        )
+    return user
+
+
+def require_plan_telefono(user: Usuario = Depends(require_active_subscription)) -> Usuario:
+    """Como `require_active_subscription` pero además exige el plan Teléfono.
+
+    Las llamadas de voz salientes (Twilio) tienen el costo del plan Teléfono
+    ($20.000). Un cliente que pagó el plan App ($10.000) no las incluye. La obra
+    social y el período de prueba (trial) sí pueden usarlas (cobertura / evaluación).
+    """
+    if user.tipo_cuenta == "obra_social":
+        return user
+    if user.plan == "activo" and user.plan_tipo == "app":
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                "Las llamadas telefónicas son parte del plan Teléfono. Tu plan "
+                "actual es App (charla desde la app). Cambiá al plan Teléfono para "
+                "que la llamemos por teléfono."
             ),
         )
     return user

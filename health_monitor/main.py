@@ -29,7 +29,7 @@ from health_monitor.api import bi as bi_routes
 from health_monitor.api import billing as billing_routes
 from health_monitor.api import patients as patients_routes
 from health_monitor.api import whatsapp as whatsapp_routes
-from health_monitor.api.deps import require_active_subscription
+from health_monitor.api.deps import require_active_subscription, require_plan_telefono
 from health_monitor.db.models import Paciente, Usuario
 from health_monitor.db.session import get_session
 from health_monitor.realtime.media_stream import MediaStreamBridge
@@ -124,7 +124,7 @@ def health() -> dict:
 @app.post("/calls/{paciente_id}/initiate")
 def initiate_call(
     paciente_id: int,
-    user: Usuario = Depends(require_active_subscription),
+    user: Usuario = Depends(require_plan_telefono),
     db: Session = Depends(get_session),
 ) -> JSONResponse:
     """Inicia una llamada saliente de seguimiento hacia el WhatsApp del paciente.

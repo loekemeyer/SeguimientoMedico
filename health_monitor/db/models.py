@@ -20,6 +20,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -201,6 +202,11 @@ class ContactoEmergencia(Base):
 
 class EvolucionDiaria(Base):
     __tablename__ = "evolucion_diaria"
+    # Índice compuesto para la consulta caliente: el historial y el "estado de
+    # hoy" piden las evoluciones de un paciente ordenadas por fecha descendente.
+    __table_args__ = (
+        Index("ix_evolucion_paciente_fecha", "paciente_id", "fecha"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     paciente_id: Mapped[int] = mapped_column(
