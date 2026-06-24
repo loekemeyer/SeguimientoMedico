@@ -266,7 +266,18 @@
             <form id="form-contacto" class="addform is-hidden">
               <div class="addform__row">
                 <input name="nombre" placeholder="Nombre (ej: Thomas)" required />
-                <input name="telefono" placeholder="WhatsApp (+54911...)" required />
+                <div class="phone-input">
+                  <select class="select phone-cc" aria-label="País">
+                    <option value="+549" selected>🇦🇷 +54</option>
+                    <option value="+598">🇺🇾 +598</option>
+                    <option value="+569">🇨🇱 +56</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+595">🇵🇾 +595</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+34">🇪🇸 +34</option>
+                  </select>
+                  <input type="text" inputmode="numeric" class="phone-num" name="telefono" placeholder="11 3118 1594" required />
+                </div>
               </div>
               <div class="addform__row">
                 <input name="relacion" placeholder="Relación (ej: hijo)" />
@@ -414,7 +425,18 @@
             <input type="text" name="nombre" placeholder="Ej: Papá, Abuela Rosa, Rosa Pérez…" required />
           </label>
           <label class="field"><span>WhatsApp del paciente</span>
-            <input type="text" name="telefono_whatsapp" placeholder="+54911..." required />
+            <div class="phone-input">
+              <select class="select phone-cc" aria-label="País">
+                <option value="+549" selected>🇦🇷 +54</option>
+                <option value="+598">🇺🇾 +598</option>
+                <option value="+569">🇨🇱 +56</option>
+                <option value="+55">🇧🇷 +55</option>
+                <option value="+595">🇵🇾 +595</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+34">🇪🇸 +34</option>
+              </select>
+              <input type="text" inputmode="numeric" class="phone-num" name="telefono_whatsapp" placeholder="11 3118 1594" required />
+            </div>
           </label>
         </div>
         <div class="field"><span>Enfermedades / patologías</span>
@@ -531,7 +553,18 @@
               <input type="text" name="contacto_nombre" placeholder="Ej: Thomas (hijo)" />
             </label>
             <label class="field"><span>WhatsApp del familiar</span>
-              <input type="text" name="contacto_telefono" placeholder="+54911..." />
+              <div class="phone-input">
+                <select class="select phone-cc" aria-label="País">
+                  <option value="+549" selected>🇦🇷 +54</option>
+                  <option value="+598">🇺🇾 +598</option>
+                  <option value="+569">🇨🇱 +56</option>
+                  <option value="+55">🇧🇷 +55</option>
+                  <option value="+595">🇵🇾 +595</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+34">🇪🇸 +34</option>
+                </select>
+                <input type="text" inputmode="numeric" class="phone-num" name="contacto_telefono" placeholder="11 3118 1594" />
+              </div>
             </label>
           </div>
         </div>

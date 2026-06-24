@@ -384,7 +384,7 @@ $("#form-contacto")?.addEventListener("submit", async (e) => {
     await api(`/pacientes/${currentPatient.id}/contactos`, {
       method: "POST",
       body: {
-        nombre: f.get("nombre"), telefono: f.get("telefono"),
+        nombre: f.get("nombre"), telefono: getPhone(e.target, "telefono"),
         relacion: f.get("relacion") || "", prioridad: Number(f.get("prioridad")) || 1,
         recibe_alertas: f.get("recibe_alertas") === "on",
       },
@@ -612,7 +612,7 @@ function openEditModal() {        // edición del paciente abierto
   $("#contacto-section").classList.add("is-hidden");
   form.reset();
   $("[name=nombre]", form).value = currentPatient.nombre || "";
-  $("[name=telefono_whatsapp]", form).value = currentPatient.telefono_whatsapp || "";
+  setPhone(form, "telefono_whatsapp", currentPatient.telefono_whatsapp || "");
   setPatologiasChips(currentPatient.patologias || []);
   $("[name=llamada_hora]", form).value = currentPatient.programacion?.llamada_hora || "10:00";
   $("[name=consentimiento_firmado]", form).checked = !!currentPatient.consentimiento_firmado;
@@ -744,7 +744,7 @@ form.addEventListener("submit", async (e) => {
   };
   const body = {
     nombre: f.get("nombre"),
-    telefono_whatsapp: f.get("telefono_whatsapp"),
+    telefono_whatsapp: getPhone(e.target, "telefono_whatsapp"),
     consentimiento_firmado: f.get("consentimiento_firmado") === "on",
     patologias,
     personalidad,
@@ -761,7 +761,7 @@ form.addEventListener("submit", async (e) => {
       if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
         await api(`/pacientes/${p.id}/contactos`, {
           method: "POST",
-          body: { nombre: f.get("contacto_nombre"), telefono: f.get("contacto_telefono"), relacion: "familiar", prioridad: 1 },
+          body: { nombre: f.get("contacto_nombre"), telefono: getPhone(e.target, "contacto_telefono"), relacion: "familiar", prioridad: 1 },
         }).catch(() => {});
       }
       closeModal();
@@ -774,6 +774,32 @@ form.addEventListener("submit", async (e) => {
 /* ---------- util ---------- */
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------- teléfono con país (bandera + código, sin escribir el +54) ---------- */
+function getPhone(scope, name) {
+  const num = $(`[name="${name}"]`, scope);
+  if (!num) return "";
+  const cc = num.closest(".phone-input")?.querySelector(".phone-cc")?.value || "+549";
+  let n = (num.value || "").replace(/\D/g, "").replace(/^0+/, "");
+  const ccd = cc.replace(/\D/g, "");
+  if (n.startsWith(ccd)) n = n.slice(ccd.length);
+  return n ? cc + n : "";
+}
+function setPhone(scope, name, full) {
+  const num = $(`[name="${name}"]`, scope);
+  if (!num) return;
+  const sel = num.closest(".phone-input")?.querySelector(".phone-cc");
+  const digits = (full || "").replace(/\D/g, "");
+  if (sel) {
+    const opts = [...sel.options].map((o) => o.value)
+      .sort((a, b) => b.replace(/\D/g, "").length - a.replace(/\D/g, "").length);
+    for (const cc of opts) {
+      const d = cc.replace(/\D/g, "");
+      if (digits.startsWith(d)) { sel.value = cc; num.value = digits.slice(d.length); return; }
+    }
+  }
+  num.value = digits;
 }
 
 /* ====================================================================

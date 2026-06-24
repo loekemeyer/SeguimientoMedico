@@ -201,6 +201,11 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .chip__x { border: none; background: transparent; color: inherit; cursor: pointer; font-size: .78rem; padding: 0; line-height: 1; opacity: .7; }
 .chip__x:hover { opacity: 1; }
 
+/* Teléfono con país (bandera + código): no escriben el +54 */
+.phone-input { display: flex; gap: 6px; align-items: stretch; }
+.phone-input .phone-cc { flex: none; width: auto; padding-left: 8px; padding-right: 2px; }
+.phone-input .phone-num { flex: 1; min-width: 0; }
+
 /* Selector segmentado (ej. tipo de cuenta en el registro) */
 .segmented { display: flex; gap: 10px; }
 .segmented label {
