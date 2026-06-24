@@ -335,6 +335,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .cuenta__name { font-family: var(--font-head); font-weight: 700; font-size: 1.2rem; }
 .cuenta__mail { color: var(--slate); font-size: .95rem; word-break: break-all; }
 #cuenta-kv { margin: 0 0 18px; }
+.appver { text-align: center; color: var(--slate-400); font-size: .8rem; margin-top: 14px; }
 
 /* ====================================================================
    Modal + toast

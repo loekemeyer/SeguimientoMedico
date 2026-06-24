@@ -639,5 +639,15 @@ if ("serviceWorker" in navigator) {
   );
 }
 
+/* ---------- versión del build (fuente única: /health) ---------- */
+async function loadVersion() {
+  try {
+    const h = await api("/health", { auth: false });
+    const txt = "v" + (h.version || "?");
+    $$(".appver").forEach((el) => (el.textContent = txt));
+  } catch { /* sin conexión: no mostramos versión */ }
+}
+loadVersion();
+
 /* ---------- arranque ---------- */
 if (token()) enterApp(); else show("auth");
