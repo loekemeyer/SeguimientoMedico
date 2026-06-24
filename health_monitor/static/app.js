@@ -38,6 +38,7 @@ function showPage(page) {
   // El detalle es parte del flujo "Personas", así que esa pestaña queda activa.
   const navActive = page === "cuenta" ? "cuenta" : "personas";
   $$(".bnav__btn").forEach((b) => b.classList.toggle("is-active", b.dataset.nav === navActive));
+  if (page !== "detail") stopClaveRotativa();
   window.scrollTo(0, 0);
 }
 
@@ -254,6 +255,30 @@ function patientCard(p) {
 /* ---------- detalle ---------- */
 let currentPatient = null;   // paciente abierto en el detalle
 
+/* ---------- clave rotativa de 2 dígitos (panel del familiar) ---------- */
+let claveTimer = null, claveSeg = 0, clavePacienteId = null;
+function stopClaveRotativa() { if (claveTimer) clearInterval(claveTimer); claveTimer = null; }
+async function _fetchClave(id) {
+  try {
+    const r = await api(`/pacientes/${id}/codigo-rotativo`);
+    const val = $("#detail-clave-val");
+    if (val) val.textContent = r.clave || "··";
+    claveSeg = r.segundos || 0;
+  } catch { claveSeg = 0; }
+}
+async function startClaveRotativa(id) {
+  stopClaveRotativa();
+  if (!$("#detail-clave-val")) return;
+  clavePacienteId = id;
+  await _fetchClave(id);
+  claveTimer = setInterval(async () => {
+    const seg = $("#detail-clave-seg");
+    if (seg) seg.textContent = claveSeg > 0 ? `cambia en ${claveSeg}s` : "actualizando…";
+    claveSeg--;
+    if (claveSeg < 0) await _fetchClave(clavePacienteId);
+  }, 1000);
+}
+
 async function openDetail(id) {
   showPage("detail");
   try {
@@ -269,6 +294,7 @@ async function openDetail(id) {
     renderDetail(p, contactos, rutina, evos);
     renderSugerencias(sugerencias);
     renderNotificaciones(notifs);
+    startClaveRotativa(id);
   } catch (e) { toast(e.message, true); }
 }
 

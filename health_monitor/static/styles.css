@@ -405,6 +405,13 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   background: var(--teal-50); border: 1px dashed #bfe6df;
   border-radius: var(--radius-sm); padding: 16px 10px;
 }
+.clave-rot { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.clave-rot__lbl { font-size: .9rem; color: var(--slate); }
+.clave-rot__val {
+  font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; letter-spacing: .12em;
+  color: #a16207; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 3px 14px;
+}
+.clave-rot__seg { font-size: .82rem; color: var(--slate-400); }
 
 /* Planes de suscripción (modal "Mi suscripción") */
 .sub-intro { font-family: var(--font-head); font-weight: 700; color: var(--ink); margin: 16px 0 10px; }
