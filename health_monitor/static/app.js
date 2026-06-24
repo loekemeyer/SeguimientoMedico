@@ -392,7 +392,8 @@ async function startClaveRotativa(id) {
   await _fetchClave(id);
   claveTimer = setInterval(async () => {
     const seg = $("#detail-clave-seg");
-    if (seg) seg.textContent = claveSeg > 0 ? `cambia en ${claveSeg}s` : "actualizando…";
+    // Dos líneas, a la derecha del número (claveSeg es un número: seguro interpolarlo).
+    if (seg) seg.innerHTML = claveSeg > 0 ? `cambia en<br>${claveSeg}s` : "actualizando…";
     claveSeg--;
     if (claveSeg < 0) await _fetchClave(clavePacienteId);
   }, 1000);

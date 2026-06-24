@@ -503,11 +503,37 @@ def llamar_ahora(
         registrar_evento(
             db, tipo=USO_LLAMADA, modulo="telefono",
             usuario_id=p.usuario_id, paciente_id=p.id,
-            meta={"call_sid": call.sid},
+            meta={"call_sid": call.sid, "estado": getattr(call, "status", "")},
         )
-        return {"status": "llamando", "detail": "Llamada iniciada.", "call_sid": call.sid}
+        return {
+            "status": "llamando",
+            "detail": (
+                "Llamada iniciada. Puede tardar unos segundos en sonar. Si no suena: "
+                "con una cuenta Twilio de prueba sólo se puede llamar a números "
+                "verificados — verificá el número del paciente en Twilio."
+            ),
+            "call_sid": call.sid,
+            "estado_twilio": getattr(call, "status", ""),
+        }
     except Exception as exc:
         return {"status": "error", "detail": f"No se pudo iniciar la llamada: {exc}"}
+
+
+@router.get("/{paciente_id}/preguntas-cuidado")
+def preguntas_cuidado(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> list[dict]:
+    """Preguntas de tratamiento según las patologías cargadas (para completar la rutina).
+
+    Cada pregunta trae el ítem de rutina a crear si la respuesta es 'sí'.
+    """
+    from health_monitor.cuidado import preguntas_de_alta
+
+    p = _owned_paciente(db, user, paciente_id)
+    patologias = (p.ficha.patologias if p.ficha else []) or []
+    return preguntas_de_alta(patologias)
 
 
 # --- Agente de Mejora Continua (sugerencias proactivas) ---
