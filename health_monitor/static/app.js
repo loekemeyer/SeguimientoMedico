@@ -54,7 +54,7 @@ $$(".tabs__btn").forEach((b) =>
   })
 );
 
-$("#form-login").addEventListener("submit", async (e) => {
+$("#form-login")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
   err.textContent = "";
@@ -89,7 +89,7 @@ if (osSelect) {
   syncOsBrand();
 }
 
-$("#form-register").addEventListener("submit", async (e) => {
+$("#form-register")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
   err.textContent = "";
@@ -109,7 +109,7 @@ $("#form-register").addEventListener("submit", async (e) => {
   } catch (ex) { err.textContent = ex.message; }
 });
 
-$("#btn-logout").addEventListener("click", () => {
+$("#btn-logout")?.addEventListener("click", () => {
   localStorage.removeItem(TOKEN_KEY);
   show("auth");
 });
@@ -141,7 +141,7 @@ $$(".bnav__btn").forEach((b) =>
     else { showPage("list"); loadPatients(); }
   })
 );
-$("#avatar").addEventListener("click", () => { showPage("cuenta"); loadCuenta(); });
+$("#avatar")?.addEventListener("click", () => { showPage("cuenta"); loadCuenta(); });
 
 async function loadCuenta() {
   const me = currentUser || {};
@@ -245,7 +245,7 @@ async function openDetail(id) {
 }
 
 /* ---------- llamar ahora ---------- */
-$("#btn-call-now").addEventListener("click", async () => {
+$("#btn-call-now")?.addEventListener("click", async () => {
   if (!currentPatient) return;
   try {
     const r = await api(`/pacientes/${currentPatient.id}/llamar`, { method: "POST" });
@@ -254,7 +254,7 @@ $("#btn-call-now").addEventListener("click", async () => {
 });
 
 /* ---------- seguimiento por WhatsApp de voz (canal económico) ---------- */
-$("#btn-whatsapp").addEventListener("click", async () => {
+$("#btn-whatsapp")?.addEventListener("click", async () => {
   if (!currentPatient) return;
   if (!confirm("¿Iniciar un seguimiento por mensajes de voz de WhatsApp?")) return;
   try {
@@ -271,7 +271,7 @@ const TIPO_ICON = {
 };
 const DIA_NOMBRE = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-$("#form-rutina").addEventListener("submit", async (e) => {
+$("#form-rutina")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!currentPatient) return;
   const f = new FormData(e.target);
@@ -315,7 +315,7 @@ async function reloadContactos() {
   renderContactos(contactos);
 }
 
-$("#form-contacto").addEventListener("submit", async (e) => {
+$("#form-contacto")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!currentPatient) return;
   const f = new FormData(e.target);
@@ -334,7 +334,7 @@ $("#form-contacto").addEventListener("submit", async (e) => {
   } catch (ex) { toast(ex.message, true); }
 });
 
-$("#detail-contacts").addEventListener("click", async (e) => {
+$("#detail-contacts")?.addEventListener("click", async (e) => {
   const btn = e.target.closest("[data-del-contacto]");
   if (!btn || !currentPatient) return;
   if (!confirm("¿Quitar este contacto de emergencia?")) return;
@@ -367,7 +367,7 @@ async function reloadRutina() {
   renderRutina(rutina);
 }
 
-$("#detail-rutina").addEventListener("click", async (e) => {
+$("#detail-rutina")?.addEventListener("click", async (e) => {
   const btn = e.target.closest("[data-del-rutina]");
   if (!btn || !currentPatient) return;
   if (!confirm("¿Quitar este ítem de la rutina?")) return;
@@ -469,8 +469,8 @@ function historyRow(e) {
   </div>`;
 }
 
-$("#btn-back").addEventListener("click", () => { showPage("list"); loadPatients(); });
-$("#btn-add").addEventListener("click", openModal);
+$("#btn-back")?.addEventListener("click", () => { showPage("list"); loadPatients(); });
+$("#btn-add")?.addEventListener("click", openModal);
 
 /* ---------- modal alta / edición de paciente ---------- */
 let editingId = null;
@@ -521,7 +521,7 @@ function closeModal() {
   $("[data-error]", form).textContent = "";
 }
 $$("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
-$("#btn-edit").addEventListener("click", openEditModal);
+$("#btn-edit")?.addEventListener("click", openEditModal);
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -584,7 +584,7 @@ function escapeHtml(s) {
    MI SUSCRIPCIÓN
 ==================================================================== */
 const subModal = $("#modal-sub");
-$("#plan-chip").addEventListener("click", openSubModal);
+$("#btn-mi-suscripcion")?.addEventListener("click", openSubModal);
 $$("[data-close-sub]").forEach((el) =>
   el.addEventListener("click", () => subModal.classList.add("is-hidden"))
 );
@@ -648,6 +648,40 @@ async function loadVersion() {
   } catch { /* sin conexión: no mostramos versión */ }
 }
 loadVersion();
+
+/* ---------- carrusel de funcionalidades (pantalla de acceso) ---------- */
+(function initCarousel() {
+  const track = $("#carousel-track");
+  const dotsWrap = $("#carousel-dots");
+  if (!track || !dotsWrap) return;
+  const slides = $$(".carousel__slide", track);
+  if (!slides.length) return;
+  let idx = 0, timer = null;
+
+  function go(i) {
+    idx = (i + slides.length) % slides.length;
+    track.style.transform = `translateX(-${idx * 100}%)`;
+    dots.forEach((d, j) => d.classList.toggle("is-active", j === idx));
+  }
+  function restart() { clearInterval(timer); timer = setInterval(() => go(idx + 1), 4500); }
+
+  slides.forEach((_, i) => {
+    const d = document.createElement("button");
+    d.type = "button";
+    d.className = "carousel__dot" + (i === 0 ? " is-active" : "");
+    d.setAttribute("aria-label", `Función ${i + 1}`);
+    d.addEventListener("click", () => { go(i); restart(); });
+    dotsWrap.appendChild(d);
+  });
+  const dots = $$(".carousel__dot", dotsWrap);
+
+  const car = $("#auth-carousel");
+  if (car) {
+    car.addEventListener("mouseenter", () => clearInterval(timer));
+    car.addEventListener("mouseleave", restart);
+  }
+  restart();
+})();
 
 /* ---------- arranque ---------- */
 if (token()) enterApp(); else show("auth");

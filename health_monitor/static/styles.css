@@ -123,6 +123,20 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 }
 .auth__bullets i::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
 
+/* Carrusel de funcionalidades (panel de acceso) */
+.carousel { margin-top: 30px; max-width: 420px; overflow: hidden; }
+.carousel__track { display: flex; transition: transform .5s ease; }
+.carousel__slide { flex: 0 0 100%; }
+.carousel__ico { display: block; font-size: 2.4rem; line-height: 1; margin-bottom: 14px; }
+.carousel__title { font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; letter-spacing: -.02em; margin-bottom: 8px; color: #fff; }
+.carousel__text { color: rgba(255,255,255,.85); font-size: 1.05rem; max-width: 380px; }
+.carousel__dots { display: flex; gap: 8px; margin-top: 22px; }
+.carousel__dot {
+  width: 9px; height: 9px; border-radius: 999px; border: none; padding: 0; cursor: pointer;
+  background: rgba(255,255,255,.32); transition: width .25s, background .25s;
+}
+.carousel__dot.is-active { width: 26px; background: #fff; }
+
 .auth__formside { display: flex; align-items: center; justify-content: center; padding: 5vw; }
 .auth__card { width: 100%; max-width: 410px; box-shadow: var(--shadow); }
 
@@ -358,8 +372,14 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
    Responsive
 ==================================================================== */
 @media (max-width: 860px) {
-  .auth { grid-template-columns: 1fr; }
-  .auth__brandside { display: none; }
+  /* Login mobile: el hero (con el carrusel) va ARRIBA y el formulario abajo. */
+  .auth { display: block; }
+  .auth__brandside { padding: 26px 22px calc(26px + env(safe-area-inset-top)); }
+  .auth__headline { font-size: 1.55rem; margin: 16px 0 0; }
+  .carousel { margin-top: 16px; max-width: none; }
+  .carousel__title { font-size: 1.2rem; }
+  .carousel__text { font-size: .98rem; }
+  .auth__formside { padding: 22px; }
   .form__row { grid-template-columns: 1fr; }
   .tl-item { grid-template-columns: 1fr; gap: 4px; }
 }
