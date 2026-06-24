@@ -299,6 +299,7 @@ async function openDetail(id) {
     currentPatient = p;
     renderDetail(p, contactos, rutina, evos);
     renderEstadoHoy(evos);
+    renderTendencias(evos);
     renderSugerencias(sugerencias);
     renderNotificaciones(notifs);
     startClaveRotativa(id);
@@ -463,6 +464,64 @@ function renderEstadoHoy(evos) {
       <div class="estado-hoy__sub">${escapeHtml(relato)}</div>
       ${metricasChips(e.readout)}
     </div></div>`;
+}
+
+/* ---------- tendencias (sparklines SVG, sin librerías) ---------- */
+function sparklineSVG(values, color) {
+  // values: array cronológico (puede tener null donde no hubo dato)
+  const n = values.length;
+  const pts = [];
+  values.forEach((v, i) => { if (v != null && !isNaN(v)) pts.push({ i, v }); });
+  if (pts.length < 2) return null;
+  const vals = pts.map((p) => p.v);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const flat = max === min;
+  const range = (max - min) || 1;
+  const W = 100, H = 30, pad = 3;
+  const x = (i) => n > 1 ? (i / (n - 1)) * W : W / 2;
+  const y = (v) => flat ? H / 2 : H - pad - ((v - min) / range) * (H - pad * 2);
+  const poly = pts.map((p) => `${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
+  const last = pts[pts.length - 1];
+  return `<svg class="spark__svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="${poly}" fill="none" stroke="${color}" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${x(last.i).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="2.4" fill="${color}"/>
+  </svg>`;
+}
+
+const NIVEL_ANIMO = { verde: 3, amarilla: 2, roja: 1 };
+function renderTendencias(evos) {
+  const card = $("#detail-tendencias-card");
+  const cont = $("#detail-tendencias");
+  if (!card || !cont) return;
+  // evos viene del más nuevo al más viejo; lo damos vuelta y tomamos los últimos 14
+  const serie = (evos || []).slice(0, 14).reverse();
+  const get = (fn) => serie.map(fn);
+  const defs = [
+    { label: "Presión", unidad: "sist.", color: "#0d9488",
+      vals: get((e) => e.readout?.presion_sistolica ?? null),
+      fmt: (v) => `${v}` },
+    { label: "Peso", unidad: "kg", color: "#7c3aed",
+      vals: get((e) => e.readout?.peso ?? null),
+      fmt: (v) => `${v}` },
+    { label: "Ánimo", unidad: "", color: "#f59e0b",
+      vals: get((e) => NIVEL_ANIMO[(e.nivel_alerta || "").toLowerCase()] ?? null),
+      fmt: (v) => ({ 3: "Bien", 2: "Atención", 1: "Alerta" }[Math.round(v)] || "—") },
+  ];
+  const cards = [];
+  for (const d of defs) {
+    const svg = sparklineSVG(d.vals, d.color);
+    if (!svg) continue;
+    const reales = d.vals.filter((v) => v != null);
+    const ultimo = reales[reales.length - 1];
+    cards.push(`<div class="spark">
+      <div class="spark__head"><span class="spark__label">${d.label}</span>
+        <span class="spark__val">${d.fmt(ultimo)}${d.unidad ? " " + d.unidad : ""}</span></div>
+      ${svg}</div>`);
+  }
+  if (!cards.length) { card.classList.add("is-hidden"); return; }
+  card.classList.remove("is-hidden");
+  cont.innerHTML = cards.join("");
 }
 
 function renderDetail(p, contactos, rutina, evos) {
