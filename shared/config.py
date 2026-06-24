@@ -19,8 +19,10 @@ class Settings(BaseSettings):
     encryption_key: str = ""  # AES-256 en base64 (32 bytes)
     jwt_secret: str = ""  # secreto para firmar tokens de sesión
 
-    # Base de datos
-    database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/seguimiento"
+    # Base de datos. Por defecto SQLite local: cero configuración para correr la app
+    # en una notebook o en Codespaces. En producción se setea DATABASE_URL al
+    # PostgreSQL real (vía entorno o .env).
+    database_url: str = "sqlite:///./local.db"
 
     # Twilio
     twilio_account_sid: str = ""

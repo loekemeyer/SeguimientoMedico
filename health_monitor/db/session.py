@@ -16,7 +16,11 @@ _SessionLocal: sessionmaker[Session] | None = None
 def _init() -> None:
     global _engine, _SessionLocal
     if _engine is None:
-        _engine = create_engine(get_settings().database_url, pool_pre_ping=True)
+        url = get_settings().database_url
+        # SQLite con FastAPI corre los endpoints en varios hilos: hay que permitir
+        # usar la conexión entre hilos. En PostgreSQL no aplica.
+        connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
+        _engine = create_engine(url, pool_pre_ping=True, connect_args=connect_args)
         _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False)
 
 
