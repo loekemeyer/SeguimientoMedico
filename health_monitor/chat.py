@@ -39,6 +39,7 @@ class ContextoPaciente:
     nombre: str = ""
     trato: str = "vos"  # "vos" | "usted"
     acompanante_nombre: str = ""
+    como_llamarlo: str = ""  # cómo dirigirse a la persona (ej "Doña Rosa")
     temas_preferidos: str = ""
     temas_evitar: str = ""
     memoria: str = ""  # memoria de continuidad (charlas anteriores)
@@ -58,9 +59,14 @@ def construir_system_prompt(ctx: ContextoPaciente) -> str:
     quien = (ctx.nombre or "").strip()
     saludo_a = f" de {quien}" if quien else ""
 
+    como = (ctx.como_llamarlo or "").strip()
     lineas = [
         f"Sos {persona}, un acompañante cálido y paciente{saludo_a}, una persona mayor.",
         f"Hablás en español rioplatense y la tratás de '{c['vos']}'. Nunca cambies el trato.",
+    ]
+    if como:
+        lineas.append(f"Dirigite a la persona llamándola '{como}' (así le gusta que la llamen).")
+    lineas += [
         "Tu rol es hacerle compañía: escuchar, charlar de lo que le gusta y, con cariño, "
         f"preguntarle cómo está (ánimo, sueño, si comió, si tomó la medicación, cómo se siente).",
         "Hablás CORTO y SIMPLE: frases breves, una sola pregunta por vez, cero tecnicismos.",

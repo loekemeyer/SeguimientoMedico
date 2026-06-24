@@ -105,6 +105,7 @@ def iniciar(
             trato=state.trato, acompanante_nombre=state.acompanante_nombre,
             temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
             explorar_animo=state.explorar_animo, memoria=state.memoria,
+            como_llamarlo=state.como_llamarlo,
         )
     except HTTPException:
         raise
@@ -174,6 +175,7 @@ async def incoming(request: Request, db: Session = Depends(get_session)) -> Resp
         trato=state.trato, acompanante_nombre=state.acompanante_nombre,
         temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
         explorar_animo=state.explorar_animo, memoria=state.memoria,
+        como_llamarlo=state.como_llamarlo,
     )
 
     nuevo = historial_previo

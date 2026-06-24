@@ -129,6 +129,7 @@ def chat(
         nombre=_nombre(p),
         trato=p.trato or "vos",
         acompanante_nombre=p.acompanante_nombre or "",
+        como_llamarlo=p.como_llamarlo or "",
         temas_preferidos=p.temas_preferidos or "",
         temas_evitar=p.temas_evitar or "",
         memoria=_memoria(p),

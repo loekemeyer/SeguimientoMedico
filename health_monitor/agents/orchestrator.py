@@ -42,6 +42,7 @@ class CallState:
     voz_velocidad: float = 0.9
     trato: str = "vos"  # vos | usted
     acompanante_nombre: str = ""
+    como_llamarlo: str = ""  # cómo dirigirse al paciente (ej "Doña Rosa")
     temas_preferidos: str = ""
     temas_evitar: str = ""
     # Para detectar aumento brusco de peso: última medición conocida y su antigüedad.

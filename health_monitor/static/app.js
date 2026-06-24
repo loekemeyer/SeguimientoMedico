@@ -827,6 +827,7 @@ function openEditModal() {        // edición del paciente abierto
   const pers = currentPatient.personalidad || {};
   $("[name=trato]", form).value = pers.trato || "vos";
   $("[name=acompanante_nombre]", form).value = pers.acompanante_nombre || "";
+  const _cll = $("[name=como_llamarlo]", form); if (_cll) _cll.value = pers.como_llamarlo || "";
   const _voz = pers.voz || "coral";
   const _sexoVoz = sexoDeVoz(_voz);
   if ($("#voz-sexo")) $("#voz-sexo").value = _sexoVoz;
@@ -941,6 +942,7 @@ form.addEventListener("submit", async (e) => {
     velocidad: Number(f.get("velocidad")) || 0.9,
     trato: f.get("trato") || "vos",
     acompanante_nombre: f.get("acompanante_nombre") || "",
+    como_llamarlo: f.get("como_llamarlo") || "",
     temas_preferidos: f.get("temas_preferidos") || "",
     temas_evitar: f.get("temas_evitar") || "",
   };
@@ -989,9 +991,10 @@ form.addEventListener("submit", async (e) => {
 let cuidadoPid = null;
 async function abrirPreguntasCuidado(pid) {
   cuidadoPid = pid;
+  const comoInput = $("#cuidado-como-llamarlo");
+  if (comoInput) comoInput.value = "";
   let preguntas = [];
   try { preguntas = await api(`/pacientes/${pid}/preguntas-cuidado`); } catch { preguntas = []; }
-  if (!preguntas.length) { await openDetail(pid); return; }
   const cont = $("#cuidado-lista");
   cont.innerHTML = preguntas.map((q, i) => `
     <div class="cuidado-item" data-i="${i}">
@@ -1018,7 +1021,12 @@ async function responderCuidado(q, btn, si) {
   }
   if (row) row.innerHTML = `<div class="cuidado-item__done">${si ? "✅ Agregado a la rutina" : "— Listo"}</div>`;
 }
-function cerrarCuidado() {
+async function cerrarCuidado() {
+  const como = ($("#cuidado-como-llamarlo")?.value || "").trim();
+  if (como && cuidadoPid) {
+    try { await api(`/pacientes/${cuidadoPid}/como-llamarlo`, { method: "POST", body: { como_llamarlo: como } }); }
+    catch { /* no bloquea el cierre */ }
+  }
   $("#modal-cuidado")?.classList.add("is-hidden");
   if (cuidadoPid) openDetail(cuidadoPid);
 }

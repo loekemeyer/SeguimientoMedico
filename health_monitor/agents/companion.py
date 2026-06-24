@@ -43,9 +43,11 @@ def _build_instructions(nombre: str = "", rutina: str = "", nivel_insistencia: i
                         historial: str = "", *, trato: str = "vos",
                         acompanante_nombre: str = "", temas_preferidos: str = "",
                         temas_evitar: str = "", explorar_animo: bool = False,
-                        memoria: str = "") -> str:
+                        memoria: str = "", como_llamarlo: str = "") -> str:
     """Suma a la persona base el contexto y la personalización del paciente."""
     datos = ["\n\nDATOS DE ESTA LLAMADA:", f"- Persona: {nombre or 'la persona'}."]
+    if (como_llamarlo or "").strip():
+        datos.append(f"- Dirigite a la persona llamándola '{como_llamarlo.strip()}' (así le gusta que la llamen).")
     if memoria and memoria.strip():
         from health_monitor.memoria import bloque_para_prompt
         datos.append("\n" + bloque_para_prompt(memoria))
@@ -84,7 +86,7 @@ def build_realtime_session_config(
     *, nombre: str = "", rutina: str = "", nivel_insistencia: int = 2, historial: str = "",
     speed: float = 0.9, trato: str = "vos", acompanante_nombre: str = "",
     temas_preferidos: str = "", temas_evitar: str = "", explorar_animo: bool = False,
-    memoria: str = "",
+    memoria: str = "", como_llamarlo: str = "",
 ) -> dict[str, Any]:
     """Config de sesión para la Realtime API (OpenAI) con la persona del contenedor.
 
@@ -103,7 +105,7 @@ def build_realtime_session_config(
                 nombre, rutina, nivel_insistencia, historial,
                 trato=trato, acompanante_nombre=acompanante_nombre,
                 temas_preferidos=temas_preferidos, temas_evitar=temas_evitar,
-                explorar_animo=explorar_animo, memoria=memoria,
+                explorar_animo=explorar_animo, memoria=memoria, como_llamarlo=como_llamarlo,
             ),
             "audio": {
                 "input": {

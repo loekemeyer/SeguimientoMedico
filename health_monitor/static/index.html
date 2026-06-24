@@ -536,6 +536,9 @@
               <input type="text" name="acompanante_nombre" placeholder="Ej: Sofía" />
             </label>
           </div>
+          <label class="field"><span>¿Cómo le gusta que la llamen en la llamada?</span>
+            <input type="text" name="como_llamarlo" placeholder="Ej: Rosita, Doña Rosa, Abu" maxlength="40" />
+          </label>
           <div class="form__row">
             <label class="field"><span>Sexo de la voz</span>
               <select name="voz_sexo" class="select" id="voz-sexo">
@@ -625,6 +628,9 @@
     <div class="modal__panel card">
       <h2 class="form__title">Para cuidarlo mejor 💛</h2>
       <p class="hint">Según lo que cargaste, un par de preguntas para armar la rutina. Tocá <strong>Sí</strong> y lo agregamos solo.</p>
+      <label class="field"><span>¿Cómo le gusta que la llamen en la charla?</span>
+        <input type="text" id="cuidado-como-llamarlo" placeholder="Ej: Rosita, Doña Rosa, Abu" maxlength="40" />
+      </label>
       <div id="cuidado-lista" class="cuidado-lista"></div>
       <button type="button" class="btn btn--primary btn--block" id="cuidado-listo">Listo</button>
     </div>

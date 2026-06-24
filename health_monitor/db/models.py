@@ -111,6 +111,7 @@ class Paciente(Base):
     voz_velocidad: Mapped[float] = mapped_column(Float, default=0.9)  # 0.25–1.5
     trato: Mapped[str] = mapped_column(String(8), default="vos")  # vos | usted
     acompanante_nombre: Mapped[str] = mapped_column(String(40), default="")  # cómo se presenta
+    como_llamarlo: Mapped[str] = mapped_column(String(40), default="")  # cómo dirigirse al paciente (ej "Doña Rosa", "Rosita")
     temas_preferidos: Mapped[str] = mapped_column(Text, default="")  # temas que le gustan
     temas_evitar: Mapped[str] = mapped_column(Text, default="")  # temas a evitar
 

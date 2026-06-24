@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -119,6 +120,7 @@ def _to_out(p: Paciente, cipher: FieldCipher, ultimo_nivel: str | None = None) -
             velocidad=p.voz_velocidad,
             trato=p.trato,
             acompanante_nombre=p.acompanante_nombre,
+            como_llamarlo=p.como_llamarlo,
             temas_preferidos=p.temas_preferidos,
             temas_evitar=p.temas_evitar,
         ),
@@ -140,6 +142,7 @@ def _apply_personalidad(p: Paciente, pers: PersonalidadAcompanante) -> None:
     p.voz_velocidad = pers.velocidad
     p.trato = pers.trato
     p.acompanante_nombre = pers.acompanante_nombre.strip()
+    p.como_llamarlo = pers.como_llamarlo.strip()[:40]
     p.temas_preferidos = pers.temas_preferidos.strip()
     p.temas_evitar = pers.temas_evitar.strip()
 
@@ -534,6 +537,24 @@ def preguntas_cuidado(
     p = _owned_paciente(db, user, paciente_id)
     patologias = (p.ficha.patologias if p.ficha else []) or []
     return preguntas_de_alta(patologias)
+
+
+class _ComoLlamarloIn(BaseModel):
+    como_llamarlo: str = ""
+
+
+@router.post("/{paciente_id}/como-llamarlo")
+def set_como_llamarlo(
+    paciente_id: int,
+    data: _ComoLlamarloIn,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Guarda cómo prefiere la persona que se dirijan a ella en la llamada/charla."""
+    p = _owned_paciente(db, user, paciente_id)
+    p.como_llamarlo = (data.como_llamarlo or "").strip()[:40]
+    db.commit()
+    return {"ok": True, "como_llamarlo": p.como_llamarlo}
 
 
 # --- Agente de Mejora Continua (sugerencias proactivas) ---

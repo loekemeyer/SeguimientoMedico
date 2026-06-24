@@ -130,6 +130,7 @@ class PersonalidadAcompanante(BaseModel):
     velocidad: float = 0.9  # 0.25–1.5 (más bajo = más pausado)
     trato: str = "vos"  # vos | usted
     acompanante_nombre: str = ""  # cómo se presenta, ej "Sofía"
+    como_llamarlo: str = ""  # cómo dirigirse al paciente en la llamada, ej "Doña Rosa", "Rosita"
     temas_preferidos: str = ""  # temas que le gustan, texto libre (ej "fútbol, los nietos")
     temas_evitar: str = ""  # temas a evitar, texto libre
 
