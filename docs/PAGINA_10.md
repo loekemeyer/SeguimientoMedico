@@ -20,7 +20,8 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
   familia" con canal, destino, nivel, fecha, si se envió y el texto.
 - ✅ **Sugerencias del agente** (`/sugerencias`): tarjeta "Sugerencias para el cuidado"
   (se muestra solo si hay), con prioridad en color.
-- [ ] **Programación completa**: días de llamada, pausar/reanudar, zona horaria.
+- ✅ **Programación completa**: en el form del paciente, días de llamada (Lun-Dom),
+  pausar/reanudar (llamadas activas) y zona horaria; se guardan y se ven en el detalle.
 - [ ] **Métricas clínicas en el historial**: presión, glucemia, temperatura, dolor,
   peso, caída, riesgo emocional (hoy solo se ve el relato).
 - [ ] **Borrar/editar** ítems de rutina y contactos (faltan endpoints DELETE testeados).

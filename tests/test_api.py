@@ -115,6 +115,23 @@ def test_crear_y_leer_paciente():
     assert got.json()["programacion"]["nivel_insistencia"] == 2  # default
 
 
+def test_programacion_dias_y_pausa_se_guardan():
+    headers = _register("prog@test.com")
+    pid = client.post("/pacientes", json={
+        "nombre": "Prog", "telefono_whatsapp": "+5490000000055",
+    }, headers=headers).json()["id"]
+    body = {
+        "nombre": "Prog", "telefono_whatsapp": "+5490000000055",
+        "programacion": {"llamada_activa": False, "llamada_dias": [0, 2, 4], "llamada_hora": "09:00"},
+    }
+    r = client.put(f"/pacientes/{pid}", json=body, headers=headers)
+    assert r.status_code == 200, r.text
+    prog = r.json()["programacion"]
+    assert prog["llamada_activa"] is False
+    assert prog["llamada_dias"] == [0, 2, 4]
+    assert prog["llamada_hora"] == "09:00"
+
+
 def test_aislamiento_entre_usuarios():
     h1 = _register("owner@test.com")
     h2 = _register("intruso@test.com")

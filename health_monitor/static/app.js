@@ -362,6 +362,7 @@ function openModal() {            // alta
   $("#contacto-section").classList.remove("is-hidden");
   form.reset();
   $("[name=llamada_hora]", form).value = "10:00";
+  $$("#patient-days input").forEach((c) => (c.checked = true));
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -384,6 +385,13 @@ function openEditModal() {        // edición del paciente abierto
   $("[name=velocidad]", form).value = String(pers.velocidad ?? 0.9);
   $("[name=temas_preferidos]", form).value = pers.temas_preferidos || "";
   $("[name=temas_evitar]", form).value = pers.temas_evitar || "";
+  const prog = currentPatient.programacion || {};
+  $("[name=llamada_activa]", form).checked = prog.llamada_activa !== false;
+  $("[name=llamada_zona]", form).value = prog.llamada_zona || "America/Argentina/Buenos_Aires";
+  const dias = prog.llamada_dias || [];
+  $$("#patient-days input").forEach((c) => {
+    c.checked = dias.length === 0 || dias.includes(Number(c.value));
+  });
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -410,13 +418,21 @@ form.addEventListener("submit", async (e) => {
     temas_preferidos: f.get("temas_preferidos") || "",
     temas_evitar: f.get("temas_evitar") || "",
   };
+  const dias = $$("#patient-days input:checked").map((c) => Number(c.value));
+  const programacion = {
+    llamada_hora: f.get("llamada_hora") || "10:00",
+    nivel_insistencia: nivel,
+    llamada_activa: f.get("llamada_activa") === "on",
+    llamada_zona: f.get("llamada_zona") || "America/Argentina/Buenos_Aires",
+    llamada_dias: dias.length === 7 ? [] : dias,
+  };
   const body = {
     nombre: f.get("nombre"),
     telefono_whatsapp: f.get("telefono_whatsapp"),
     consentimiento_firmado: f.get("consentimiento_firmado") === "on",
     patologias,
     personalidad,
-    programacion: { ...(currentPatient?.programacion || {}), llamada_hora: f.get("llamada_hora") || "10:00", nivel_insistencia: nivel },
+    programacion,
   };
   try {
     if (editingId) {
@@ -425,7 +441,6 @@ form.addEventListener("submit", async (e) => {
       toast("Cambios guardados ✅");
       await openDetail(p.id);
     } else {
-      body.programacion = { llamada_hora: f.get("llamada_hora") || "10:00", nivel_insistencia: nivel };
       const p = await api("/pacientes", { method: "POST", body });
       if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
         await api(`/pacientes/${p.id}/contactos`, {

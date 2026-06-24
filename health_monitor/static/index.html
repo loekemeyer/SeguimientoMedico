@@ -259,6 +259,33 @@
           <label class="field"><span>Hora de llamada</span>
             <input type="time" name="llamada_hora" value="10:00" />
           </label>
+          <label class="field"><span>Zona horaria</span>
+            <select name="llamada_zona" class="select">
+              <option value="America/Argentina/Buenos_Aires" selected>Argentina (Buenos Aires)</option>
+              <option value="America/Argentina/Cordoba">Argentina (Córdoba)</option>
+              <option value="America/Argentina/Mendoza">Argentina (Mendoza)</option>
+              <option value="America/Argentina/Salta">Argentina (Salta)</option>
+              <option value="America/Montevideo">Uruguay (Montevideo)</option>
+              <option value="America/Santiago">Chile (Santiago)</option>
+            </select>
+          </label>
+        </div>
+        <div class="field"><span>Días de llamada</span>
+          <div class="days" id="patient-days">
+            <label><input type="checkbox" value="0" checked> Lun</label>
+            <label><input type="checkbox" value="1" checked> Mar</label>
+            <label><input type="checkbox" value="2" checked> Mié</label>
+            <label><input type="checkbox" value="3" checked> Jue</label>
+            <label><input type="checkbox" value="4" checked> Vie</label>
+            <label><input type="checkbox" value="5" checked> Sáb</label>
+            <label><input type="checkbox" value="6" checked> Dom</label>
+          </div>
+        </div>
+        <div class="form__row">
+          <label class="field field--check">
+            <input type="checkbox" name="llamada_activa" checked />
+            <span>Llamadas activas (destildá para pausar)</span>
+          </label>
           <label class="field field--check">
             <input type="checkbox" name="consentimiento_firmado" />
             <span>Tengo el consentimiento del apoderado legal</span>
