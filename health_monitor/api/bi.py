@@ -201,6 +201,63 @@ def diagnostico(owner: Usuario = Depends(require_owner)) -> dict:
     }
 
 
+class ProbarContactoIn(BaseModel):
+    telefono: str
+
+
+@router.post("/probar-whatsapp")
+def probar_whatsapp(
+    data: ProbarContactoIn,
+    owner: Usuario = Depends(require_owner),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Manda un WhatsApp de prueba y devuelve el resultado EXACTO de Twilio.
+
+    Sirve para diagnosticar por qué 'no llega' (sandbox sin join, número no
+    verificado, credenciales). Sólo el dueño.
+    """
+    from shared.notifications import enviar_whatsapp_detallado
+
+    tel = (data.telefono or "").strip()
+    if not tel:
+        raise HTTPException(status_code=400, detail="Pasá un teléfono (ej. +5491112345678)")
+    return enviar_whatsapp_detallado(tel, "Mensaje de prueba de SeguimientoMedico ✅. Si lo recibís, ¡WhatsApp está andando!")
+
+
+@router.post("/probar-llamada")
+def probar_llamada(
+    data: ProbarContactoIn,
+    owner: Usuario = Depends(require_owner),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Intenta una llamada de prueba y devuelve el resultado EXACTO de Twilio."""
+    s = get_settings()
+    faltan = [n for n, ok in (
+        ("TWILIO_ACCOUNT_SID", s.twilio_account_sid),
+        ("TWILIO_AUTH_TOKEN", s.twilio_auth_token),
+        ("TWILIO_VOICE_FROM", s.twilio_voice_from),
+        ("PUBLIC_BASE_URL", s.public_base_url),
+    ) if not ok]
+    if faltan:
+        return {"ok": False, "detalle": f"Falta configurar en el servidor: {', '.join(faltan)}."}
+    tel = (data.telefono or "").strip()
+    if not tel:
+        raise HTTPException(status_code=400, detail="Pasá un teléfono (ej. +5491112345678)")
+    try:
+        from twilio.rest import Client
+        client = Client(s.twilio_account_sid, s.twilio_auth_token)
+        call = client.calls.create(
+            to=tel, from_=s.twilio_voice_from,
+            url=f"{s.public_base_url.rstrip('/')}/twilio/voice?paciente_id=0",
+        )
+        return {"ok": True, "call_sid": call.sid, "estado": getattr(call, "status", ""),
+                "detalle": "Llamada creada. Si no suena, verificá que el número esté verificado en Twilio (cuenta de prueba)."}
+    except Exception as exc:
+        code = getattr(exc, "code", None)
+        ayuda = " En cuenta de prueba sólo se puede llamar a números verificados." if code == 21219 else ""
+        return {"ok": False, "error_code": code, "detalle": f"{exc}{ayuda}"}
+
+
 class ActivarIn(BaseModel):
     usuario_id: int
     plan_tipo: str = "app"  # app | telefono

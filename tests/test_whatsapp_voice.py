@@ -53,3 +53,14 @@ def test_phone_index_exige_clave():
 
     with pytest.raises(ValueError):
         phone_index("+5491112345678", "")
+
+
+def test_enviar_whatsapp_detallado_sin_credenciales(monkeypatch):
+    import shared.config as cfg
+    from shared.notifications import enviar_whatsapp_detallado
+    monkeypatch.setenv("TWILIO_ACCOUNT_SID", "")
+    monkeypatch.setenv("TWILIO_AUTH_TOKEN", "")
+    cfg.get_settings.cache_clear()
+    r = enviar_whatsapp_detallado("+5491112345678", "hola")
+    assert r["ok"] is False and "TWILIO" in r["detalle"]
+    cfg.get_settings.cache_clear()

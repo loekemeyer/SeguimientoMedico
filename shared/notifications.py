@@ -69,6 +69,37 @@ def send_whatsapp_message(
     return True
 
 
+def enviar_whatsapp_detallado(to: str, body: str) -> dict:
+    """Como send_whatsapp_message pero devuelve el detalle del resultado de Twilio.
+
+    Pensado para el diagnóstico del dueño: {ok, sid?, error_code?, detalle}. Así se
+    ve EXACTAMENTE por qué no llega (sandbox sin 'join', número no verificado, etc.).
+    """
+    from shared.config import get_settings
+
+    s = get_settings()
+    if not (s.twilio_account_sid and s.twilio_auth_token):
+        return {"ok": False, "detalle": "Faltan TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN en el servidor."}
+    try:
+        from twilio.rest import Client
+    except ImportError:
+        return {"ok": False, "detalle": "El paquete 'twilio' no está instalado en el servidor."}
+
+    try:
+        client = Client(s.twilio_account_sid, s.twilio_auth_token)
+        msg = client.messages.create(from_=s.twilio_whatsapp_from, to=_wa(to), body=body)
+        return {"ok": True, "sid": msg.sid, "detalle": "Mensaje aceptado por Twilio."}
+    except Exception as exc:
+        code = getattr(exc, "code", None)
+        ayuda = ""
+        if code in (63015, 63016, 21654):
+            ayuda = (" Ese número primero tiene que escribir 'join <código>' al "
+                     "+14155238886 (sandbox) y responder dentro de las 24h.")
+        elif code == 21608:
+            ayuda = " En cuenta de prueba, el número de destino tiene que estar verificado en Twilio."
+        return {"ok": False, "error_code": code, "detalle": f"{exc}{ayuda}"}
+
+
 def fire_webhook(url: str, payload: dict) -> bool:
     """Dispara un webhook POST (JSON) hacia emergencias / equipo de ventas.
 
