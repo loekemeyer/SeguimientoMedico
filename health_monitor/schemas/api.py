@@ -9,6 +9,38 @@ from pydantic import BaseModel, Field, field_validator
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
+def _texto_requerido(v: str, *, campo: str, maxlen: int) -> str:
+    """Valida un texto obligatorio: no vacío y dentro del largo máximo."""
+    v = (v or "").strip()
+    if not v:
+        raise ValueError(f"{campo} es obligatorio")
+    if len(v) > maxlen:
+        raise ValueError(f"{campo} es demasiado largo (máx {maxlen})")
+    return v
+
+
+def _telefono_valido(v: str) -> str:
+    """Valida un teléfono: entre 8 y 15 dígitos (acepta +, espacios y guiones)."""
+    v = (v or "").strip()
+    digitos = re.sub(r"\D", "", v)
+    if not (8 <= len(digitos) <= 15):
+        raise ValueError("Teléfono inválido")
+    return v
+
+
+def _horario_valido(v: str) -> str:
+    """Horario opcional: vacío o HH:MM (00:00–23:59)."""
+    v = (v or "").strip()
+    if not v:
+        return ""
+    try:
+        hh, mm = (int(x) for x in v.split(":"))
+        assert 0 <= hh <= 23 and 0 <= mm <= 59
+    except Exception:
+        raise ValueError("Horario inválido; usá HH:MM")
+    return f"{hh:02d}:{mm:02d}"
+
+
 # --- Autenticación ---
 
 class RegistroIn(BaseModel):
@@ -127,6 +159,22 @@ class PacienteIn(BaseModel):
     programacion: ProgramacionLlamada = Field(default_factory=ProgramacionLlamada)
     personalidad: PersonalidadAcompanante = Field(default_factory=PersonalidadAcompanante)
 
+    @field_validator("nombre")
+    @classmethod
+    def _v_nombre(cls, v: str) -> str:
+        return _texto_requerido(v, campo="El nombre", maxlen=80)
+
+    @field_validator("telefono_whatsapp")
+    @classmethod
+    def _v_tel(cls, v: str) -> str:
+        return _telefono_valido(v)
+
+    @field_validator("patologias")
+    @classmethod
+    def _v_patologias(cls, v: list[str]) -> list[str]:
+        # Acota cantidad y largo para no inflar la ficha con basura.
+        return [p.strip() for p in (v or [])[:30] if p and p.strip()][:30]
+
 
 class PacienteOut(BaseModel):
     id: int
@@ -162,6 +210,16 @@ class RutinaItemIn(BaseModel):
     def _valid_aviso(cls, v: str) -> str:
         return v if v in ("mensaje", "llamada", "ninguno") else "mensaje"
 
+    @field_validator("nombre")
+    @classmethod
+    def _v_nombre(cls, v: str) -> str:
+        return _texto_requerido(v, campo="La descripción", maxlen=200)
+
+    @field_validator("horario")
+    @classmethod
+    def _v_horario(cls, v: str) -> str:
+        return _horario_valido(v)
+
 
 class RutinaItemOut(RutinaItemIn):
     id: int
@@ -175,6 +233,21 @@ class ContactoIn(BaseModel):
     relacion: str = ""
     prioridad: int = 1
     recibe_alertas: bool = True
+
+    @field_validator("nombre")
+    @classmethod
+    def _v_nombre(cls, v: str) -> str:
+        return _texto_requerido(v, campo="El nombre del contacto", maxlen=60)
+
+    @field_validator("telefono")
+    @classmethod
+    def _v_tel(cls, v: str) -> str:
+        return _telefono_valido(v)
+
+    @field_validator("prioridad")
+    @classmethod
+    def _v_prioridad(cls, v: int) -> int:
+        return min(3, max(1, int(v)))
 
 
 class ContactoOut(ContactoIn):
