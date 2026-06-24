@@ -139,6 +139,7 @@ async function enterApp() {
     $("#avatar").textContent = inicial;
     show("app");
     showPage("list");
+    refreshSubButton();
     await loadPatients();
   } catch {
     localStorage.removeItem(TOKEN_KEY);
@@ -149,10 +150,25 @@ async function enterApp() {
 /* ---------- navegación inferior (app shell) + pantalla "Cuenta" ---------- */
 $$(".bnav__btn").forEach((b) =>
   b.addEventListener("click", () => {
-    if (b.dataset.nav === "cuenta") { showPage("cuenta"); loadCuenta(); }
+    const nav = b.dataset.nav;
+    if (nav === "suscripcion") { openSubModal(); return; }
+    if (nav === "cuenta") { showPage("cuenta"); loadCuenta(); }
     else { showPage("list"); loadPatients(); }
   })
 );
+
+async function refreshSubButton() {
+  const lbl = $("#bnav-sub-lbl"), ico = $("#bnav-sub-ico"), btn = $("#bnav-sub");
+  if (!lbl || !ico) return;
+  try {
+    const s = await api("/billing/estado");
+    const suscripto = s.tipo_cuenta === "obra_social" ||
+      (s.plan && s.plan !== "trial" && s.plan !== "cancelado");
+    lbl.textContent = suscripto ? "Suscripto" : "Suscribirse";
+    ico.textContent = suscripto ? "👑" : "💳";
+    if (btn) btn.classList.toggle("is-suscripto", !!suscripto);
+  } catch { /* sin red: dejamos el default */ }
+}
 $("#avatar")?.addEventListener("click", () => { showPage("cuenta"); loadCuenta(); });
 
 async function loadCuenta() {
@@ -724,6 +740,7 @@ function renderSub(s) {
     </div>`;
   });
   html += `</div>`;
+  html += `<p class="sub-garantia">🛡️ Garantía: si no te gusta, te devolvemos la plata dentro de los <strong>5 días</strong>.</p>`;
   $("#sub-body").innerHTML = html;
   $$("[data-suscribir]", $("#sub-body")).forEach((b) =>
     b.addEventListener("click", () => suscribir(b.dataset.suscribir))

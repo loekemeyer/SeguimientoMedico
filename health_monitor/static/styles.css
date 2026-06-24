@@ -372,7 +372,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .bottomnav {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 480px; z-index: 40;
-  display: grid; grid-template-columns: 1fr 1fr;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
   background: rgba(255,255,255,.94); backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
@@ -388,6 +388,8 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .bnav__ico { display: grid; place-items: center; width: 26px; height: 26px; }
 .bnav__ico svg { width: 24px; height: 24px; }
 .bnav__btn.is-active { color: var(--teal-700); }
+.bnav__ico--emoji { font-size: 21px; line-height: 1; }
+.bnav__btn.is-suscripto { color: #a16207; }   /* dorado = plan activo */
 .bnav__btn:active { transform: translateY(1px); }
 
 .cuenta__profile { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
@@ -413,6 +415,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .plan__name { font-family: var(--font-head); font-weight: 700; font-size: 1.02rem; }
 .plan__price { color: var(--teal-700); font-weight: 700; font-size: .95rem; }
 .plan__desc { font-size: .92rem; color: var(--slate); margin-bottom: 12px; }
+.sub-garantia { margin-top: 14px; font-size: .9rem; color: #15803d; background: #ecfdf3; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 11px 13px; }
 
 /* ====================================================================
    Modal + toast
