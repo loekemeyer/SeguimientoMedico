@@ -111,3 +111,33 @@ def test_token_paciente_no_sirve_para_seccion_del_familiar():
                         json={"codigo_acceso": codigo, "clave": clave}).json()["token"]
     # el token del paciente NO debe servir para la sección del familiar
     assert client.get("/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
+
+
+def test_chat_gateado_por_suscripcion_de_la_familia():
+    headers, pid, codigo = _crear_paciente_y_codigo()
+    clave = client.get(f"/pacientes/{pid}/codigo-rotativo", headers=headers).json()["clave"]
+    token = client.post("/acompanante/login",
+                        json={"codigo_acceso": codigo, "clave": clave}).json()["token"]
+    h = {"Authorization": f"Bearer {token}"}
+
+    # Apertura (mensaje vacío) siempre gratis.
+    assert client.post("/acompanante/chat", headers=h, json={"mensaje": "", "historial": []}).status_code == 200
+
+    # Con el trial vigente, un mensaje real NO cae en el gate de pago.
+    r1 = client.post("/acompanante/chat", headers=h, json={"mensaje": "hola", "historial": []})
+    assert r1.status_code == 200
+    assert "avisale a tu familia" not in r1.json()["respuesta"]
+
+    # Cancelamos la suscripción de la familia: el mensaje real queda gateado (sin gastar API).
+    import health_monitor.db.session as sess
+    from health_monitor.db.models import Paciente, Usuario
+    s = sess._SessionLocal()
+    u = s.get(Usuario, s.get(Paciente, pid).usuario_id)
+    u.plan = "cancelado"
+    s.commit()
+    s.close()
+
+    r2 = client.post("/acompanante/chat", headers=h, json={"mensaje": "hola", "historial": []})
+    assert r2.status_code == 200
+    assert r2.json()["configurado"] is False
+    assert "avisale a tu familia" in r2.json()["respuesta"]

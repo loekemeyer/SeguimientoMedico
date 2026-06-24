@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from health_monitor.acompanante import clave_valida
+from health_monitor.api.deps import subscription_active
 from health_monitor.chat import ContextoPaciente, responder
 from health_monitor.db.models import Paciente
 from health_monitor.usage import (
@@ -96,6 +97,18 @@ def chat(
     Hasta entonces responde con un mensaje cálido (el módulo ya queda andando).
     La apertura de la charla siempre es un saludo cordial (sin gastar API).
     """
+    # Gating de pago: la charla con IA es la feature paga. El saludo de apertura
+    # (mensaje vacío) es siempre gratis; un turno real exige suscripción vigente
+    # de la familia. Si no hay, respondemos con cariño y sin gastar API.
+    if (data.mensaje or "").strip() and not subscription_active(p.usuario):
+        return {
+            "configurado": False,
+            "respuesta": (
+                "¡Hola! Te quiero un montón 💛. En un ratito seguimos charlando; "
+                "avisale a tu familia que ya volvemos."
+            ),
+        }
+
     ctx = ContextoPaciente(
         nombre=_nombre(p),
         trato=p.trato or "vos",
