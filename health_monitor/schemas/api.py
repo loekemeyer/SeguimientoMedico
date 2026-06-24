@@ -176,6 +176,21 @@ class PacienteIn(BaseModel):
         # Acota cantidad y largo para no inflar la ficha con basura.
         return [p.strip() for p in (v or [])[:30] if p and p.strip()][:30]
 
+    @field_validator("limites")
+    @classmethod
+    def _v_limites(cls, v: dict) -> dict:
+        # Validamos el formato de los límites clínicos ACÁ (al guardar), no recién
+        # al iniciar la llamada: un valor inválido (ej. {"sistolica_max": "abc"})
+        # guardaba el paciente OK pero después rompía CADA llamada futura con
+        # "application error". Se valida contra el modelo y se rechaza en el alta.
+        datos = {k: val for k, val in (v or {}).items() if k != "paciente_id"}
+        from health_monitor.triage import ClinicalLimits
+        try:
+            ClinicalLimits(paciente_id=0, **datos)
+        except Exception:
+            raise ValueError("Los límites clínicos tienen un formato inválido.")
+        return v or {}
+
 
 class PacienteOut(BaseModel):
     id: int

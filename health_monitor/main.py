@@ -286,13 +286,19 @@ async def media_stream(ws: WebSocket) -> None:
     try:
         await bridge.run()
     finally:
-        # La llamada de prueba (paciente_id 0) no deja registro ni dispara alertas.
-        if paciente_id != 0:
-            # Al cerrar la llamada: extracción + triaje + alertas + persistencia.
-            state.transcript = bridge.full_transcript
-            state = run_post_call(state)
-            persist_evolucion(db, state)
-        db.close()
+        try:
+            # La llamada de prueba (paciente_id 0) no deja registro ni dispara alertas.
+            if paciente_id != 0:
+                # Al cerrar la llamada: extracción + triaje + alertas + persistencia.
+                state.transcript = bridge.full_transcript
+                state = run_post_call(state)
+                persist_evolucion(db, state)
+        except Exception as exc:
+            # Que un fallo al persistir NO impida cerrar la conexión (si no, se
+            # filtra y a escala agota el pool de la base).
+            logger.error("Post-llamada falló (paciente %s): %s", paciente_id, exc)
+        finally:
+            db.close()
 
 
 # Frontend (app web para los familiares). Se monta AL FINAL —después de TODOS los

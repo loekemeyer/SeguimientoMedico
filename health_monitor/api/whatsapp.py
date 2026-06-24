@@ -34,7 +34,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/whatsapp", tags=["whatsapp"])
 
 # Audios TTS efímeros para que WhatsApp los descargue (token -> bytes mp3).
+# Con tope de tamaño: descartamos los más viejos para no perder memoria sin límite.
 _AUDIO_CACHE: dict[str, bytes] = {}
+_AUDIO_CACHE_MAX = 200
 
 
 def _host_audio(audio: bytes) -> str | None:
@@ -44,6 +46,8 @@ def _host_audio(audio: bytes) -> str | None:
         return None
     token = uuid.uuid4().hex
     _AUDIO_CACHE[token] = audio
+    while len(_AUDIO_CACHE) > _AUDIO_CACHE_MAX:  # dict ordenado por inserción: saco el más viejo
+        del _AUDIO_CACHE[next(iter(_AUDIO_CACHE))]
     return f"{settings.public_base_url.rstrip('/')}/whatsapp/audio/{token}.mp3"
 
 

@@ -2,6 +2,7 @@
 historial de llamadas y notificaciones registradas)."""
 from __future__ import annotations
 
+import logging
 import secrets
 import uuid
 from datetime import datetime, timezone
@@ -87,13 +88,30 @@ def _ultimo_nivel(db: Session, paciente_id: int) -> str | None:
     )
 
 
+logger = logging.getLogger(__name__)
+
+
+def _safe_decrypt(cipher: FieldCipher, blob: str | None) -> str:
+    """Descifra tolerando datos corruptos o clave rotada: nunca tira 500 por una
+    sola fila. Así un registro ilegible no tumba el listado entero de pacientes."""
+    if not blob:
+        return ""
+    try:
+        return cipher.decrypt(blob)
+    except Exception:
+        logger.warning("No se pudo descifrar un campo PII (clave rotada o dato corrupto).")
+        return "—"
+
+
 def _generar_codigo_acceso(db: Session) -> str:
     """Genera un código de 6 dígitos único entre todos los pacientes."""
-    for _ in range(25):
+    for _ in range(50):
         codigo = f"{secrets.randbelow(1_000_000):06d}"
         if not db.scalar(select(Paciente.id).where(Paciente.codigo_acceso == codigo)):
             return codigo
-    return f"{secrets.randbelow(1_000_000):06d}"  # colisión extremadamente improbable
+    # No devolvemos un código sin verificar: chocaría con la constraint UNIQUE y
+    # haría 500 en el commit. Pedimos reintentar (caso extremadamente improbable).
+    raise HTTPException(status_code=503, detail="No se pudo generar un código de acceso. Probá de nuevo.")
 
 
 def _to_out(p: Paciente, cipher: FieldCipher, ultimo_nivel: str | None = None) -> PacienteOut:
@@ -101,8 +119,8 @@ def _to_out(p: Paciente, cipher: FieldCipher, ultimo_nivel: str | None = None) -
         id=p.id,
         ultimo_nivel=ultimo_nivel,
         codigo_acceso=p.codigo_acceso,
-        nombre=cipher.decrypt(p.nombre_enc) if p.nombre_enc else "",
-        telefono_whatsapp=cipher.decrypt(p.telefono_whatsapp_enc) if p.telefono_whatsapp_enc else "",
+        nombre=_safe_decrypt(cipher, p.nombre_enc),
+        telefono_whatsapp=_safe_decrypt(cipher, p.telefono_whatsapp_enc),
         consentimiento_firmado=p.consentimiento_firmado,
         consentimiento_fecha=p.consentimiento_fecha,
         patologias=p.ficha.patologias if p.ficha else [],

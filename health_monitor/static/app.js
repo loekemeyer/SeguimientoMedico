@@ -859,6 +859,7 @@ function poblarVoces(sexo, vozSeleccionada) {
   if (vozSeleccionada && !VOCES.some((v) => v.value === vozSeleccionada)) {
     lista = [...lista, { value: vozSeleccionada, sexo, label: vozSeleccionada }];
   }
+  if (!lista.length) lista = VOCES.slice();   // nunca dejar el select vacío (evita lista[0] undefined)
   sel.innerHTML = lista.map((v) => `<option value="${v.value}">${v.label}</option>`).join("");
   sel.value = lista.some((v) => v.value === vozSeleccionada) ? vozSeleccionada : lista[0].value;
 }
@@ -1235,7 +1236,7 @@ function renderSub(s) {
     : "—";
   let html = `<div class="kv">
     <div class="kv__row"><span>Estado</span><span>${escapeHtml(s.plan || "trial")}</span></div>
-    <div class="kv__row"><span>Vigente hasta</span><span>${vence}</span></div></div>`;
+    <div class="kv__row"><span>Vigente hasta</span><span>${escapeHtml(vence)}</span></div></div>`;
   if (s.tipo_cuenta === "obra_social") {
     html += `<p class="hint">Tu seguimiento está cubierto por tu obra social${s.obra_social ? " (" + escapeHtml(s.obra_social) + ")" : ""}. No tenés que pagar nada. 💚</p>`;
     $("#sub-body").innerHTML = html;

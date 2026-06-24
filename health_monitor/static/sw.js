@@ -3,7 +3,7 @@
    siempre lo último (así los cambios se ven al toque), y usa el cache solo como
    respaldo si no hay red. NO intercepta la API (ni POST ni GET de datos): esos van
    siempre a la red, así nunca se sirven datos clínicos viejos del cache. */
-const CACHE = "sm-shell-v9";
+const CACHE = "sm-shell-v10";
 const SHELL = ["/", "/index.html", "/app.js", "/styles.css", "/manifest.webmanifest",
   "/icon.svg", "/icon-192.png", "/icon-512.png"];
 
