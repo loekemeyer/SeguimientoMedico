@@ -18,6 +18,7 @@ import time
 from shared.auth import signing_secret
 
 VENTANA_SEG = 30  # la clave rotativa cambia cada 30 segundos
+GRACIA_BORDE_SEG = 5  # tolerancia al cambio de ventana mientras el paciente tipea
 
 
 def clave_rotativa(codigo_acceso: str, *, ahora: float | None = None) -> str:
@@ -36,12 +37,19 @@ def segundos_restantes(*, ahora: float | None = None) -> int:
 
 
 def clave_valida(codigo_acceso: str, clave: str, *, ahora: float | None = None) -> bool:
-    """Valida la clave aceptando la ventana actual y la anterior (tolerancia al borde)."""
+    """Valida la clave de ahora.
+
+    Acepta SIEMPRE la ventana actual y, sólo durante los primeros segundos de la
+    ventana (gracia de borde), también la anterior — para no penalizar a quien
+    venía tipeando cuando cambió. El resto del tiempo hay una sola clave válida
+    (1/100 en vez de 2/100), reduciendo la superficie de fuerza bruta.
+    """
     if not clave:
         return False
     t = ahora if ahora is not None else time.time()
-    validas = {
-        clave_rotativa(codigo_acceso, ahora=t),
-        clave_rotativa(codigo_acceso, ahora=t - VENTANA_SEG),
-    }
-    return clave.strip() in validas
+    clave = clave.strip()
+    if clave == clave_rotativa(codigo_acceso, ahora=t):
+        return True
+    if (int(t) % VENTANA_SEG) < GRACIA_BORDE_SEG:
+        return clave == clave_rotativa(codigo_acceso, ahora=t - VENTANA_SEG)
+    return False

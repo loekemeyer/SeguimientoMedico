@@ -6,7 +6,7 @@ con IA (texto/voz) se enchufa cuando se configura OPENAI_API_KEY.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,6 +15,7 @@ from health_monitor.acompanante import clave_valida
 from health_monitor.api.deps import subscription_active
 from health_monitor.chat import ContextoPaciente, responder
 from health_monitor.db.models import Paciente
+from health_monitor.ratelimit import enforce
 from health_monitor.usage import (
     CHAT_MSG,
     LOGIN_PACIENTE,
@@ -57,9 +58,14 @@ class AccesoIn(BaseModel):
 
 
 @router.post("/login")
-def login(data: AccesoIn, db: Session = Depends(get_session)) -> dict:
+def login(data: AccesoIn, request: Request, db: Session = Depends(get_session)) -> dict:
     """Login del paciente: código de acceso + clave rotativa. Token sin vencimiento útil."""
     codigo = (data.codigo_acceso or "").strip()
+    # Anti-fuerza-bruta: la clave es de 2 dígitos. Limitamos por código y por IP.
+    enforce(request, bucket="paclogin", identity=codigo, limit=5, window=60,
+            detail="Demasiados intentos. Esperá un momento y pedí la clave de nuevo.")
+    enforce(request, bucket="paclogin-ip", limit=20, window=60,
+            detail="Demasiados intentos. Esperá un momento y probá de nuevo.")
     p = db.scalar(select(Paciente).where(Paciente.codigo_acceso == codigo)) if codigo else None
     if p is None or not p.activo or not clave_valida(codigo, data.clave):
         raise HTTPException(status_code=401, detail="Código o clave incorrectos")

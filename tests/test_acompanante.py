@@ -44,13 +44,17 @@ def _db():
 # --- Clave rotativa (funciones puras) ---
 
 def test_clave_rotativa_2_digitos_y_deterministica():
-    t = 1_700_000_000.0
+    t = 1_700_000_010.0  # comienzo de ventana (t % 30 == 0)
+    assert t % VENTANA_SEG == 0
     c1 = clave_rotativa("123456", ahora=t)
     assert len(c1) == 2 and c1.isdigit()
     assert clave_rotativa("123456", ahora=t + 5) == c1           # misma ventana
-    c2 = clave_rotativa("123456", ahora=t + VENTANA_SEG)         # ventana siguiente
-    assert clave_valida("123456", c2, ahora=t + VENTANA_SEG)
-    assert clave_valida("123456", c1, ahora=t + VENTANA_SEG)     # tolerancia ventana previa
+    t2 = t + VENTANA_SEG                                          # ventana siguiente
+    c2 = clave_rotativa("123456", ahora=t2)
+    assert clave_valida("123456", c2, ahora=t2)                  # la actual siempre vale
+    # tolerancia de borde: la clave anterior sólo vale los primeros segundos
+    assert clave_valida("123456", c1, ahora=t2 + 2)              # dentro de la gracia
+    assert not clave_valida("123456", c1, ahora=t2 + 10)         # fuera de la gracia
 
 
 def test_clave_valida_rechaza_incorrectas():
@@ -141,3 +145,16 @@ def test_chat_gateado_por_suscripcion_de_la_familia():
     assert r2.status_code == 200
     assert r2.json()["configurado"] is False
     assert "avisale a tu familia" in r2.json()["respuesta"]
+
+
+def test_login_paciente_rate_limited():
+    from health_monitor.ratelimit import reset
+    reset()
+    _, _, codigo = _crear_paciente_y_codigo()
+    # 5 intentos con clave mala permitidos; el 6º debe ser 429 (no 401).
+    codes = [client.post("/acompanante/login",
+                         json={"codigo_acceso": codigo, "clave": "99"}).status_code
+             for _ in range(6)]
+    assert codes[:5] == [401] * 5
+    assert codes[5] == 429
+    reset()

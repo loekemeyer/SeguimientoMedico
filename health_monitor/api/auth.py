@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from health_monitor.api.deps import get_current_user
 from health_monitor.db.models import Usuario
 from health_monitor.db.session import get_session
+from health_monitor.ratelimit import enforce
 from health_monitor.schemas.api import (
     LoginIn,
     RegistroIn,
@@ -24,12 +25,15 @@ _TRIAL_DAYS = 14
 
 
 @router.post("/register", response_model=TokenOut, status_code=201)
-def register(data: RegistroIn, db: Session = Depends(get_session)) -> TokenOut:
-    if db.scalar(select(Usuario).where(Usuario.email == data.email)):
+def register(data: RegistroIn, request: Request, db: Session = Depends(get_session)) -> TokenOut:
+    enforce(request, bucket="register", limit=5, window=3600,
+            detail="Muchos registros desde acá. Probá de nuevo en un rato.")
+    email = data.email.strip().lower()  # normalizar: el login compara en minúsculas
+    if db.scalar(select(Usuario).where(Usuario.email == email)):
         raise HTTPException(status_code=409, detail="Ese email ya está registrado")
 
     user = Usuario(
-        email=data.email,
+        email=email,
         password_hash=hash_password(data.password),
         nombre=data.nombre,
         tipo_cuenta=data.tipo_cuenta,
@@ -54,8 +58,11 @@ def register(data: RegistroIn, db: Session = Depends(get_session)) -> TokenOut:
 
 
 @router.post("/login", response_model=TokenOut)
-def login(data: LoginIn, db: Session = Depends(get_session)) -> TokenOut:
-    user = db.scalar(select(Usuario).where(Usuario.email == data.email.strip().lower()))
+def login(data: LoginIn, request: Request, db: Session = Depends(get_session)) -> TokenOut:
+    email = data.email.strip().lower()
+    enforce(request, bucket="login", identity=email, limit=8, window=60,
+            detail="Demasiados intentos. Esperá un minuto y probá de nuevo.")
+    user = db.scalar(select(Usuario).where(Usuario.email == email))
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
     return TokenOut(access_token=create_access_token(user.id))
