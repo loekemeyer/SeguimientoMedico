@@ -34,6 +34,11 @@ function show(view) {
 function showPage(page) {
   $("#page-list").classList.toggle("is-hidden", page !== "list");
   $("#page-detail").classList.toggle("is-hidden", page !== "detail");
+  $("#page-cuenta").classList.toggle("is-hidden", page !== "cuenta");
+  // El detalle es parte del flujo "Personas", así que esa pestaña queda activa.
+  const navActive = page === "cuenta" ? "cuenta" : "personas";
+  $$(".bnav__btn").forEach((b) => b.classList.toggle("is-active", b.dataset.nav === navActive));
+  window.scrollTo(0, 0);
 }
 
 /* ====================================================================
@@ -72,6 +77,18 @@ $$('#reg-tipo input[name="tipo_cuenta"]').forEach((radio) =>
   })
 );
 
+// Reflejar la obra social elegida en el distintivo (monograma + nombre).
+const osSelect = $('#reg-obrasocial select[name="obra_social"]');
+if (osSelect) {
+  const syncOsBrand = () => {
+    const val = (osSelect.value || "Obra social").trim();
+    $("#os-card-name").textContent = val;
+    $("#os-logo").textContent = (val[0] || "O").toUpperCase();
+  };
+  osSelect.addEventListener("change", syncOsBrand);
+  syncOsBrand();
+}
+
 $("#form-register").addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
@@ -100,18 +117,52 @@ $("#btn-logout").addEventListener("click", () => {
 /* ====================================================================
    APP
 ==================================================================== */
+let currentUser = null;
+
 async function enterApp() {
   try {
     const me = await api("/auth/me");
+    currentUser = me;
     const inicial = (me.nombre || me.email || "U").trim()[0].toUpperCase();
     $("#avatar").textContent = inicial;
-    $("#plan-chip").textContent = "Plan " + (me.plan || "trial");
     show("app");
     showPage("list");
     await loadPatients();
   } catch {
     localStorage.removeItem(TOKEN_KEY);
     show("auth");
+  }
+}
+
+/* ---------- navegación inferior (app shell) + pantalla "Cuenta" ---------- */
+$$(".bnav__btn").forEach((b) =>
+  b.addEventListener("click", () => {
+    if (b.dataset.nav === "cuenta") { showPage("cuenta"); loadCuenta(); }
+    else { showPage("list"); loadPatients(); }
+  })
+);
+$("#avatar").addEventListener("click", () => { showPage("cuenta"); loadCuenta(); });
+
+async function loadCuenta() {
+  const me = currentUser || {};
+  const inicial = (me.nombre || me.email || "U").trim()[0].toUpperCase();
+  $("#cuenta-avatar").textContent = inicial;
+  $("#cuenta-name").textContent = me.nombre || "Mi cuenta";
+  $("#cuenta-mail").textContent = me.email || "";
+  try {
+    const s = await api("/billing/estado");
+    const tipo = s.tipo_cuenta === "obra_social"
+      ? `Obra social — ${s.obra_social || ""}`
+      : "Privada";
+    const vence = s.suscripcion_vence
+      ? new Date(s.suscripcion_vence).toLocaleDateString("es-AR") : "—";
+    $("#cuenta-kv").innerHTML = `
+      <div class="kv__row"><span>Plan</span><span>${escapeHtml(s.plan || "trial")}</span></div>
+      <div class="kv__row"><span>Tipo de cuenta</span><span>${escapeHtml(tipo)}</span></div>
+      <div class="kv__row"><span>Vigente hasta</span><span>${escapeHtml(vence)}</span></div>`;
+  } catch {
+    $("#cuenta-kv").innerHTML =
+      `<div class="kv__row"><span>Plan</span><span>${escapeHtml((currentUser && currentUser.plan) || "trial")}</span></div>`;
   }
 }
 

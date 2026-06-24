@@ -75,7 +75,14 @@
             </div>
           </div>
           <div id="reg-obrasocial" class="is-hidden">
-            <div class="form__row">
+            <div class="os-card">
+              <div class="os-card__brand">
+                <span class="os-logo" id="os-logo" aria-hidden="true">C</span>
+                <div>
+                  <div class="os-card__name" id="os-card-name">CEMIC</div>
+                  <div class="os-card__tag">Credencial de afiliado</div>
+                </div>
+              </div>
               <label class="field"><span>Obra social / prepaga</span>
                 <select name="obra_social" class="select">
                   <option value="CEMIC" selected>CEMIC</option>
@@ -108,11 +115,7 @@
         </span>
         <span class="brand__name">Seguimiento<span>Medico</span></span>
       </div>
-      <div class="topbar__right">
-        <span class="plan-chip" id="plan-chip">Plan trial</span>
-        <div class="avatar" id="avatar" title="Tu cuenta">U</div>
-        <button class="btn btn--ghost btn--sm" id="btn-logout">Salir</button>
-      </div>
+      <button class="avatar" id="avatar" title="Mi cuenta" aria-label="Mi cuenta">U</button>
     </header>
 
     <main class="main">
@@ -244,7 +247,52 @@
           <div id="detail-notificaciones" class="stacklist"></div>
         </div>
       </section>
+
+      <!-- MI CUENTA -->
+      <section id="page-cuenta" class="page is-hidden">
+        <div class="page__head">
+          <div>
+            <h1 class="page__title">Mi cuenta</h1>
+            <p class="page__subtitle">Tu plan, tu cobertura y tu sesión.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cuenta__profile">
+            <div class="avatar avatar--lg" id="cuenta-avatar">U</div>
+            <div class="cuenta__id">
+              <div class="cuenta__name" id="cuenta-name">—</div>
+              <div class="cuenta__mail" id="cuenta-mail">—</div>
+            </div>
+          </div>
+          <div class="kv" id="cuenta-kv"></div>
+          <button class="btn btn--primary btn--block" id="btn-mi-suscripcion">💳 Mi suscripción</button>
+        </div>
+        <div class="card">
+          <h3 class="card__title">Cómo funciona</h3>
+          <p class="hint">Las llamadas, la rutina y los avisos se configuran desde cada
+            persona, en la pestaña <strong>Personas</strong>. Acá manejás tu plan y tu sesión.</p>
+        </div>
+        <div class="card">
+          <button class="btn btn--ghost btn--block" id="btn-logout">Cerrar sesión</button>
+        </div>
+      </section>
     </main>
+
+    <!-- ===== Barra de navegación inferior (estilo app) ===== -->
+    <nav class="bottomnav" aria-label="Navegación principal">
+      <button class="bnav__btn is-active" data-nav="personas" type="button">
+        <span class="bnav__ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        <span class="bnav__lbl">Personas</span>
+      </button>
+      <button class="bnav__btn" data-nav="cuenta" type="button">
+        <span class="bnav__ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <span class="bnav__lbl">Cuenta</span>
+      </button>
+    </nav>
   </div>
 
   <!-- ============ MODAL: agregar persona ============ -->

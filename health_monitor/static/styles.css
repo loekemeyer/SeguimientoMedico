@@ -80,6 +80,23 @@ body {
 }
 
 /* ====================================================================
+   APP SHELL — marco tipo teléfono (se instala en el inicio como PWA)
+==================================================================== */
+.app {
+  max-width: 480px;
+  margin-inline: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  position: relative;
+}
+@media (min-width: 540px) {
+  body { background: #dde6e3; }            /* fondo "fuera" del marco en desktop */
+  .app { box-shadow: var(--shadow-lg); border-inline: 1px solid var(--line); }
+}
+button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
+
+/* ====================================================================
    PANTALLA DE ACCESO
 ==================================================================== */
 .auth { display: grid; grid-template-columns: 1.05fr .95fr; min-height: 100vh; }
@@ -152,14 +169,33 @@ body {
 .segmented input { accent-color: var(--teal-600); width: 18px; height: 18px; }
 .segmented label:has(input:checked) { border-color: var(--teal-500); background: var(--teal-50); color: var(--teal-700); }
 
+/* Tarjeta de obra social (onboarding): distintivo de la prepaga + campos apilados */
+.os-card {
+  border: 1.5px solid #cfe0dc; border-radius: var(--radius-sm);
+  padding: 16px; margin-bottom: 14px;
+  background: linear-gradient(180deg, #fff, var(--teal-50));
+}
+.os-card__brand { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.os-logo {
+  width: 48px; height: 48px; border-radius: 13px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-head); font-weight: 800; font-size: 1.35rem;
+  letter-spacing: -.02em; color: #fff;
+  background: linear-gradient(135deg, #2f7bd6, #0b3d80);
+  box-shadow: 0 6px 16px -8px rgba(11,61,128,.7);
+}
+.os-card__name { font-family: var(--font-head); font-weight: 800; font-size: 1.12rem; letter-spacing: -.01em; }
+.os-card__tag { font-size: .85rem; color: var(--slate); }
+.os-card .field:last-child { margin-bottom: 0; }
+
 /* ====================================================================
    APP: topbar
 ==================================================================== */
 .topbar {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px clamp(16px, 5vw, 48px);
-  background: rgba(255,255,255,.85); backdrop-filter: blur(10px);
+  padding: 12px 18px; padding-top: calc(12px + env(safe-area-inset-top));
+  background: rgba(255,255,255,.9); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 .topbar__right { display: flex; align-items: center; gap: 14px; }
@@ -173,13 +209,14 @@ body {
 .avatar--lg { width: 60px; height: 60px; font-size: 1.4rem; }
 
 /* ---------- Páginas ---------- */
-.main { max-width: 1100px; margin: 0 auto; padding: clamp(20px, 4vw, 40px); }
+.main { max-width: none; margin: 0; padding: 20px 18px;
+  padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
 .page__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
 .page__title { font-family: var(--font-head); font-weight: 800; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -.02em; }
 .page__subtitle { color: var(--slate); margin-top: 4px; }
 
 /* ---------- Grilla de pacientes ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .pcard {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 22px; box-shadow: var(--shadow-sm); cursor: pointer;
@@ -269,6 +306,35 @@ body {
 .tl-reasons { font-size: .9rem; color: var(--slate); margin-top: 4px; }
 .tl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chip { font-size: .85rem; font-weight: 600; color: var(--slate); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; white-space: nowrap; }
+
+/* ====================================================================
+   Barra de navegación inferior (app shell) + pantalla "Mi cuenta"
+==================================================================== */
+.bottomnav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; z-index: 40;
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: rgba(255,255,255,.94); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -6px 20px -14px rgba(15,42,40,.4);
+}
+.bnav__btn {
+  border: none; background: transparent; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0 8px; color: var(--slate-400);
+  font-family: var(--font-head); font-weight: 600; font-size: .72rem;
+  transition: color .15s;
+}
+.bnav__ico { display: grid; place-items: center; width: 26px; height: 26px; }
+.bnav__ico svg { width: 24px; height: 24px; }
+.bnav__btn.is-active { color: var(--teal-700); }
+.bnav__btn:active { transform: translateY(1px); }
+
+.cuenta__profile { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.cuenta__name { font-family: var(--font-head); font-weight: 700; font-size: 1.2rem; }
+.cuenta__mail { color: var(--slate); font-size: .95rem; word-break: break-all; }
+#cuenta-kv { margin: 0 0 18px; }
 
 /* ====================================================================
    Modal + toast
