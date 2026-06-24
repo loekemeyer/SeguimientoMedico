@@ -201,6 +201,51 @@ def diagnostico(owner: Usuario = Depends(require_owner)) -> dict:
     }
 
 
+@router.get("/probar-openai")
+def probar_openai(owner: Usuario = Depends(require_owner)) -> dict:
+    """Diagnóstico de OpenAI: ¿la key es válida? ¿la cuenta tiene el modelo de voz?
+
+    Es lo que destraba la llamada con IA: si el modelo Realtime no está disponible
+    para esta key, la llamada conecta pero dice 'application error'.
+    """
+    import httpx
+
+    s = get_settings()
+    if not s.openai_api_key:
+        return {"ok": False, "detalle": "OPENAI_API_KEY no está configurada."}
+    try:
+        r = httpx.get(
+            "https://api.openai.com/v1/models",
+            headers={"Authorization": f"Bearer {s.openai_api_key}"}, timeout=15.0,
+        )
+    except Exception as exc:
+        return {"ok": False, "detalle": f"No se pudo contactar a OpenAI: {exc}"}
+    if r.status_code == 401:
+        return {"ok": False, "detalle": "La OPENAI_API_KEY es inválida o está vencida (401)."}
+    if r.status_code != 200:
+        return {"ok": False, "detalle": f"OpenAI respondió {r.status_code}: {r.text[:200]}"}
+
+    ids = {m.get("id") for m in r.json().get("data", [])}
+    rt = s.openai_realtime_model
+    realtime_disponibles = sorted(i for i in ids if i and "realtime" in i)
+    rt_ok = rt in ids
+    return {
+        "ok": True,
+        "key_valida": True,
+        "modelo_realtime_configurado": rt,
+        "modelo_realtime_disponible": rt_ok,
+        "realtime_disponibles_en_tu_cuenta": realtime_disponibles,
+        "modelo_chat_configurado": s.openai_chat_model,
+        "modelo_chat_disponible": s.openai_chat_model in ids,
+        "detalle": (
+            "Key OK y el modelo de voz está disponible." if rt_ok else
+            (f"Key OK, pero tu cuenta NO tiene '{rt}'. Por eso la llamada dice "
+             f"'application error'. Cambiá OPENAI_REALTIME_MODEL a uno de: "
+             f"{realtime_disponibles or 'ninguno (tu cuenta no tiene acceso a Realtime)'}.")
+        ),
+    }
+
+
 class ProbarContactoIn(BaseModel):
     telefono: str
 
