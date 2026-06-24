@@ -119,6 +119,8 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .auth__brandinner .brand__logo { background: rgba(255,255,255,.16); }
 .auth__headline { font-family: var(--font-head); font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.15; letter-spacing: -.02em; margin: 28px 0 14px; }
 .auth__sub { color: rgba(255,255,255,.82); font-size: 1.05rem; max-width: 400px; }
+.auth__price { margin-top: 12px; color: rgba(255,255,255,.92); font-size: 1.02rem; }
+.auth__price strong { font-weight: 800; }
 .auth__bullets { list-style: none; margin-top: 30px; display: grid; gap: 14px; }
 .auth__bullets li { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.92); font-weight: 500; }
 .auth__bullets i {
