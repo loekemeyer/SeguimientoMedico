@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from health_monitor.db.models import Usuario
 from health_monitor.db.session import get_session
 from shared.auth import decode_token
+from shared.config import get_settings
 
 
 def get_current_user(
@@ -65,4 +66,16 @@ def require_active_subscription(
                 "pacientes y llamadas."
             ),
         )
+    return user
+
+
+def require_owner(user: Usuario = Depends(get_current_user)) -> Usuario:
+    """Exige que el usuario sea el DUEÑO del negocio (panel BI privado).
+
+    Se valida contra `OWNER_EMAIL` del entorno. Si no está configurado, se niega
+    el acceso (seguro por defecto): el dueño setea OWNER_EMAIL con su email.
+    """
+    owner = (get_settings().owner_email or "").strip().lower()
+    if not owner or (user.email or "").strip().lower() != owner:
+        raise HTTPException(status_code=403, detail="Acceso reservado al dueño")
     return user

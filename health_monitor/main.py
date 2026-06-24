@@ -25,6 +25,7 @@ from health_monitor import __version__
 from health_monitor.agents.orchestrator import run_post_call
 from health_monitor.api import acompanante as acompanante_routes
 from health_monitor.api import auth as auth_routes
+from health_monitor.api import bi as bi_routes
 from health_monitor.api import billing as billing_routes
 from health_monitor.api import patients as patients_routes
 from health_monitor.api import whatsapp as whatsapp_routes
@@ -71,6 +72,7 @@ app.include_router(patients_routes.router)
 app.include_router(whatsapp_routes.router)
 app.include_router(billing_routes.router)
 app.include_router(acompanante_routes.router)
+app.include_router(bi_routes.router)
 
 
 @app.on_event("startup")

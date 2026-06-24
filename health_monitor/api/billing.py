@@ -47,4 +47,10 @@ def suscribir(
             "status": "cubierto",
             "detail": "Tu cobertura corre por cuenta de tu obra social; no necesitás pagar.",
         }
-    return get_provider().crear_checkout(user, PLANES.get(plan, PLAN_DEFAULT))
+    elegido = PLANES.get(plan, PLAN_DEFAULT)
+    # Registramos el plan elegido (para BI/ingreso). El cobro real lo confirma
+    # la pasarela; el ingreso se reconoce cuando plan == "activo".
+    if user.plan_tipo != elegido.id:
+        user.plan_tipo = elegido.id
+        db.commit()
+    return get_provider().crear_checkout(user, elegido)

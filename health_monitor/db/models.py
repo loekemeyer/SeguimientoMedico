@@ -54,6 +54,7 @@ class Usuario(Base):
 
     # Suscripción (el cobro real se integra aparte; acá vive el estado).
     plan: Mapped[str] = mapped_column(String(32), default="trial")  # trial|activo|cancelado
+    plan_tipo: Mapped[str] = mapped_column(String(16), default="")  # app | telefono (para BI/ingreso)
     suscripcion_vence: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
