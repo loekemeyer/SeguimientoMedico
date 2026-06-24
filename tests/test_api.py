@@ -319,12 +319,14 @@ def test_twilio_voice_no_lo_tapa_el_frontend():
     """Regresión: el frontend montado en '/' no debe tapar los endpoints de la API.
 
     Si el StaticFiles se monta antes que /twilio/voice, el POST de Twilio rebota
-    con 405 Method Not Allowed (el frontend solo acepta GET). Debe responder el
-    TwiML (200) con el <Stream>.
+    con 405 Method Not Allowed (el frontend solo acepta GET). Debe responder TwiML
+    (200): el <Stream> si la IA de voz está configurada, o un <Say> de respaldo si
+    falta OPENAI_API_KEY (en el entorno de test no hay key).
     """
     r = client.post("/twilio/voice?paciente_id=1")
     assert r.status_code == 200, f"esperaba 200 con el TwiML, vino {r.status_code}"
-    assert "<Stream" in r.text and "media-stream" in r.text
+    assert "<Response" in r.text  # responde TwiML válido (no lo tapa el frontend)
+    assert "<Stream" in r.text or "<Say" in r.text
 
 
 def test_sugerencias_y_notificaciones_se_listan():
