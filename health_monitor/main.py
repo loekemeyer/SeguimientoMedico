@@ -98,10 +98,17 @@ app.include_router(bi_routes.router)
 
 @app.on_event("startup")
 def _startup() -> None:
-    """Crea las tablas si no existen (cómodo en dev; en prod usar migraciones)."""
+    """Crea las tablas que falten y reconcilia columnas/índices nuevos.
+
+    `create_all` crea tablas nuevas pero no agrega columnas a tablas existentes;
+    `apply_safe_migrations` cubre eso de forma idempotente (puente hasta Alembic).
+    """
     try:
-        from health_monitor.db.session import create_all
-        create_all()
+        import health_monitor.db.session as sess
+        from health_monitor.db.migrate import apply_safe_migrations
+        sess.create_all()
+        sess._init()
+        apply_safe_migrations(sess._engine)
     except Exception as exc:  # la app igual sirve el frontend aunque la DB no esté
         logger.warning("No se pudieron crear/verificar las tablas al iniciar: %s", exc)
 
