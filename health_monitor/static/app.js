@@ -7,6 +7,27 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const token = () => localStorage.getItem(TOKEN_KEY);
 
+/* Inicial para el avatar, a prueba de nombres vacíos o sólo espacios
+   (antes `"".trim()[0]` era undefined y `.toUpperCase()` tiraba y deslogueaba). */
+function inicial(...candidatos) {
+  for (const c of candidatos) {
+    const s = (c || "").trim();
+    if (s) return s[0].toUpperCase();
+  }
+  return "?";
+}
+
+/* Evita el doble-submit: deshabilita el botón del form mientras corre `fn`. */
+async function conBotonOcupado(form, fn) {
+  const btn = form?.querySelector('button[type="submit"], button:not([type])');
+  if (btn) btn.disabled = true;
+  try {
+    return await fn();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function toast(msg, isError = false) {
   const t = $("#toast");
   t.textContent = msg;
@@ -75,14 +96,16 @@ $("#form-login")?.addEventListener("submit", async (e) => {
   const err = $("[data-error]", e.target);
   err.textContent = "";
   const f = new FormData(e.target);
-  try {
-    const r = await api("/auth/login", {
-      method: "POST", auth: false,
-      body: { email: f.get("email"), password: f.get("password") },
-    });
-    localStorage.setItem(TOKEN_KEY, r.access_token);
-    await enterApp();
-  } catch (ex) { err.textContent = ex.message; }
+  await conBotonOcupado(e.target, async () => {
+    try {
+      const r = await api("/auth/login", {
+        method: "POST", auth: false,
+        body: { email: f.get("email"), password: f.get("password") },
+      });
+      localStorage.setItem(TOKEN_KEY, r.access_token);
+      await enterApp();
+    } catch (ex) { err.textContent = ex.message; }
+  });
 });
 
 // Onboarding: mostrar los campos de obra social solo si se elige esa opción.
@@ -110,19 +133,21 @@ $("#form-register")?.addEventListener("submit", async (e) => {
   const err = $("[data-error]", e.target);
   err.textContent = "";
   const f = new FormData(e.target);
-  try {
-    const r = await api("/auth/register", {
-      method: "POST", auth: false,
-      body: {
-        nombre: f.get("nombre"), email: f.get("email"), password: f.get("password"),
-        tipo_cuenta: f.get("tipo_cuenta") || "privado",
-        obra_social: f.get("obra_social") || "",
-        nro_afiliado: f.get("nro_afiliado") || "",
-      },
-    });
-    localStorage.setItem(TOKEN_KEY, r.access_token);
-    await enterApp();
-  } catch (ex) { err.textContent = ex.message; }
+  await conBotonOcupado(e.target, async () => {
+    try {
+      const r = await api("/auth/register", {
+        method: "POST", auth: false,
+        body: {
+          nombre: f.get("nombre"), email: f.get("email"), password: f.get("password"),
+          tipo_cuenta: f.get("tipo_cuenta") || "privado",
+          obra_social: f.get("obra_social") || "",
+          nro_afiliado: f.get("nro_afiliado") || "",
+        },
+      });
+      localStorage.setItem(TOKEN_KEY, r.access_token);
+      await enterApp();
+    } catch (ex) { err.textContent = ex.message; }
+  });
 });
 
 $("#btn-logout")?.addEventListener("click", () => {
@@ -139,8 +164,7 @@ async function enterApp() {
   try {
     const me = await api("/auth/me");
     currentUser = me;
-    const inicial = (me.nombre || me.email || "U").trim()[0].toUpperCase();
-    $("#avatar").textContent = inicial;
+    $("#avatar").textContent = inicial(me.nombre, me.email, "U");
     show("app");
     showPage("list");
     refreshSubButton();
@@ -177,8 +201,7 @@ $("#avatar")?.addEventListener("click", () => { showPage("cuenta"); loadCuenta()
 
 async function loadCuenta() {
   const me = currentUser || {};
-  const inicial = (me.nombre || me.email || "U").trim()[0].toUpperCase();
-  $("#cuenta-avatar").textContent = inicial;
+  $("#cuenta-avatar").textContent = inicial(me.nombre, me.email, "U");
   $("#cuenta-name").textContent = me.nombre || "Mi cuenta";
   $("#cuenta-mail").textContent = me.email || "";
   try {
@@ -236,7 +259,7 @@ function patologiasBadges(arr) {
 function patientCard(p) {
   const el = document.createElement("div");
   el.className = "pcard";
-  const inicial = (p.nombre || "?").trim()[0].toUpperCase();
+  const ini = inicial(p.nombre);
   const patHtml = patologiasBadges(p.patologias) || `<div class="pcard__tag">Seguimiento general</div>`;
   const hora = p.programacion?.llamada_hora || "—";
   const estado = p.consentimiento_firmado
@@ -244,7 +267,7 @@ function patientCard(p) {
     : `<span class="badge badge--neutral">Falta consentimiento</span>`;
   el.innerHTML = `
     <div class="pcard__top">
-      <div class="avatar">${inicial}</div>
+      <div class="avatar">${ini}</div>
       <div class="pcard__head">
         <div class="pcard__name">${escapeHtml(p.nombre || "Sin nombre")}</div>
         ${patHtml}
@@ -525,7 +548,7 @@ function renderTendencias(evos) {
 }
 
 function renderDetail(p, contactos, rutina, evos) {
-  $("#detail-avatar").textContent = (p.nombre || "?").trim()[0].toUpperCase();
+  $("#detail-avatar").textContent = inicial(p.nombre);
   $("#detail-name").textContent = p.nombre || "—";
   $("#detail-meta").innerHTML = patologiasBadges(p.patologias) || "Seguimiento general";
   $("#detail-codigo").textContent = p.codigo_acceso || "—";
@@ -810,25 +833,27 @@ form.addEventListener("submit", async (e) => {
     personalidad,
     programacion,
   };
-  try {
-    if (editingId) {
-      const p = await api(`/pacientes/${editingId}`, { method: "PUT", body });
-      closeModal();
-      toast("Cambios guardados ✅");
-      await openDetail(p.id);
-    } else {
-      const p = await api("/pacientes", { method: "POST", body });
-      if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
-        await api(`/pacientes/${p.id}/contactos`, {
-          method: "POST",
-          body: { nombre: f.get("contacto_nombre"), telefono: getPhone(e.target, "contacto_telefono"), relacion: "familiar", prioridad: 1 },
-        }).catch(() => {});
+  await conBotonOcupado(e.target, async () => {
+    try {
+      if (editingId) {
+        const p = await api(`/pacientes/${editingId}`, { method: "PUT", body });
+        closeModal();
+        toast("Cambios guardados ✅");
+        await openDetail(p.id);
+      } else {
+        const p = await api("/pacientes", { method: "POST", body });
+        if (f.get("contacto_nombre") && f.get("contacto_telefono")) {
+          await api(`/pacientes/${p.id}/contactos`, {
+            method: "POST",
+            body: { nombre: f.get("contacto_nombre"), telefono: getPhone(e.target, "contacto_telefono"), relacion: "familiar", prioridad: 1 },
+          }).catch(() => {});
+        }
+        closeModal();
+        toast("Persona agregada ✅");
+        await loadPatients();
       }
-      closeModal();
-      toast("Persona agregada ✅");
-      await loadPatients();
-    }
-  } catch (ex) { err.textContent = ex.message; }
+    } catch (ex) { err.textContent = ex.message; }
+  });
 });
 
 /* ---------- util ---------- */
@@ -1030,6 +1055,7 @@ $("#acompanado-salir")?.addEventListener("click", () => {
 
 /* --- la "llamada" (charla con el acompañante) --- */
 let callHist = [];
+let callEnviando = false;  // evita mandar dos mensajes a la vez
 function pintarMensaje(quien, texto) {
   const wrap = $("#call-mensajes");
   if (!wrap || !texto) return;
@@ -1039,13 +1065,33 @@ function pintarMensaje(quien, texto) {
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
 }
+function mostrarTipeando(on) {
+  const wrap = $("#call-mensajes");
+  let el = $("#call-typing");
+  if (on && wrap && !el) {
+    el = document.createElement("div");
+    el.id = "call-typing";
+    el.className = "call-msg call-msg--acomp call-msg--typing";
+    el.innerHTML = "<span></span><span></span><span></span>";
+    wrap.appendChild(el);
+    wrap.scrollTop = wrap.scrollHeight;
+  } else if (!on && el) {
+    el.remove();
+  }
+}
 async function enviarCall(texto) {
+  if (callEnviando) return;            // ya hay un turno en curso
+  callEnviando = true;
+  const sendBtn = $("#form-call button[type=submit]");
+  if (sendBtn) sendBtn.disabled = true;
   if (texto) { pintarMensaje("yo", texto); callHist.push({ role: "user", content: texto }); }
+  mostrarTipeando(true);
   try {
     const r = await api("/acompanante/chat", {
       method: "POST", bearer: pacToken(),
       body: { mensaje: texto, historial: callHist },
     });
+    mostrarTipeando(false);
     pintarMensaje("acomp", r.respuesta || "…");
     // Solo acumulamos turnos reales (con texto del usuario) para que el historial
     // con la IA quede balanceado (user → assistant → ...). El saludo inicial no cuenta.
@@ -1055,7 +1101,11 @@ async function enviarCall(texto) {
       if (est) est.textContent = "Pronto vamos a poder hablar 💛";
     }
   } catch {
+    mostrarTipeando(false);
     pintarMensaje("acomp", "Perdoná, ahora no puedo. Probá en un ratito 💛");
+  } finally {
+    callEnviando = false;
+    if (sendBtn) sendBtn.disabled = false;
   }
 }
 function abrirCall() {
@@ -1081,6 +1131,14 @@ $("#form-call")?.addEventListener("submit", (e) => {
 });
 
 /* ---------- arranque ---------- */
-if (pacToken()) enterAcompanado();
-else if (token()) enterApp();
-else show("auth");
+(async function bootstrap() {
+  try {
+    if (pacToken()) await enterAcompanado();
+    else if (token()) await enterApp();
+    else show("auth");
+  } catch (e) {
+    // Token vencido/inválido o API caída: no dejamos la pantalla en blanco.
+    console.error("bootstrap", e);
+    show("auth");
+  }
+})();

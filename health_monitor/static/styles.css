@@ -511,6 +511,11 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .call-msg { max-width: 80%; padding: 12px 15px; border-radius: 16px; font-size: 1.08rem; line-height: 1.45; }
 .call-msg--acomp { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; }
 .call-msg--yo { align-self: flex-end; background: var(--teal-600); color: #fff; border-bottom-right-radius: 5px; }
+.call-msg--typing { display: inline-flex; gap: 5px; align-items: center; }
+.call-msg--typing span { width: 8px; height: 8px; border-radius: 50%; background: var(--slate); opacity: .5; animation: typing 1.2s infinite ease-in-out; }
+.call-msg--typing span:nth-child(2) { animation-delay: .2s; }
+.call-msg--typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-4px); opacity: .9; } }
 .call__form { width: 100%; display: flex; gap: 8px; }
 .call__form input { flex: 1; min-width: 0; border: 1.5px solid var(--line); border-radius: 12px; padding: 13px 15px; font-size: 1.05rem; background: #fff; }
 .call__form input:focus { outline: none; border-color: var(--teal-500); }
