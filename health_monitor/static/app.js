@@ -785,7 +785,12 @@ function sexoDeVoz(voz) {
 function poblarVoces(sexo, vozSeleccionada) {
   const sel = $("#voz-select");
   if (!sel) return;
-  const lista = VOCES.filter((v) => v.sexo === sexo);
+  let lista = VOCES.filter((v) => v.sexo === sexo);
+  // Si el paciente tenía una voz fuera del catálogo curado (ej. "alloy" de una
+  // versión anterior), la conservamos para no pisarla sin querer al editar.
+  if (vozSeleccionada && !VOCES.some((v) => v.value === vozSeleccionada)) {
+    lista = [...lista, { value: vozSeleccionada, sexo, label: vozSeleccionada }];
+  }
   sel.innerHTML = lista.map((v) => `<option value="${v.value}">${v.label}</option>`).join("");
   sel.value = lista.some((v) => v.value === vozSeleccionada) ? vozSeleccionada : lista[0].value;
 }
