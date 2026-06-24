@@ -181,6 +181,26 @@ def asesor(
     }
 
 
+@router.get("/diagnostico")
+def diagnostico(owner: Usuario = Depends(require_owner)) -> dict:
+    """Qué integraciones están configuradas (sin exponer secretos): para saber por
+    qué 'no anda' la llamada o el WhatsApp. Sólo el dueño."""
+    s = get_settings()
+    return {
+        "twilio_account_sid": bool(s.twilio_account_sid),
+        "twilio_auth_token": bool(s.twilio_auth_token),
+        "twilio_voice_from": s.twilio_voice_from or "(vacío)",   # número de voz, no es secreto
+        "twilio_whatsapp_from": s.twilio_whatsapp_from or "(vacío)",
+        "public_base_url": s.public_base_url or "(vacío)",
+        "openai_api_key": bool(s.openai_api_key),
+        "llamada_de_voz_lista": bool(
+            s.twilio_account_sid and s.twilio_auth_token and s.twilio_voice_from and s.public_base_url
+        ),
+        "whatsapp_listo": bool(s.twilio_account_sid and s.twilio_auth_token),
+        "chat_ia_listo": bool(s.openai_api_key),
+    }
+
+
 class ActivarIn(BaseModel):
     usuario_id: int
     plan_tipo: str = "app"  # app | telefono

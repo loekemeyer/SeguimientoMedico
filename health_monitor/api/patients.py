@@ -476,13 +476,18 @@ def llamar_ahora(
     s = get_settings()
     # Sin teléfono saliente de voz / URL pública no se puede hacer la llamada real.
     voice_from = s.twilio_voice_from or s.twilio_whatsapp_from
-    if not (s.twilio_account_sid and s.twilio_auth_token and s.public_base_url and s.twilio_voice_from):
+    faltan = [n for n, ok in (
+        ("TWILIO_ACCOUNT_SID", s.twilio_account_sid),
+        ("TWILIO_AUTH_TOKEN", s.twilio_auth_token),
+        ("TWILIO_VOICE_FROM", s.twilio_voice_from),
+        ("PUBLIC_BASE_URL", s.public_base_url),
+    ) if not ok]
+    if faltan:
         return {
             "status": "no_disponible",
             "detail": (
-                "La llamada de voz todavía no está configurada (falta el teléfono "
-                "saliente de voz y la URL pública). Cuando se configure, este botón "
-                "llama al instante."
+                "La llamada de voz todavía no está configurada. Falta cargar en el "
+                f"servidor: {', '.join(faltan)}. Cuando esté, este botón llama al instante."
             ),
         }
     try:

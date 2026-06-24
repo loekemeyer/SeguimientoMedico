@@ -47,13 +47,16 @@ def _host_audio(audio: bytes) -> str | None:
     return f"{settings.public_base_url.rstrip('/')}/whatsapp/audio/{token}.mp3"
 
 
-def _enviar_voz(telefono: str, texto: str) -> None:
-    """Manda el texto como audio por WhatsApp; si no se puede, manda el texto."""
+def _enviar_voz(telefono: str, texto: str) -> bool:
+    """Manda el texto como audio por WhatsApp; si no se puede, manda el texto.
+
+    Devuelve True si Twilio aceptó el envío, False si no (sin credenciales, o el
+    número todavía no escribió 'join <código>' al sandbox / ventana de 24h cerrada).
+    """
     url = _host_audio(voice_chat.synthesize(texto))
     if url:
-        send_whatsapp_message(telefono, media_url=url)
-    else:
-        send_whatsapp_message(telefono, texto)
+        return send_whatsapp_message(telefono, media_url=url)
+    return send_whatsapp_message(telefono, texto)
 
 
 def _telefono(db: Session, paciente_id: int) -> str:
@@ -89,15 +92,29 @@ def iniciar(
         temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
         explorar_animo=state.explorar_animo, memoria=state.memoria,
     )
+    s = get_settings()
+    if not (s.twilio_account_sid and s.twilio_auth_token):
+        return {
+            "status": "no_disponible",
+            "detail": ("WhatsApp todavía no está configurado (faltan las credenciales "
+                       "de Twilio). Cargá TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN."),
+        }
+    enviado = _enviar_voz(telefono, msg)
+    if not enviado:
+        return {
+            "status": "no_enviado",
+            "detail": ("No se pudo entregar el WhatsApp. En el sandbox de Twilio, ese "
+                       "número primero tiene que escribir 'join <código>' al "
+                       "+14155238886; en producción se necesita una plantilla aprobada."),
+        }
     conv = ConversacionWhatsApp(
         paciente_id=paciente_id,
-        telefono_index=phone_index(telefono, get_settings().encryption_key),
+        telefono_index=phone_index(telefono, s.encryption_key),
         estado="activa",
         historial=[{"role": "assistant", "content": msg}],
     )
     db.add(conv)
     db.commit()
-    _enviar_voz(telefono, msg)
     return {"status": "iniciado", "conversacion_id": conv.id}
 
 
