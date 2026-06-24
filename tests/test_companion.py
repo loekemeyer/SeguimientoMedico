@@ -55,6 +55,17 @@ def test_voz_y_velocidad_configurables_por_paciente():
     assert out["speed"] == 1.1
 
 
+def test_memoria_se_inyecta_en_las_instrucciones():
+    ins = _session(memoria="- Su nieto Tomás empezó la facultad.")["instructions"]
+    assert "Tomás" in ins
+    assert "memoria" in ins.lower()
+
+
+def test_sin_memoria_no_rompe():
+    ins = _session()["instructions"]  # memoria="" por defecto
+    assert isinstance(ins, str) and len(ins) > 0
+
+
 def test_trato_de_usted_se_refleja():
     ins = _session(trato="usted")["instructions"]
     assert "USTED" in ins
