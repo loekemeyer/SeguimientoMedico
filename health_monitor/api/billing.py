@@ -11,36 +11,40 @@ from sqlalchemy.orm import Session
 from health_monitor.api.deps import get_current_user
 from health_monitor.db.models import Usuario
 from health_monitor.db.session import get_session
-from health_monitor.payments import PLAN_DEFAULT, get_provider
+from health_monitor.payments import PLAN_DEFAULT, PLANES, get_provider
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
 
+def _plan_dict(p) -> dict:
+    return {"id": p.id, "nombre": p.nombre, "precio": p.precio, "moneda": p.moneda}
+
+
 @router.get("/estado")
 def estado(user: Usuario = Depends(get_current_user)) -> dict:
-    """Estado de la suscripción + plan disponible para mostrarlo en 'Mi suscripción'."""
-    plan = PLAN_DEFAULT
+    """Estado de la suscripción + los planes disponibles para 'Mi suscripción'."""
     return {
         "tipo_cuenta": user.tipo_cuenta,
         "obra_social": user.obra_social,
         "plan": user.plan,
         "suscripcion_vence": user.suscripcion_vence.isoformat() if user.suscripcion_vence else None,
         "proveedor_configurado": get_provider().configurado(),
-        "plan_disponible": {
-            "id": plan.id, "nombre": plan.nombre, "precio": plan.precio, "moneda": plan.moneda,
-        },
+        "planes": [_plan_dict(p) for p in PLANES.values()],
+        # compat: el primer plan como "disponible" por defecto.
+        "plan_disponible": _plan_dict(PLAN_DEFAULT),
     }
 
 
 @router.post("/suscribir")
 def suscribir(
+    plan: str = "app",
     user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_session),
 ) -> dict:
-    """Inicia el checkout de la suscripción privada (o informa que ya está cubierta)."""
+    """Inicia el checkout del plan elegido (o informa que la obra social ya cubre)."""
     if user.tipo_cuenta == "obra_social":
         return {
             "status": "cubierto",
             "detail": "Tu cobertura corre por cuenta de tu obra social; no necesitás pagar.",
         }
-    return get_provider().crear_checkout(user, PLAN_DEFAULT)
+    return get_provider().crear_checkout(user, PLANES.get(plan, PLAN_DEFAULT))

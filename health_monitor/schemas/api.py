@@ -139,6 +139,8 @@ class PacienteOut(BaseModel):
     activo: bool = True
     # Nivel del último seguimiento (VERDE/AMARILLA/ROJA), para el semáforo de la tarjeta.
     ultimo_nivel: str | None = None
+    # Código de 6 dígitos para que la persona entre a la app (plan App).
+    codigo_acceso: str | None = None
 
 
 # --- Medicación ---

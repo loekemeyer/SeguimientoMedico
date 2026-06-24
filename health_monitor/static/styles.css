@@ -362,6 +362,24 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 #cuenta-kv { margin: 0 0 18px; }
 .appver { text-align: center; color: var(--slate-400); font-size: .8rem; margin-top: 14px; }
 
+/* Código de acceso del paciente (detalle) */
+.codigo-box {
+  font-family: var(--font-head); font-weight: 800; font-size: 2rem;
+  letter-spacing: .3em; text-align: center; color: var(--teal-700);
+  background: var(--teal-50); border: 1px dashed #bfe6df;
+  border-radius: var(--radius-sm); padding: 16px 10px;
+}
+
+/* Planes de suscripción (modal "Mi suscripción") */
+.sub-intro { font-family: var(--font-head); font-weight: 700; color: var(--ink); margin: 16px 0 10px; }
+.planes { display: grid; gap: 12px; }
+.plan { border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 16px; }
+.plan__head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.plan__icon { font-size: 1.7rem; line-height: 1; }
+.plan__name { font-family: var(--font-head); font-weight: 700; font-size: 1.02rem; }
+.plan__price { color: var(--teal-700); font-weight: 700; font-size: .95rem; }
+.plan__desc { font-size: .92rem; color: var(--slate); margin-bottom: 12px; }
+
 /* ====================================================================
    Modal + toast
 ==================================================================== */

@@ -49,9 +49,13 @@ class Settings(BaseSettings):
     # Pagos / suscripción (pasarela: Mercado Pago por default).
     # Modo sin código: un link de plan de suscripción de Mercado Pago (mpago.la/...).
     # Con esto el botón "Suscribirme" lleva al checkout sin necesidad de token/API.
-    mercadopago_suscripcion_url: str = "https://mpago.la/13873rm"
+    # Dos planes (links de checkout de Mercado Pago, modo sin código):
+    #   - App ($10.000/mes): la persona charla desde la app con su código.
+    #   - Teléfono ($20.000/mes): la llamamos por teléfono.
+    mercadopago_suscripcion_url: str = "https://mpago.la/13873rm"          # Plan App ($10.000)
+    mercadopago_suscripcion_url_telefono: str = "https://mpago.la/23vp1ze"  # Plan Teléfono ($20.000)
     # Token de API (para la integración avanzada: webhook de confirmación que activa
-    # el plan solo). Opcional; sin él, el cobro igual funciona vía el link de arriba.
+    # el plan solo). Opcional; sin él, el cobro igual funciona vía los links de arriba.
     mercadopago_access_token: str = ""
 
     # Operación

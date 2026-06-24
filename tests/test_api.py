@@ -107,6 +107,9 @@ def test_crear_y_leer_paciente():
     assert r.status_code == 201, r.text
     pid = r.json()["id"]
     assert r.json()["nombre"] == "Alejandro Damián Loekemeyer"
+    # Cada paciente recibe un código de acceso único de 6 dígitos (para entrar a la app).
+    codigo = r.json()["codigo_acceso"]
+    assert codigo is not None and len(codigo) == 6 and codigo.isdigit()
 
     got = client.get(f"/pacientes/{pid}", headers=headers)
     assert got.status_code == 200
@@ -327,13 +330,21 @@ def test_billing_estado_y_suscribir_privado():
     headers = _register("billing@test.com")
     e = client.get("/billing/estado", headers=headers)
     assert e.status_code == 200
-    assert e.json()["plan_disponible"]["precio"] > 0
-    # Con el link de suscripción de Mercado Pago cargado, el pago ya está disponible.
-    assert e.json()["proveedor_configurado"] is True
-    r = client.post("/billing/suscribir", headers=headers)
-    assert r.status_code == 200
-    assert r.json()["status"] == "ok"
-    assert r.json()["checkout_url"].startswith("http")  # lleva al checkout
+    body = e.json()
+    assert body["plan_disponible"]["precio"] > 0
+    # Dos planes disponibles: App ($10.000) y Teléfono ($20.000).
+    planes = {p["id"]: p for p in body["planes"]}
+    assert planes["app"]["precio"] == 10000
+    assert planes["telefono"]["precio"] == 20000
+    # Con los links de Mercado Pago cargados, el pago ya está disponible.
+    assert body["proveedor_configurado"] is True
+    # Suscribirse a cada plan lleva a su propio checkout (links distintos).
+    r_app = client.post("/billing/suscribir?plan=app", headers=headers)
+    assert r_app.status_code == 200 and r_app.json()["status"] == "ok"
+    assert r_app.json()["checkout_url"].startswith("http")
+    r_tel = client.post("/billing/suscribir?plan=telefono", headers=headers)
+    assert r_tel.json()["checkout_url"].startswith("http")
+    assert r_tel.json()["checkout_url"] != r_app.json()["checkout_url"]
 
 
 def test_billing_obra_social_no_paga():

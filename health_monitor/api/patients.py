@@ -2,6 +2,7 @@
 historial de llamadas y notificaciones registradas)."""
 from __future__ import annotations
 
+import secrets
 import uuid
 from datetime import datetime, timezone
 
@@ -71,10 +72,20 @@ def _ultimo_nivel(db: Session, paciente_id: int) -> str | None:
     )
 
 
+def _generar_codigo_acceso(db: Session) -> str:
+    """Genera un código de 6 dígitos único entre todos los pacientes."""
+    for _ in range(25):
+        codigo = f"{secrets.randbelow(1_000_000):06d}"
+        if not db.scalar(select(Paciente.id).where(Paciente.codigo_acceso == codigo)):
+            return codigo
+    return f"{secrets.randbelow(1_000_000):06d}"  # colisión extremadamente improbable
+
+
 def _to_out(p: Paciente, cipher: FieldCipher, ultimo_nivel: str | None = None) -> PacienteOut:
     return PacienteOut(
         id=p.id,
         ultimo_nivel=ultimo_nivel,
+        codigo_acceso=p.codigo_acceso,
         nombre=cipher.decrypt(p.nombre_enc) if p.nombre_enc else "",
         telefono_whatsapp=cipher.decrypt(p.telefono_whatsapp_enc) if p.telefono_whatsapp_enc else "",
         consentimiento_firmado=p.consentimiento_firmado,
@@ -129,6 +140,7 @@ def crear_paciente(
     p = Paciente(
         usuario_id=user.id,
         hce_id=uuid.uuid4().hex,
+        codigo_acceso=_generar_codigo_acceso(db),
         nombre_enc=cipher.encrypt(data.nombre),
         telefono_whatsapp_enc=cipher.encrypt(data.telefono_whatsapp),
         consentimiento_firmado=data.consentimiento_firmado,

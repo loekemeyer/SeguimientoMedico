@@ -382,6 +382,7 @@ function renderDetail(p, contactos, rutina, evos) {
   $("#detail-avatar").textContent = (p.nombre || "?").trim()[0].toUpperCase();
   $("#detail-name").textContent = p.nombre || "—";
   $("#detail-meta").textContent = (p.patologias || []).join(" · ") || "Seguimiento general";
+  $("#detail-codigo").textContent = p.codigo_acceso || "—";
   const st = $("#detail-status");
   if (p.consentimiento_firmado) { st.className = "badge badge--verde"; st.textContent = "Seguimiento activo"; }
   else { st.className = "badge badge--neutral"; st.textContent = "Falta consentimiento"; }
@@ -601,30 +602,49 @@ async function openSubModal() {
   }
 }
 
+const PLAN_META = {
+  app: { icon: "📱", desc: "La persona charla desde la app con su código de 6 dígitos." },
+  telefono: { icon: "📞", desc: "La llamamos por teléfono y charla por ahí." },
+};
+
 function renderSub(s) {
   const vence = s.suscripcion_vence
     ? new Date(s.suscripcion_vence).toLocaleDateString("es-AR")
     : "—";
-  const plan = s.plan_disponible || {};
   let html = `<div class="kv">
     <div class="kv__row"><span>Estado</span><span>${escapeHtml(s.plan || "trial")}</span></div>
-    <div class="kv__row"><span>Vigente hasta</span><span>${vence}</span></div>`;
+    <div class="kv__row"><span>Vigente hasta</span><span>${vence}</span></div></div>`;
   if (s.tipo_cuenta === "obra_social") {
-    html += `<div class="kv__row"><span>Cobertura</span><span>${escapeHtml(s.obra_social || "Obra social")}</span></div></div>
-      <p class="hint">Tu seguimiento está cubierto por tu obra social. No tenés que pagar nada. 💚</p>`;
-  } else {
-    html += `</div>
-      <p class="hint">${escapeHtml(plan.nombre || "Plan")}: <strong>$${plan.precio || 0} ${escapeHtml(plan.moneda || "ARS")}</strong> por mes.</p>
-      <button class="btn btn--primary btn--block" id="btn-suscribir">Suscribirme</button>`;
+    html += `<p class="hint">Tu seguimiento está cubierto por tu obra social${s.obra_social ? " (" + escapeHtml(s.obra_social) + ")" : ""}. No tenés que pagar nada. 💚</p>`;
+    $("#sub-body").innerHTML = html;
+    return;
   }
+  html += `<p class="sub-intro">Elegí tu plan:</p><div class="planes">`;
+  (s.planes || []).forEach((p) => {
+    const meta = PLAN_META[p.id] || { icon: "•", desc: "" };
+    const precio = Number(p.precio || 0).toLocaleString("es-AR");
+    html += `<div class="plan">
+      <div class="plan__head">
+        <span class="plan__icon">${meta.icon}</span>
+        <div>
+          <div class="plan__name">${escapeHtml(p.nombre)}</div>
+          <div class="plan__price">$${precio} ${escapeHtml(p.moneda || "ARS")}/mes</div>
+        </div>
+      </div>
+      <p class="plan__desc">${escapeHtml(meta.desc)}</p>
+      <button class="btn btn--primary btn--block" data-suscribir="${escapeHtml(p.id)}">Suscribirme</button>
+    </div>`;
+  });
+  html += `</div>`;
   $("#sub-body").innerHTML = html;
-  const btn = $("#btn-suscribir");
-  if (btn) btn.addEventListener("click", suscribir);
+  $$("[data-suscribir]", $("#sub-body")).forEach((b) =>
+    b.addEventListener("click", () => suscribir(b.dataset.suscribir))
+  );
 }
 
-async function suscribir() {
+async function suscribir(planId) {
   try {
-    const r = await api("/billing/suscribir", { method: "POST" });
+    const r = await api(`/billing/suscribir?plan=${encodeURIComponent(planId || "app")}`, { method: "POST" });
     if (r.checkout_url) {
       window.open(r.checkout_url, "_blank", "noopener");
       toast("Te abrimos el pago de Mercado Pago 💳");

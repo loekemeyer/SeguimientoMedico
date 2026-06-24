@@ -20,11 +20,22 @@ class Plan:
     moneda: str = "ARS"
 
 
-# Plan privado (B2C). Los de obra social no pagan: lo cubre el prestador.
+# Dos planes (B2C). Los de obra social no pagan: lo cubre el prestador.
+#   - app: la persona charla desde la app (entra con su código de 6 dígitos).
+#   - telefono: la llamamos por teléfono y charla por ahí (usa la línea, sale más).
 PLANES: dict[str, Plan] = {
-    "privado_mensual": Plan("privado_mensual", "Plan privado — mensual", 9900, "ARS"),
+    "app": Plan("app", "Plan App — charla desde la app", 10000, "ARS"),
+    "telefono": Plan("telefono", "Plan Teléfono — la llamamos", 20000, "ARS"),
 }
-PLAN_DEFAULT = PLANES["privado_mensual"]
+PLAN_DEFAULT = PLANES["app"]
+
+
+def url_checkout(plan: Plan) -> str:
+    """Link de Mercado Pago para ese plan (cada plan tiene su propio precio/link)."""
+    s = get_settings()
+    if plan.id == "telefono":
+        return s.mercadopago_suscripcion_url_telefono or s.mercadopago_suscripcion_url
+    return s.mercadopago_suscripcion_url
 
 
 class PaymentProvider:
@@ -49,12 +60,14 @@ class MercadoPagoProvider(PaymentProvider):
 
     def crear_checkout(self, usuario, plan: Plan) -> dict:
         s = get_settings()
-        # Modo sin código: link de plan de suscripción de Mercado Pago. Cobra ya.
-        if s.mercadopago_suscripcion_url:
+        # Modo sin código: link de plan de suscripción de Mercado Pago (uno por plan).
+        url = url_checkout(plan)
+        if url:
             return {
                 "status": "ok",
                 "detail": "Te llevamos al pago seguro de Mercado Pago.",
-                "checkout_url": s.mercadopago_suscripcion_url,
+                "checkout_url": url,
+                "plan_id": plan.id,
             }
         if not s.mercadopago_access_token:
             return {

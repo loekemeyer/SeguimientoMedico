@@ -109,6 +109,12 @@ class Paciente(Base):
     temas_preferidos: Mapped[str] = mapped_column(Text, default="")  # temas que le gustan
     temas_evitar: Mapped[str] = mapped_column(Text, default="")  # temas a evitar
 
+    # Código de 6 dígitos para que la persona entre a la app a charlar (plan App).
+    # Lo ve el familiar en el panel y se lo pasa. Único entre todos los pacientes.
+    codigo_acceso: Mapped[str | None] = mapped_column(
+        String(6), unique=True, index=True, default=None
+    )
+
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
