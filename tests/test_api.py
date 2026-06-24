@@ -356,6 +356,17 @@ def test_pwa_manifest_y_service_worker_se_sirven():
     assert "addEventListener" in sw.text  # es un service worker de verdad
 
 
+def test_whatsapp_iniciar_exige_consentimiento():
+    """El botón 'Por WhatsApp' inicia el seguimiento; exige consentimiento (Ley 25.326)."""
+    headers = _register("waini@test.com")
+    pid = client.post("/pacientes", json={
+        "nombre": "WA", "telefono_whatsapp": "+5490000000033",
+    }, headers=headers).json()["id"]
+    # Sin consentimiento firmado, no se puede iniciar.
+    r = client.post(f"/whatsapp/iniciar/{pid}", headers=headers)
+    assert r.status_code == 403
+
+
 def test_whatsapp_incoming_sin_conversacion_responde_204():
     """El webhook de WhatsApp responde 204 si no hay conversación activa (ruta viva)."""
     r = client.post(

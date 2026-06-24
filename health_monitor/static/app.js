@@ -202,6 +202,16 @@ $("#btn-call-now").addEventListener("click", async () => {
   } catch (e) { toast(e.message, true); }
 });
 
+/* ---------- seguimiento por WhatsApp de voz (canal económico) ---------- */
+$("#btn-whatsapp").addEventListener("click", async () => {
+  if (!currentPatient) return;
+  if (!confirm("¿Iniciar un seguimiento por mensajes de voz de WhatsApp?")) return;
+  try {
+    const r = await api(`/whatsapp/iniciar/${currentPatient.id}`, { method: "POST" });
+    toast(r.status === "iniciado" ? "Seguimiento por WhatsApp iniciado 📲" : (r.detail || "Listo"));
+  } catch (e) { toast(e.message, true); }
+});
+
 /* ---------- agregar a la rutina ---------- */
 const TIPO_ICON = {
   medicamento: "💊", presion: "🩺", glucemia: "🩸", oximetria: "🫁",
