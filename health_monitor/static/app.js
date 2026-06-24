@@ -497,7 +497,9 @@ function openEditModal() {        // edición del paciente abierto
   $("[name=patologias]", form).value = (currentPatient.patologias || []).join(", ");
   $("[name=llamada_hora]", form).value = currentPatient.programacion?.llamada_hora || "10:00";
   $("[name=consentimiento_firmado]", form).checked = !!currentPatient.consentimiento_firmado;
-  $("[name=nivel_insistencia]", form).value = String(currentPatient.programacion?.nivel_insistencia || 2);
+  const _nivelIns = String(currentPatient.programacion?.nivel_insistencia || 2);
+  const _insRadio = $(`[name=nivel_insistencia][value="${_nivelIns}"]`, form);
+  if (_insRadio) _insRadio.checked = true;
   const pers = currentPatient.personalidad || {};
   $("[name=trato]", form).value = pers.trato || "vos";
   $("[name=acompanante_nombre]", form).value = pers.acompanante_nombre || "";

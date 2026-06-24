@@ -328,7 +328,7 @@
       <h2 class="form__title" id="modal-title">Agregar persona a cuidar</h2>
       <form id="form-patient" class="form">
         <div class="form__row">
-          <label class="field"><span>Nombre (el que vos quieras: real o cariñoso)</span>
+          <label class="field"><span>Nombre (real o cariñoso)</span>
             <input type="text" name="nombre" placeholder="Ej: Papá, Abuela Rosa, Rosa Pérez…" required />
           </label>
           <label class="field"><span>WhatsApp del paciente</span>
@@ -374,13 +374,27 @@
             <span>Tengo el consentimiento del apoderado legal</span>
           </label>
         </div>
-        <label class="field"><span>Insistencia del asistente en la llamada</span>
-          <select name="nivel_insistencia" class="select">
-            <option value="1">1 · Pasivo (solo escucha)</option>
-            <option value="2" selected>2 · Recordar</option>
-            <option value="3">3 · Insistir amablemente</option>
-          </select>
-        </label>
+        <div class="field">
+          <span>Insistencia del asistente en la llamada</span>
+          <p class="seg-help">Cuánto insiste con la medicación y las preguntas, siempre con tacto.</p>
+          <div class="segmented segmented--3">
+            <label>
+              <input type="radio" name="nivel_insistencia" value="1" />
+              <span class="seg__title">Pasivo</span>
+              <span class="seg__desc">Solo escucha</span>
+            </label>
+            <label>
+              <input type="radio" name="nivel_insistencia" value="2" checked />
+              <span class="seg__title">Recordar</span>
+              <span class="seg__desc">Con tacto</span>
+            </label>
+            <label>
+              <input type="radio" name="nivel_insistencia" value="3" />
+              <span class="seg__title">Insistir</span>
+              <span class="seg__desc">Con amabilidad</span>
+            </label>
+          </div>
+        </div>
         <details class="form__advanced">
           <summary>Personalidad del acompañante (opcional)</summary>
           <div class="form__row">
