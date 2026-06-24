@@ -67,6 +67,27 @@ async def _trace_id_middleware(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = trace_id
     return response
+
+
+@app.middleware("http")
+async def _security_headers_middleware(request: Request, call_next):
+    """Cabeceras de seguridad básicas (anti-clickjacking, sniffing, etc.)."""
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # CSP permisiva (la app es self-contained y carga sus assets del mismo origen).
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "script-src 'self'; connect-src 'self'; frame-ancestors 'none'",
+    )
+    # HSTS sólo en producción (en dev/local rompería http://localhost).
+    if (get_settings().environment or "").strip().lower() in ("production", "prod"):
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+    return response
 app.include_router(auth_routes.router)
 app.include_router(patients_routes.router)
 app.include_router(whatsapp_routes.router)
