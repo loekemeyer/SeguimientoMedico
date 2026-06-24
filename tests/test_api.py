@@ -22,6 +22,13 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True, scope="module")
 def _db():
+    # Reapunta el entorno y reinicia el engine global (otro módulo de test pudo
+    # haberlo dejado apuntando a otra DB).
+    import health_monitor.db.session as sess
+    os.environ["DATABASE_URL"] = "sqlite:///./test_api.db"
+    get_settings.cache_clear()
+    sess._engine = None
+    sess._SessionLocal = None
     if os.path.exists("test_api.db"):
         os.remove("test_api.db")
     create_all()

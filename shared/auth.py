@@ -79,6 +79,29 @@ def create_access_token(user_id: int, expires_in: int = 7 * 24 * 3600) -> str:
     return f"{body}.{sig}"
 
 
+def create_patient_token(paciente_id: int, expires_in: int = 365 * 24 * 3600) -> str:
+    """Token de sesión del PACIENTE (módulo Acompañante). De larga duración: la
+    sesión del paciente no se cierra sola. Lleva typ=paciente para no confundirlo
+    con el token del familiar."""
+    payload = {"sub": paciente_id, "typ": "paciente", "exp": int(time.time()) + expires_in}
+    body = _b64e(json.dumps(payload, separators=(",", ":")).encode())
+    return f"{body}.{_sign(body)}"
+
+
+def paciente_id_from_token(token: str) -> int | None:
+    """Devuelve el paciente_id si es un token de paciente válido; si no, None."""
+    try:
+        payload = decode_token(token)
+    except Exception:
+        return None
+    if payload.get("typ") != "paciente":
+        return None
+    try:
+        return int(payload["sub"])
+    except (KeyError, ValueError, TypeError):
+        return None
+
+
 def decode_token(token: str) -> dict:
     """Valida la firma y el vencimiento; devuelve el payload. Lanza si es inválido."""
     body, sig = token.split(".")

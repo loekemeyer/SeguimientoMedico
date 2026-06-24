@@ -181,6 +181,21 @@ def ver_paciente(
     return _to_out(p, _cipher(), _ultimo_nivel(db, p.id))
 
 
+@router.get("/{paciente_id}/codigo-rotativo")
+def codigo_rotativo_paciente(
+    paciente_id: int,
+    user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Clave rotativa de 2 dígitos (cambia cada 30s) para dictarle al paciente al entrar."""
+    from health_monitor.acompanante import clave_rotativa, segundos_restantes
+
+    p = _owned_paciente(db, user, paciente_id)
+    if not p.codigo_acceso:
+        return {"clave": None, "segundos": 0}
+    return {"clave": clave_rotativa(p.codigo_acceso), "segundos": segundos_restantes()}
+
+
 @router.put("/{paciente_id}", response_model=PacienteOut)
 def actualizar_paciente(
     paciente_id: int,

@@ -22,6 +22,8 @@ def get_current_user(
         payload = decode_token(authorization.split(" ", 1)[1])
     except Exception:
         raise HTTPException(status_code=401, detail="Token inválido o vencido")
+    if payload.get("typ") == "paciente":  # token del Acompañante, no del familiar
+        raise HTTPException(status_code=401, detail="Token inválido para esta sección")
     user = db.get(Usuario, payload.get("sub"))
     if user is None or not user.activo:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
