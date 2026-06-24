@@ -35,6 +35,8 @@ from health_monitor.schemas.api import (
 )
 from health_monitor.schemas.clinical import ClinicalReadout
 from health_monitor.schemas.fhir import readout_to_fhir_bundle
+from health_monitor.usage import LLAMADA as USO_LLAMADA
+from health_monitor.usage import registrar_evento
 from shared.config import get_settings
 from shared.security import FieldCipher
 
@@ -478,6 +480,11 @@ def llamar_ahora(
             to=to,
             from_=voice_from,
             url=f"{s.public_base_url}/twilio/voice?paciente_id={p.id}",
+        )
+        registrar_evento(
+            db, tipo=USO_LLAMADA, modulo="telefono",
+            usuario_id=p.usuario_id, paciente_id=p.id,
+            meta={"call_sid": call.sid},
         )
         return {"status": "llamando", "detail": "Llamada iniciada.", "call_sid": call.sid}
     except Exception as exc:

@@ -293,3 +293,34 @@ class AuditLog(Base):
     recurso: Mapped[str] = mapped_column(String(40))  # paciente | rutina | contacto | ...
     recurso_id: Mapped[int | None] = mapped_column(Integer)
     detalle: Mapped[str] = mapped_column(Text, default="")  # SIN PII en claro
+
+
+class EventoUso(Base):
+    """Evento de uso facturable, append-only — base del módulo BI del dueño.
+
+    Se escribe en cada acción que cuesta plata (llamada de voz, mensaje de chat,
+    WhatsApp) o que marca actividad del cliente (login del paciente, alerta a la
+    familia). NO se actualiza nunca. Con esta única tabla quedan habilitados:
+    costo por cliente, ingreso vs costo, mix de módulos y el asesor agéntico.
+    Ver docs/ARQUITECTURA_ESCALA.md §5. SIN PII en claro: solo métricas.
+    """
+
+    __tablename__ = "eventos_uso"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int | None] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="SET NULL"), index=True
+    )
+    paciente_id: Mapped[int | None] = mapped_column(
+        ForeignKey("pacientes.id", ondelete="SET NULL"), index=True
+    )
+    ts: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
+    # tipo: llamada | whatsapp | chat_msg | login_paciente | alerta_familia | info_cargada
+    tipo: Mapped[str] = mapped_column(String(24), index=True)
+    # modulo: acompanado | telefono | admin | billing
+    modulo: Mapped[str] = mapped_column(String(16), default="")
+    unidades: Mapped[float] = mapped_column(Float, default=0.0)  # minutos, tokens, mensajes
+    costo_estimado: Mapped[float] = mapped_column(Float, default=0.0)  # $ del evento
+    meta: Mapped[dict] = mapped_column(JSON, default=dict)  # sid Twilio, modelo, etc. SIN PII

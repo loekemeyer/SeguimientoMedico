@@ -14,6 +14,13 @@ from sqlalchemy.orm import Session
 from health_monitor.acompanante import clave_valida
 from health_monitor.chat import ContextoPaciente, responder
 from health_monitor.db.models import Paciente
+from health_monitor.usage import (
+    CHAT_MSG,
+    LOGIN_PACIENTE,
+    estimar_costo_chat,
+    estimar_tokens,
+    registrar_evento,
+)
 from health_monitor.db.session import get_session
 from shared.auth import create_patient_token, paciente_id_from_token
 from shared.config import get_settings
@@ -55,6 +62,10 @@ def login(data: AccesoIn, db: Session = Depends(get_session)) -> dict:
     p = db.scalar(select(Paciente).where(Paciente.codigo_acceso == codigo)) if codigo else None
     if p is None or not p.activo or not clave_valida(codigo, data.clave):
         raise HTTPException(status_code=401, detail="Código o clave incorrectos")
+    registrar_evento(
+        db, tipo=LOGIN_PACIENTE, modulo="acompanado",
+        usuario_id=p.usuario_id, paciente_id=p.id,
+    )
     return {"token": create_patient_token(p.id), "nombre": _nombre(p)}
 
 
@@ -74,7 +85,11 @@ class MensajeIn(BaseModel):
 
 
 @router.post("/chat")
-def chat(data: MensajeIn, p: Paciente = Depends(paciente_actual)) -> dict:
+def chat(
+    data: MensajeIn,
+    p: Paciente = Depends(paciente_actual),
+    db: Session = Depends(get_session),
+) -> dict:
     """Charla del paciente con el acompañante.
 
     La IA (texto) se activa cuando se configura OPENAI_API_KEY en el entorno.
@@ -89,4 +104,15 @@ def chat(data: MensajeIn, p: Paciente = Depends(paciente_actual)) -> dict:
         temas_evitar=p.temas_evitar or "",
     )
     configurado, respuesta = responder(data.mensaje, data.historial, ctx)
+    # Registrar el turno solo cuando hubo una llamada real a la IA (no el saludo).
+    if configurado and (data.mensaje or "").strip():
+        tokens = estimar_tokens(data.mensaje, respuesta, *(
+            (h.get("content") or "") for h in (data.historial or []) if isinstance(h, dict)
+        ))
+        registrar_evento(
+            db, tipo=CHAT_MSG, modulo="acompanado",
+            usuario_id=p.usuario_id, paciente_id=p.id,
+            unidades=tokens, costo_estimado=estimar_costo_chat(tokens),
+            meta={"modelo": get_settings().openai_chat_model},
+        )
     return {"configurado": configurado, "respuesta": respuesta}
