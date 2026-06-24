@@ -797,6 +797,30 @@ function poblarVoces(sexo, vozSeleccionada) {
 }
 $("#voz-sexo")?.addEventListener("change", (e) => poblarVoces(e.target.value));
 
+/* Escuchar una muestra (3s) de la voz elegida. */
+let _vozAudio = null;
+$("#btn-probar-voz")?.addEventListener("click", async () => {
+  const btn = $("#btn-probar-voz");
+  const voz = $("#voz-select")?.value;
+  if (!voz) return;
+  const prev = btn.textContent;
+  btn.disabled = true; btn.textContent = "♪ Cargando…";
+  try {
+    const res = await fetch(`${API}/pacientes/voz/muestra/${encodeURIComponent(voz)}`, {
+      headers: token() ? { Authorization: `Bearer ${token()}` } : {},
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.detail || "No se pudo cargar la voz");
+    }
+    const blob = await res.blob();
+    if (_vozAudio) { _vozAudio.pause(); }
+    _vozAudio = new Audio(URL.createObjectURL(blob));
+    _vozAudio.play();
+  } catch (e) { toast(e.message, true); }
+  finally { btn.disabled = false; btn.textContent = prev; }
+});
+
 function openModal() {            // alta
   editingId = null;
   $("#modal-title").textContent = "Agregar persona a cuidar";

@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_realtime_model: str = "gpt-realtime-mini"
     openai_chat_model: str = "gpt-4o-mini"  # charla de texto del paciente (Acompañado)
+    openai_tts_model: str = "gpt-4o-mini-tts"  # muestras de voz (soporta coral/ash/sage/...)
     gemini_api_key: str = ""
     gemini_realtime_model: str = "gemini-2.0-flash-live"
 

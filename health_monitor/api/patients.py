@@ -539,6 +539,40 @@ def preguntas_cuidado(
     return preguntas_de_alta(patologias)
 
 
+# Muestras de voz cacheadas en memoria (voz -> mp3): se generan una sola vez.
+_VOZ_MUESTRA_CACHE: dict[str, bytes] = {}
+_VOZ_MUESTRA_TEXTO = "Hola, ¿cómo estás? Soy tu acompañante y te voy a llamar todos los días."
+
+
+@router.get("/voz/muestra/{voz}")
+def voz_muestra(voz: str, user: Usuario = Depends(get_current_user)):
+    """Devuelve un audio corto de muestra de la voz, para que el admin la pruebe."""
+    from fastapi.responses import Response
+
+    from health_monitor.schemas.api import _VOCES_VALIDAS
+
+    if voz not in _VOCES_VALIDAS:
+        raise HTTPException(400, "Voz desconocida")
+    if voz in _VOZ_MUESTRA_CACHE:
+        return Response(content=_VOZ_MUESTRA_CACHE[voz], media_type="audio/mpeg")
+
+    s = get_settings()
+    if not s.openai_api_key:
+        raise HTTPException(503, "Para escuchar las voces falta configurar OPENAI_API_KEY.")
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=s.openai_api_key)
+        r = client.audio.speech.create(
+            model=s.openai_tts_model, voice=voz, input=_VOZ_MUESTRA_TEXTO,
+        )
+        audio = r.read() if hasattr(r, "read") else r.content
+        _VOZ_MUESTRA_CACHE[voz] = audio
+        return Response(content=audio, media_type="audio/mpeg")
+    except Exception as exc:
+        raise HTTPException(502, f"No se pudo generar la muestra de voz: {exc}")
+
+
 class _ComoLlamarloIn(BaseModel):
     como_llamarlo: str = ""
 
