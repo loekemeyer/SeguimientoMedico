@@ -75,7 +75,10 @@
             <input type="email" name="email" placeholder="tu@email.com" required />
           </label>
           <label class="field"><span>Contraseña</span>
-            <input type="password" name="password" placeholder="••••••••" required />
+            <div class="pw-wrap">
+              <input type="password" name="password" placeholder="••••••••" required />
+              <button type="button" class="pw-toggle" aria-label="Mostrar contraseña">👁</button>
+            </div>
           </label>
           <button class="btn btn--primary btn--block" type="submit">Entrar</button>
           <p class="form__error" data-error></p>
@@ -90,7 +93,10 @@
             <input type="email" name="email" placeholder="tu@email.com" required />
           </label>
           <label class="field"><span>Contraseña</span>
-            <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+            <div class="pw-wrap">
+              <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+              <button type="button" class="pw-toggle" aria-label="Mostrar contraseña">👁</button>
+            </div>
           </label>
           <div class="field"><span>¿Cómo querés entrar?</span>
             <div class="segmented" id="reg-tipo">
@@ -342,9 +348,13 @@
             <input type="text" name="telefono_whatsapp" placeholder="+54911..." required />
           </label>
         </div>
-        <label class="field"><span>Enfermedades / patologías (separadas por coma)</span>
-          <input type="text" name="patologias" placeholder="Hipertensión, diabetes" />
-        </label>
+        <div class="field"><span>Enfermedades / patologías</span>
+          <div class="chips-input" id="patologias-chips">
+            <span class="chips-input__tags" id="patologias-tags"></span>
+            <input type="text" id="patologias-entry" placeholder="Escribí y apretá coma o Enter…" autocomplete="off" />
+          </div>
+          <p class="seg-help">Poné cada una y apretá <strong>coma</strong> o <strong>Enter</strong>; cae abajo como etiqueta. Las normalizamos solas (ej: "le cuesta dormir" → "Insomnio").</p>
+        </div>
         <div class="form__row">
           <label class="field"><span>Hora de llamada</span>
             <input type="time" name="llamada_hora" value="10:00" />
@@ -403,7 +413,8 @@
           </div>
         </div>
         <details class="form__advanced">
-          <summary>Personalidad del acompañante (opcional)</summary>
+          <summary>Personalidad del acompañante online (opcional)</summary>
+          <p class="seg-help">El <strong>acompañante online</strong> es el asistente que charla con la persona (por la app o por teléfono). Acá elegís cómo se presenta y cómo suena.</p>
           <div class="form__row">
             <label class="field"><span>Trato</span>
               <select name="trato" class="select">

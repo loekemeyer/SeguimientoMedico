@@ -54,6 +54,18 @@ $$(".tabs__btn").forEach((b) =>
   })
 );
 
+/* mostrar / ocultar contraseña */
+$$(".pw-toggle").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    const input = btn.parentElement.querySelector("input");
+    if (!input) return;
+    const ver = input.type === "password";
+    input.type = ver ? "text" : "password";
+    btn.textContent = ver ? "🙈" : "👁";
+    btn.setAttribute("aria-label", ver ? "Ocultar contraseña" : "Mostrar contraseña");
+  })
+);
+
 $("#form-login")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
@@ -484,6 +496,7 @@ function openModal() {            // alta
   form.reset();
   $("[name=llamada_hora]", form).value = "10:00";
   $$("#patient-days input").forEach((c) => (c.checked = true));
+  setPatologiasChips([]);
   $("#modal").classList.remove("is-hidden");
 }
 
@@ -495,7 +508,7 @@ function openEditModal() {        // edición del paciente abierto
   form.reset();
   $("[name=nombre]", form).value = currentPatient.nombre || "";
   $("[name=telefono_whatsapp]", form).value = currentPatient.telefono_whatsapp || "";
-  $("[name=patologias]", form).value = (currentPatient.patologias || []).join(", ");
+  setPatologiasChips(currentPatient.patologias || []);
   $("[name=llamada_hora]", form).value = currentPatient.programacion?.llamada_hora || "10:00";
   $("[name=consentimiento_firmado]", form).checked = !!currentPatient.consentimiento_firmado;
   const _nivelIns = String(currentPatient.programacion?.nivel_insistencia || 2);
@@ -526,12 +539,87 @@ function closeModal() {
 $$("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
 $("#btn-edit")?.addEventListener("click", openEditModal);
 
+/* ---------- patologías como chips (con normalización automática) ---------- */
+const NORMALIZA_PATOLOGIA = {
+  "le cuesta dormir": "Insomnio", "no duerme": "Insomnio", "duerme mal": "Insomnio",
+  "no puede dormir": "Insomnio", "insomnio": "Insomnio",
+  "presion alta": "Hipertensión", "presión alta": "Hipertensión", "hipertension": "Hipertensión",
+  "la presion": "Hipertensión", "azucar": "Diabetes", "azúcar": "Diabetes", "diabetes": "Diabetes",
+  "colesterol": "Colesterol alto (dislipidemia)", "del corazon": "Cardiopatía",
+  "corazon": "Cardiopatía", "corazón": "Cardiopatía",
+  "se olvida": "Deterioro cognitivo", "olvidos": "Deterioro cognitivo",
+  "perdida de memoria": "Deterioro cognitivo", "pérdida de memoria": "Deterioro cognitivo",
+  "memoria": "Deterioro cognitivo", "demencia": "Demencia", "alzheimer": "Alzheimer",
+  "triste": "Depresión", "deprimido": "Depresión", "depresion": "Depresión", "depresión": "Depresión",
+  "ansioso": "Ansiedad", "ansiedad": "Ansiedad", "nervioso": "Ansiedad",
+  "se cae": "Riesgo de caídas", "caidas": "Riesgo de caídas", "caídas": "Riesgo de caídas",
+  "se marea": "Mareos / vértigo", "mareos": "Mareos / vértigo", "vertigo": "Mareos / vértigo",
+  "epoc": "EPOC", "asma": "Asma", "artrosis": "Artrosis", "artritis": "Artritis",
+  "no escucha": "Hipoacusia", "sordo": "Hipoacusia", "no ve bien": "Baja visión",
+  "parkinson": "Parkinson", "tiroides": "Trastorno de tiroides",
+};
+function normalizaPatologia(txt) {
+  const limpio = (txt || "").trim();
+  if (!limpio) return "";
+  const key = limpio.toLowerCase();
+  if (NORMALIZA_PATOLOGIA[key]) return NORMALIZA_PATOLOGIA[key];
+  for (const [frase, termino] of Object.entries(NORMALIZA_PATOLOGIA)) {
+    if (key.includes(frase)) return termino;
+  }
+  return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+}
+let patologiasChips = [];
+function renderPatologiasChips() {
+  const tags = $("#patologias-tags");
+  if (!tags) return;
+  tags.innerHTML = patologiasChips.map((p, i) =>
+    `<span class="chip chip--tag">${escapeHtml(p)}<button type="button" class="chip__x" data-pat="${i}" aria-label="Quitar">✕</button></span>`
+  ).join("");
+}
+function setPatologiasChips(arr) {
+  patologiasChips = [...(arr || [])];
+  renderPatologiasChips();
+  const e = $("#patologias-entry"); if (e) e.value = "";
+}
+function addPatologiaFromEntry() {
+  const e = $("#patologias-entry"); if (!e) return;
+  const norm = normalizaPatologia(e.value);
+  if (norm && !patologiasChips.includes(norm)) patologiasChips.push(norm);
+  e.value = "";
+  renderPatologiasChips();
+}
+function getPatologias() {
+  const e = $("#patologias-entry");
+  const pend = normalizaPatologia(e ? e.value : "");
+  const all = [...patologiasChips];
+  if (pend && !all.includes(pend)) all.push(pend);
+  return all;
+}
+(function wirePatologias() {
+  const entry = $("#patologias-entry");
+  const tags = $("#patologias-tags");
+  if (!entry || !tags) return;
+  entry.addEventListener("keydown", (ev) => {
+    if (ev.key === "," || ev.key === "Enter") { ev.preventDefault(); addPatologiaFromEntry(); }
+    else if (ev.key === "Backspace" && !entry.value && patologiasChips.length) {
+      patologiasChips.pop(); renderPatologiasChips();
+    }
+  });
+  entry.addEventListener("blur", addPatologiaFromEntry);
+  tags.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-pat]");
+    if (!b) return;
+    patologiasChips.splice(Number(b.dataset.pat), 1);
+    renderPatologiasChips();
+  });
+})();
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
   err.textContent = "";
   const f = new FormData(e.target);
-  const patologias = (f.get("patologias") || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const patologias = getPatologias();
   const nivel = Number(f.get("nivel_insistencia")) || 2;
   const personalidad = {
     voz: f.get("voz") || "coral",

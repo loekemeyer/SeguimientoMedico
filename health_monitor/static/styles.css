@@ -173,6 +173,32 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .field--check span { font-size: 1rem; color: var(--slate); }
 .form__error { color: var(--red); font-size: .9rem; min-height: 1em; margin-top: 6px; }
 
+/* Ver / ocultar contraseña */
+.pw-wrap { position: relative; }
+.field .pw-wrap input { width: 100%; padding-right: 48px; }
+.pw-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: none; background: transparent; cursor: pointer; line-height: 1;
+  width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; font-size: 1.15rem;
+}
+.pw-toggle:hover { background: var(--bg); }
+
+/* Input de etiquetas (chips) para patologías */
+.chips-input {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 9px 12px;
+  background: #fff; min-height: 48px; transition: border .15s, box-shadow .15s;
+}
+.chips-input:focus-within { border-color: var(--teal-500); box-shadow: 0 0 0 4px var(--teal-50); }
+.chips-input__tags { display: contents; }
+.chips-input input {
+  flex: 1; min-width: 130px; border: none; outline: none; background: transparent;
+  font-family: var(--font-body); font-size: 1.02rem; color: var(--ink); padding: 4px 0;
+}
+.chip--tag { display: inline-flex; align-items: center; gap: 7px; background: var(--teal-50); color: var(--teal-700); border-color: #cdeee8; }
+.chip__x { border: none; background: transparent; color: inherit; cursor: pointer; font-size: .78rem; padding: 0; line-height: 1; opacity: .7; }
+.chip__x:hover { opacity: 1; }
+
 /* Selector segmentado (ej. tipo de cuenta en el registro) */
 .segmented { display: flex; gap: 10px; }
 .segmented label {
@@ -285,6 +311,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 /* Mini-formulario para agregar items (medicación) dentro de una tarjeta */
 .addform { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
 .addform__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.addform__row > * { min-width: 0; }
 .addform input, .addform .select {
   font-family: var(--font-body); font-size: .98rem; color: var(--ink);
   border: 1.5px solid var(--line); border-radius: 11px; padding: 11px 13px; background: #fff;
