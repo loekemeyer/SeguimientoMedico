@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     realtime_provider: str = "openai"  # openai | gemini
     openai_api_key: str = ""
     openai_realtime_model: str = "gpt-realtime-mini"
+    openai_chat_model: str = "gpt-4o-mini"  # charla de texto del paciente (Acompañado)
     gemini_api_key: str = ""
     gemini_realtime_model: str = "gemini-2.0-flash-live"
 

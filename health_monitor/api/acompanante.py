@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from health_monitor.acompanante import clave_valida
+from health_monitor.chat import ContextoPaciente, responder
 from health_monitor.db.models import Paciente
 from health_monitor.db.session import get_session
 from shared.auth import create_patient_token, paciente_id_from_token
@@ -76,15 +77,16 @@ class MensajeIn(BaseModel):
 def chat(data: MensajeIn, p: Paciente = Depends(paciente_actual)) -> dict:
     """Charla del paciente con el acompañante.
 
-    La IA (texto/voz) se activa cuando se configura OPENAI_API_KEY en el entorno.
+    La IA (texto) se activa cuando se configura OPENAI_API_KEY en el entorno.
     Hasta entonces responde con un mensaje cálido (el módulo ya queda andando).
+    La apertura de la charla siempre es un saludo cordial (sin gastar API).
     """
-    if not get_settings().openai_api_key:
-        return {
-            "configurado": False,
-            "respuesta": (
-                "¡Hola! Soy tu acompañante 💛. En un ratito ya vamos a poder charlar "
-                "tranquilos. Falta un pasito para activar mi voz."
-            ),
-        }
-    return {"configurado": True, "respuesta": "Te escucho. Contame, ¿cómo venís hoy?"}
+    ctx = ContextoPaciente(
+        nombre=_nombre(p),
+        trato=p.trato or "vos",
+        acompanante_nombre=p.acompanante_nombre or "",
+        temas_preferidos=p.temas_preferidos or "",
+        temas_evitar=p.temas_evitar or "",
+    )
+    configurado, respuesta = responder(data.mensaje, data.historial, ctx)
+    return {"configurado": configurado, "respuesta": respuesta}
