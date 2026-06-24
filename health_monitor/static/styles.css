@@ -425,6 +425,64 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .sub-garantia { margin-top: 14px; font-size: .9rem; color: #15803d; background: #ecfdf3; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 11px 13px; }
 
 /* ====================================================================
+   ACOMPAÑADO — módulo del paciente (login simple + pantalla de charla)
+==================================================================== */
+.auth__paciente-link {
+  display: block; margin: 16px auto 0; background: none; border: none; cursor: pointer;
+  color: var(--teal-700); font-family: var(--font-head); font-weight: 700; font-size: 1rem; text-align: center;
+}
+.auth__paciente-link:hover { text-decoration: underline; }
+
+.pacientelogin {
+  min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: radial-gradient(120% 120% at 50% 0%, var(--teal-50), #fff);
+}
+.pacientelogin__card { width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow); }
+.pacientelogin__card .brand { justify-content: center; margin-bottom: 18px; }
+.pacientelogin__title { font-family: var(--font-head); font-weight: 800; font-size: 2rem; margin-bottom: 6px; }
+.pacientelogin__sub { color: var(--slate); margin-bottom: 22px; font-size: 1.05rem; }
+.pacientelogin .field > span { text-align: left; }
+.bignum { text-align: center; font-family: var(--font-head); font-weight: 800; font-size: 1.8rem !important; letter-spacing: .25em; }
+
+.acompanado {
+  min-height: 100vh; min-height: 100dvh; max-width: 480px; margin-inline: auto;
+  display: flex; flex-direction: column;
+  background: radial-gradient(130% 100% at 50% 0%, var(--teal-50), #fff);
+}
+.acompanado__top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; padding-top: calc(14px + env(safe-area-inset-top));
+}
+.acompanado__brand { font-family: var(--font-head); font-weight: 800; color: var(--teal-700); }
+.acompanado__salir { background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; color: var(--slate); cursor: pointer; font-weight: 600; }
+.acompanado__home { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 6px; }
+.acompanado__avatar { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; font-size: 3rem; background: #fff; box-shadow: var(--shadow); margin-bottom: 10px; }
+.acompanado__hola { font-family: var(--font-head); font-weight: 800; font-size: 2.1rem; }
+.acompanado__sub { color: var(--slate); font-size: 1.1rem; max-width: 300px; }
+.callbtn {
+  margin-top: 26px; width: 190px; height: 190px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-700)); color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 20px 50px -16px var(--teal-600); transition: transform .1s;
+}
+.callbtn:active { transform: scale(.97); }
+.callbtn__ico { font-size: 3.4rem; line-height: 1; }
+.callbtn__lbl { font-family: var(--font-head); font-weight: 800; font-size: 1.3rem; }
+
+.acompanado__call { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 18px; gap: 12px; min-height: 0; }
+.call__avatar { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; font-size: 2.2rem; background: #fff; box-shadow: var(--shadow); flex: none; }
+.call__estado { font-family: var(--font-head); font-weight: 700; color: var(--teal-700); }
+.call__mensajes { flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 8px 2px; min-height: 0; }
+.call-msg { max-width: 80%; padding: 12px 15px; border-radius: 16px; font-size: 1.08rem; line-height: 1.45; }
+.call-msg--acomp { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; }
+.call-msg--yo { align-self: flex-end; background: var(--teal-600); color: #fff; border-bottom-right-radius: 5px; }
+.call__form { width: 100%; display: flex; gap: 8px; }
+.call__form input { flex: 1; min-width: 0; border: 1.5px solid var(--line); border-radius: 12px; padding: 13px 15px; font-size: 1.05rem; background: #fff; }
+.call__form input:focus { outline: none; border-color: var(--teal-500); }
+.call__colgar { width: 100%; background: #fdecec; color: var(--red); border: none; border-radius: 12px; padding: 13px 20px; font-family: var(--font-head); font-weight: 700; cursor: pointer; }
+.btn--lg { padding: 16px; font-size: 1.15rem; min-height: 56px; }
+
+/* ====================================================================
    Modal + toast
 ==================================================================== */
 .modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }

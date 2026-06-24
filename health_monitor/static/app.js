@@ -14,9 +14,10 @@ function toast(msg, isError = false) {
   setTimeout(() => (t.className = "toast"), 3200);
 }
 
-async function api(path, { method = "GET", body, auth = true } = {}) {
+async function api(path, { method = "GET", body, auth = true, bearer } = {}) {
   const headers = { "Content-Type": "application/json" };
-  if (auth && token()) headers.Authorization = `Bearer ${token()}`;
+  const tok = bearer || (auth ? token() : null);
+  if (tok) headers.Authorization = `Bearer ${tok}`;
   const res = await fetch(API + path, {
     method, headers, body: body ? JSON.stringify(body) : undefined,
   });
@@ -30,6 +31,8 @@ async function api(path, { method = "GET", body, auth = true } = {}) {
 function show(view) {
   $("#auth-view").classList.toggle("is-hidden", view !== "auth");
   $("#app-view").classList.toggle("is-hidden", view !== "app");
+  $("#paciente-login-view")?.classList.toggle("is-hidden", view !== "paciente-login");
+  $("#acompanado-view")?.classList.toggle("is-hidden", view !== "acompanado");
 }
 function showPage(page) {
   $("#page-list").classList.toggle("is-hidden", page !== "list");
@@ -836,5 +839,96 @@ loadVersion();
   restart();
 })();
 
+/* ====================================================================
+   ACOMPAÑADO (módulo del paciente): login con código + clave, sesión persistente
+==================================================================== */
+const PAC_TOKEN_KEY = "sm_paciente_token";
+const pacToken = () => localStorage.getItem(PAC_TOKEN_KEY);
+
+$("#ir-paciente-login")?.addEventListener("click", () => show("paciente-login"));
+$("#volver-familia")?.addEventListener("click", () => show("auth"));
+
+$("#form-paciente-login")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const err = $("[data-error]", e.target);
+  err.textContent = "";
+  const f = new FormData(e.target);
+  try {
+    const r = await api("/acompanante/login", {
+      method: "POST", auth: false,
+      body: { codigo_acceso: (f.get("codigo") || "").trim(), clave: (f.get("clave") || "").trim() },
+    });
+    localStorage.setItem(PAC_TOKEN_KEY, r.token);
+    enterAcompanado(r.nombre);
+  } catch (ex) { err.textContent = ex.message || "Código o clave incorrectos"; }
+});
+
+async function enterAcompanado(nombrePrecargado) {
+  let nombre = nombrePrecargado || "";
+  if (!nombre) {
+    try { nombre = (await api("/acompanante/me", { bearer: pacToken() })).nombre || ""; }
+    catch { localStorage.removeItem(PAC_TOKEN_KEY); show("auth"); return; }
+  }
+  const primer = (nombre || "").trim().split(/\s+/)[0] || "";
+  const hola = $("#acompanado-hola");
+  if (hola) hola.textContent = primer ? `Hola, ${primer} 👋` : "Hola 👋";
+  cerrarCall();
+  show("acompanado");
+}
+
+$("#acompanado-salir")?.addEventListener("click", () => {
+  if (!confirm("¿Cerrar la sesión?")) return;
+  localStorage.removeItem(PAC_TOKEN_KEY);
+  show("auth");
+});
+
+/* --- la "llamada" (charla con el acompañante) --- */
+let callHist = [];
+function pintarMensaje(quien, texto) {
+  const wrap = $("#call-mensajes");
+  if (!wrap || !texto) return;
+  const div = document.createElement("div");
+  div.className = "call-msg call-msg--" + quien;
+  div.textContent = texto;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+async function enviarCall(texto) {
+  if (texto) { pintarMensaje("yo", texto); callHist.push({ role: "user", content: texto }); }
+  try {
+    const r = await api("/acompanante/chat", {
+      method: "POST", bearer: pacToken(),
+      body: { mensaje: texto, historial: callHist },
+    });
+    pintarMensaje("acomp", r.respuesta || "…");
+    callHist.push({ role: "assistant", content: r.respuesta || "" });
+  } catch {
+    pintarMensaje("acomp", "Perdoná, ahora no puedo. Probá en un ratito 💛");
+  }
+}
+function abrirCall() {
+  callHist = [];
+  const wrap = $("#call-mensajes"); if (wrap) wrap.innerHTML = "";
+  $("#acompanado-home")?.classList.add("is-hidden");
+  $("#acompanado-call")?.classList.remove("is-hidden");
+  enviarCall("");  // saludo inicial del acompañante
+}
+function cerrarCall() {
+  $("#acompanado-call")?.classList.add("is-hidden");
+  $("#acompanado-home")?.classList.remove("is-hidden");
+}
+$("#btn-hablar")?.addEventListener("click", abrirCall);
+$("#call-colgar")?.addEventListener("click", cerrarCall);
+$("#form-call")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = $("#call-input");
+  const t = (input.value || "").trim();
+  if (!t) return;
+  input.value = "";
+  enviarCall(t);
+});
+
 /* ---------- arranque ---------- */
-if (token()) enterApp(); else show("auth");
+if (pacToken()) enterAcompanado();
+else if (token()) enterApp();
+else show("auth");

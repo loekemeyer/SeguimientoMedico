@@ -134,6 +134,59 @@
         </form>
         <p class="appver" aria-hidden="true"></p>
       </div>
+      <button type="button" class="auth__paciente-link" id="ir-paciente-login">¿Sos la persona acompañada? Entrá con tu código →</button>
+    </div>
+  </section>
+
+  <!-- ============ ACCESO DEL PACIENTE (Acompañado) ============ -->
+  <section id="paciente-login-view" class="pacientelogin is-hidden">
+    <div class="card pacientelogin__card">
+      <div class="brand">
+        <span class="brand__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 5 4-12 2 7h6"/></svg>
+        </span>
+        <span class="brand__name">Acompañado</span>
+      </div>
+      <h1 class="pacientelogin__title">Hola 👋</h1>
+      <p class="pacientelogin__sub">Entrá con los números que te da tu familia.</p>
+      <form id="form-paciente-login" class="form">
+        <label class="field"><span>Tu código (6 números)</span>
+          <input type="text" inputmode="numeric" name="codigo" maxlength="6" placeholder="– – – – – –" class="bignum" required />
+        </label>
+        <label class="field"><span>Clave de ahora (2 números)</span>
+          <input type="text" inputmode="numeric" name="clave" maxlength="2" placeholder="– –" class="bignum" required />
+        </label>
+        <button class="btn btn--primary btn--block btn--lg" type="submit">Entrar</button>
+        <p class="form__error" data-error></p>
+      </form>
+      <button type="button" class="auth__paciente-link" id="volver-familia">← Soy el familiar</button>
+    </div>
+  </section>
+
+  <!-- ============ ACOMPAÑADO (pantalla de la persona) ============ -->
+  <section id="acompanado-view" class="acompanado is-hidden">
+    <header class="acompanado__top">
+      <span class="acompanado__brand">Acompañado</span>
+      <button type="button" class="acompanado__salir" id="acompanado-salir">Salir</button>
+    </header>
+    <div class="acompanado__home" id="acompanado-home">
+      <div class="acompanado__avatar" id="acompanado-avatar">🌼</div>
+      <h1 class="acompanado__hola" id="acompanado-hola">Hola 👋</h1>
+      <p class="acompanado__sub">Tocá el botón cuando quieras charlar conmigo.</p>
+      <button type="button" class="callbtn" id="btn-hablar">
+        <span class="callbtn__ico" aria-hidden="true">📞</span>
+        <span class="callbtn__lbl">Hablar</span>
+      </button>
+    </div>
+    <div class="acompanado__call is-hidden" id="acompanado-call">
+      <div class="call__avatar" aria-hidden="true">🌼</div>
+      <div class="call__estado" id="call-estado">Te escucho 💛</div>
+      <div class="call__mensajes" id="call-mensajes"></div>
+      <form id="form-call" class="call__form">
+        <input type="text" id="call-input" placeholder="Escribí o contame algo…" autocomplete="off" />
+        <button class="btn btn--primary" type="submit">Enviar</button>
+      </form>
+      <button type="button" class="call__colgar" id="call-colgar">Terminar</button>
     </div>
   </section>
 
