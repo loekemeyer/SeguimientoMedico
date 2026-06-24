@@ -29,6 +29,14 @@ perfecto (sobre todo los **avisos**), y que la página sea **moderna y legible p
 - [ ] **Estado del consentimiento** y apoderado, más claro.
 - [ ] (Opc.) Exportar FHIR / ver auditoría para la prepaga.
 
+## Principio de datos clínicos
+Las métricas son **solo lo que la persona se automide en casa y nos informa en la
+llamada**: presión (tensiómetro), glucemia (glucómetro), saturación/pulso (oxímetro),
+temperatura, peso (balanza), más lo auto-reportado (dolor, caídas, ánimo). **No** hay
+datos cargados por profesionales ni integraciones con devices externos. Por eso la app
+permite agendar esas automediciones en la rutina y aclara que los valores son informados
+por la persona (no son mediciones clínicas verificadas).
+
 ## Notas
 - El front no se puede testear con navegador en este entorno: se valida sintaxis
   (`node --check app.js`, llaves CSS balanceadas) y se mantiene el comportamiento;

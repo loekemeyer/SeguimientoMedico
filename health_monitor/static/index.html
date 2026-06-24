@@ -182,15 +182,22 @@
 
         <div class="card">
           <h3 class="card__title">🔁 Rutina diaria</h3>
-          <p class="hint">Cargá <strong>todo lo posible</strong>: medicamentos, ejercicios, tomas de
-            presión y horarios de despertarse/acostarse. Cuanto más completa esté la rutina,
-            mejor acompaña el sistema — las llamadas y los avisos se accionan en base a esto.</p>
+          <p class="hint">Cargá <strong>todo lo posible</strong>: medicamentos, <strong>automediciones</strong>
+            (presión, glucemia, saturación, temperatura, peso) que la persona se toma y nos informa,
+            ejercicios y horarios. Cuanto más completa esté la rutina, mejor acompaña el sistema —
+            las llamadas y los avisos se accionan en base a esto.</p>
           <div id="detail-rutina" class="stacklist"></div>
           <form id="form-rutina" class="addform">
             <div class="addform__row">
               <select name="tipo" class="select">
                 <option value="medicamento">💊 Medicamento</option>
-                <option value="presion">🩺 Toma de presión</option>
+                <optgroup label="Automediciones (se las toma la persona)">
+                  <option value="presion">🩺 Medir la presión</option>
+                  <option value="glucemia">🩸 Medir la glucemia</option>
+                  <option value="oximetria">🫁 Medir saturación (oxímetro)</option>
+                  <option value="temperatura">🌡️ Tomar la temperatura</option>
+                  <option value="peso">⚖️ Pesarse</option>
+                </optgroup>
                 <option value="ejercicio">🏃 Ejercicio</option>
                 <option value="sueno">😴 Sueño / descanso</option>
                 <option value="pregunta">❓ Pregunta de seguimiento</option>
@@ -227,6 +234,7 @@
 
         <div class="card">
           <h3 class="card__title">🗓️ Historial de seguimientos</h3>
+          <p class="hint">Los valores los <strong>informa la persona</strong> en la llamada (lo que se automide en casa); no son mediciones clínicas verificadas.</p>
           <div id="detail-history" class="timeline"></div>
         </div>
 
