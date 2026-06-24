@@ -83,15 +83,9 @@ def iniciar(
     if p is None or p.usuario_id != user.id:
         raise HTTPException(404, "Paciente no encontrado")
 
-    state, nombre = build_call_state(db, paciente_id)
-    telefono = _telefono(db, paciente_id)
-    msg, _fin = voice_chat.next_assistant_message(
-        [], "", nombre=nombre or "", rutina=state.rutina_resumen,
-        nivel_insistencia=state.nivel_insistencia, historial_clinico=state.historial_resumen,
-        trato=state.trato, acompanante_nombre=state.acompanante_nombre,
-        temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
-        explorar_animo=state.explorar_animo, memoria=state.memoria,
-    )
+    from health_monitor.services import require_consent
+    require_consent(p)  # Ley 25.326: sin consentimiento no se contacta (antes que nada)
+
     s = get_settings()
     if not (s.twilio_account_sid and s.twilio_auth_token):
         return {
@@ -99,6 +93,25 @@ def iniciar(
             "detail": ("WhatsApp todavía no está configurado (faltan las credenciales "
                        "de Twilio). Cargá TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN."),
         }
+
+    # Todo lo que sigue toca servicios externos (IA, cifrado, Twilio): si algo
+    # falla, devolvemos un mensaje claro en vez de un 500 ("Ocurrió un error").
+    try:
+        state, nombre = build_call_state(db, paciente_id)
+        telefono = _telefono(db, paciente_id)
+        msg, _fin = voice_chat.next_assistant_message(
+            [], "", nombre=nombre or "", rutina=state.rutina_resumen,
+            nivel_insistencia=state.nivel_insistencia, historial_clinico=state.historial_resumen,
+            trato=state.trato, acompanante_nombre=state.acompanante_nombre,
+            temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
+            explorar_animo=state.explorar_animo, memoria=state.memoria,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Error preparando el WhatsApp del paciente %s: %s", paciente_id, exc)
+        return {"status": "error", "detail": f"No se pudo preparar el mensaje: {exc}"}
+
     enviado = _enviar_voz(telefono, msg)
     if not enviado:
         return {
