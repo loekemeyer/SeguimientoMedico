@@ -574,6 +574,22 @@ $$(".addform-toggle").forEach((b) => b.addEventListener("click", () => {
   b.classList.add("is-hidden");
 }));
 
+/* rutina: autocompletar la descripción de lo obvio (automediciones) — no llenar de más */
+const RUTINA_DEFECTO = {
+  presion: "Tomar la presión", glucemia: "Medir la glucemia",
+  oximetria: "Medir la saturación (oxímetro)", temperatura: "Tomar la temperatura",
+  peso: "Pesarse", despertar: "Despertarse", acostar: "Acostarse", sueno: "Dormir / descansar",
+};
+$('#form-rutina select[name="tipo"]')?.addEventListener("change", (e) => {
+  const nombre = $('#form-rutina input[name="nombre"]');
+  if (!nombre) return;
+  const def = RUTINA_DEFECTO[e.target.value];
+  if (def) nombre.value = def;
+  else if (Object.values(RUTINA_DEFECTO).includes(nombre.value)) nombre.value = "";
+  nombre.placeholder = e.target.value === "medicamento" ? "Ej: Losartán 50mg"
+    : e.target.value === "pregunta" ? "Ej: ¿Cómo durmió anoche?" : "Descripción";
+});
+
 /* ---------- modal alta / edición de paciente ---------- */
 let editingId = null;
 const form = $("#form-patient");
