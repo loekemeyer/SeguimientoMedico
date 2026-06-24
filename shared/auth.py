@@ -23,19 +23,26 @@ _PBKDF2_ITERATIONS = 200_000
 _DEV_SECRET = "dev-insecure-secret-cambiar-en-produccion"
 
 
+_DEV_ENVS = ("dev", "development", "local", "test", "testing")
+
+
 def _secret() -> str:
     from shared.config import get_settings
 
     settings = get_settings()
     if settings.jwt_secret:
         return settings.jwt_secret
-    if settings.environment.strip().lower() in ("prod", "production"):
-        raise RuntimeError(
-            "JWT_SECRET es obligatorio con ENVIRONMENT=production. "
-            'Generá uno con: python -c "import secrets;print(secrets.token_urlsafe(48))"'
-        )
-    logger.warning("JWT_SECRET vacío: usando secreto de desarrollo (INSEGURO).")
-    return _DEV_SECRET
+    # Fail-closed: sólo caemos al secreto de dev en entornos EXPLÍCITAMENTE de
+    # desarrollo. Cualquier otro valor (prod, staging, vacío, desconocido) lanza,
+    # para no firmar tokens con un secreto público en producción mal configurada.
+    if settings.environment.strip().lower() in _DEV_ENVS:
+        logger.warning("JWT_SECRET vacío: usando secreto de desarrollo (INSEGURO).")
+        return _DEV_SECRET
+    raise RuntimeError(
+        "JWT_SECRET es obligatorio fuera de desarrollo "
+        f"(ENVIRONMENT={settings.environment!r}). "
+        'Generá uno con: python -c "import secrets;print(secrets.token_urlsafe(48))"'
+    )
 
 
 def signing_secret() -> str:
@@ -103,11 +110,16 @@ def paciente_id_from_token(token: str) -> int | None:
 
 
 def decode_token(token: str) -> dict:
-    """Valida la firma y el vencimiento; devuelve el payload. Lanza si es inválido."""
-    body, sig = token.split(".")
+    """Valida formato, firma y vencimiento; devuelve el payload. Lanza si es inválido."""
+    parts = (token or "").split(".")
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise ValueError("Formato de token inválido")
+    body, sig = parts
     if not hmac.compare_digest(sig, _sign(body)):
         raise ValueError("Firma de token inválida")
     payload = json.loads(_b64d(body))
+    if not isinstance(payload, dict):
+        raise ValueError("Payload de token inválido")
     if payload.get("exp", 0) < time.time():
         raise ValueError("Token vencido")
     return payload

@@ -54,3 +54,49 @@ def test_clave_vacia_rechazada():
 def test_generate_key_es_256_bits():
     key = base64.b64decode(generate_key())
     assert len(key) == 32
+
+
+# --- Tokens de sesión: fail-closed y formato robusto (audit #2) ---
+
+def test_secret_falla_cerrado_fuera_de_dev(monkeypatch):
+    import shared.auth as auth
+    import shared.config as cfg
+
+    monkeypatch.setenv("JWT_SECRET", "")
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    cfg.get_settings.cache_clear()
+    with pytest.raises(RuntimeError):
+        auth._secret()
+    # entorno desconocido también es fail-closed
+    monkeypatch.setenv("ENVIRONMENT", "staging")
+    cfg.get_settings.cache_clear()
+    with pytest.raises(RuntimeError):
+        auth._secret()
+    cfg.get_settings.cache_clear()
+
+
+def test_secret_usa_dev_en_desarrollo(monkeypatch):
+    import shared.auth as auth
+    import shared.config as cfg
+
+    monkeypatch.setenv("JWT_SECRET", "")
+    monkeypatch.setenv("ENVIRONMENT", "dev")
+    cfg.get_settings.cache_clear()
+    assert auth._secret() == auth._DEV_SECRET
+    cfg.get_settings.cache_clear()
+
+
+def test_decode_token_rechaza_formato_invalido(monkeypatch):
+    import shared.auth as auth
+    import shared.config as cfg
+
+    monkeypatch.setenv("JWT_SECRET", "test-secret")
+    monkeypatch.setenv("ENVIRONMENT", "dev")
+    cfg.get_settings.cache_clear()
+    for malo in ["", "sinpunto", "a.b.c", ".", "a.", ".b"]:
+        with pytest.raises(ValueError):
+            auth.decode_token(malo)
+    # un token válido se decodifica
+    tok = auth.create_access_token(7)
+    assert auth.decode_token(tok)["sub"] == 7
+    cfg.get_settings.cache_clear()

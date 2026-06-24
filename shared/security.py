@@ -35,8 +35,14 @@ def phone_index(numero: str, key_b64: str) -> str:
     import hashlib
     import hmac
 
+    if not key_b64:
+        # Fail-closed: sin clave no indexamos con un valor público (sería
+        # adivinable). Igual que _load_key, exigimos la ENCRYPTION_KEY.
+        raise ValueError(
+            "ENCRYPTION_KEY vacía: no se puede indexar el teléfono de forma segura."
+        )
     norm = numero.replace("whatsapp:", "").strip()
-    key = base64.b64decode(key_b64) if key_b64 else b"sm-phone-index"
+    key = base64.b64decode(key_b64)
     return hmac.new(key, norm.encode("utf-8"), hashlib.sha256).hexdigest()
 
 

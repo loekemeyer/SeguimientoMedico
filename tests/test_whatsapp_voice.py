@@ -39,7 +39,17 @@ def test_synthesize_sin_apikey_es_vacio():
 
 
 def test_phone_index_determinista_y_normaliza_whatsapp():
-    a = phone_index("whatsapp:+5491112345678", "")
-    b = phone_index("+5491112345678", "")
+    import base64
+
+    k = base64.b64encode(b"\x01" * 32).decode()
+    a = phone_index("whatsapp:+5491112345678", k)
+    b = phone_index("+5491112345678", k)
     assert a == b  # mismo número, con o sin prefijo whatsapp:
-    assert a != phone_index("+5491100000000", "")  # números distintos, índices distintos
+    assert a != phone_index("+5491100000000", k)  # números distintos, índices distintos
+
+
+def test_phone_index_exige_clave():
+    import pytest
+
+    with pytest.raises(ValueError):
+        phone_index("+5491112345678", "")
