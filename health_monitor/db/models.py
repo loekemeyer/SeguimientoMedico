@@ -111,6 +111,11 @@ class Paciente(Base):
     temas_preferidos: Mapped[str] = mapped_column(Text, default="")  # temas que le gustan
     temas_evitar: Mapped[str] = mapped_column(Text, default="")  # temas a evitar
 
+    # Memoria de continuidad: resumen acumulativo (cifrado, PII) de lo que la
+    # persona fue contando, para que el acompañante retome la charla en cada
+    # llamada. Se actualiza al terminar cada llamada. Ver health_monitor/memoria.py.
+    memoria_enc: Mapped[str | None] = mapped_column(Text, default=None)
+
     # Código de 6 dígitos para que la persona entre a la app a charlar (plan App).
     # Lo ve el familiar en el panel y se lo pasa. Único entre todos los pacientes.
     codigo_acceso: Mapped[str | None] = mapped_column(

@@ -87,7 +87,7 @@ def iniciar(
         nivel_insistencia=state.nivel_insistencia, historial_clinico=state.historial_resumen,
         trato=state.trato, acompanante_nombre=state.acompanante_nombre,
         temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
-        explorar_animo=state.explorar_animo,
+        explorar_animo=state.explorar_animo, memoria=state.memoria,
     )
     conv = ConversacionWhatsApp(
         paciente_id=paciente_id,
@@ -143,7 +143,7 @@ async def incoming(request: Request, db: Session = Depends(get_session)) -> Resp
         nivel_insistencia=state.nivel_insistencia, historial_clinico=state.historial_resumen,
         trato=state.trato, acompanante_nombre=state.acompanante_nombre,
         temas_preferidos=state.temas_preferidos, temas_evitar=state.temas_evitar,
-        explorar_animo=state.explorar_animo,
+        explorar_animo=state.explorar_animo, memoria=state.memoria,
     )
 
     nuevo = historial_previo

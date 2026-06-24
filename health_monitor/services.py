@@ -6,6 +6,7 @@ existen datos en claro.
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -26,6 +27,8 @@ from health_monitor.triage import ClinicalLimits
 from health_monitor.triage.plantillas import aplicar_plantillas
 from shared.config import get_settings
 from shared.security import FieldCipher
+
+logger = logging.getLogger(__name__)
 
 
 def _cipher() -> FieldCipher:
@@ -159,6 +162,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
     ficha_resumen = f"Paciente {paciente_id}. Patologías: {patologias}."
     rutina_resumen = _load_rutina_resumen(db, paciente_id, cipher)
     historial_resumen = _load_historial_resumen(db, paciente_id)
+    memoria = cipher.decrypt(paciente.memoria_enc) if paciente.memoria_enc else ""
     peso_anterior, peso_dias = _load_peso_anterior(db, paciente_id)
     explorar_animo = _necesita_screening_animo(db, paciente_id)
 
@@ -170,6 +174,7 @@ def build_call_state(db: Session, paciente_id: int) -> tuple[CallState, str | No
         ficha_resumen=ficha_resumen,
         rutina_resumen=rutina_resumen,
         historial_resumen=historial_resumen,
+        memoria=memoria,
         nivel_insistencia=paciente.nivel_insistencia,
         voz=paciente.voz,
         voz_velocidad=paciente.voz_velocidad,
@@ -213,6 +218,28 @@ def persist_evolucion(db: Session, state: CallState) -> EvolucionDiaria:
             enviado=reg["enviado"],
         ))
 
+    # Actualizar la memoria de continuidad del paciente (best-effort: nunca rompe).
+    _actualizar_memoria_paciente(db, state, cipher)
+
     db.commit()
     db.refresh(evo)
     return evo
+
+
+def _actualizar_memoria_paciente(db: Session, state: CallState, cipher: FieldCipher) -> None:
+    """Destila la memoria acumulada con lo de esta llamada y la guarda cifrada."""
+    try:
+        from health_monitor.memoria import actualizar_memoria
+
+        paciente = db.get(Paciente, state.paciente_id)
+        if paciente is None:
+            return
+        previa = cipher.decrypt(paciente.memoria_enc) if paciente.memoria_enc else ""
+        nueva = actualizar_memoria(
+            previa, state.relato, state.transcript,
+            nombre=state.paciente_nombre, trato=state.trato,
+        )
+        if nueva and nueva.strip():
+            paciente.memoria_enc = cipher.encrypt(nueva.strip())
+    except Exception:  # la memoria es un extra: si falla, no frena la persistencia
+        logger.warning("No se pudo actualizar la memoria del paciente %s", state.paciente_id)

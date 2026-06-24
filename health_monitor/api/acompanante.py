@@ -37,6 +37,16 @@ def _nombre(p: Paciente) -> str:
     return FieldCipher(get_settings().encryption_key).decrypt(p.nombre_enc)
 
 
+def _memoria(p: Paciente) -> str:
+    """Memoria de continuidad descifrada (vacía si no hay)."""
+    if not p.memoria_enc:
+        return ""
+    try:
+        return FieldCipher(get_settings().encryption_key).decrypt(p.memoria_enc)
+    except Exception:
+        return ""
+
+
 def paciente_actual(
     authorization: str = Header(default=""),
     db: Session = Depends(get_session),
@@ -121,6 +131,7 @@ def chat(
         acompanante_nombre=p.acompanante_nombre or "",
         temas_preferidos=p.temas_preferidos or "",
         temas_evitar=p.temas_evitar or "",
+        memoria=_memoria(p),
     )
     configurado, respuesta = responder(data.mensaje, data.historial, ctx)
     # Registrar el turno solo cuando hubo una llamada real a la IA (no el saludo).

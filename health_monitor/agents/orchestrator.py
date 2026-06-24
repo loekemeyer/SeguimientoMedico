@@ -34,6 +34,7 @@ class CallState:
     ficha_resumen: str = ""
     rutina_resumen: str = ""  # texto con la rutina del paciente para guiar la charla
     historial_resumen: str = ""  # qué pasó en la última llamada (contexto para el agente)
+    memoria: str = ""  # memoria acumulada de continuidad (charlas anteriores)
     nivel_insistencia: int = 2  # 1=pasivo, 2=recordar, 3=insistir (lo fija el admin)
     # Personalización de la voz/estilo del acompañante (lo fija el admin por paciente).
     voz: str = "coral"

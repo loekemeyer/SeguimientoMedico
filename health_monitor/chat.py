@@ -41,6 +41,7 @@ class ContextoPaciente:
     acompanante_nombre: str = ""
     temas_preferidos: str = ""
     temas_evitar: str = ""
+    memoria: str = ""  # memoria de continuidad (charlas anteriores)
 
 
 def _conjuga(trato: str) -> dict[str, str]:
@@ -75,6 +76,12 @@ def construir_system_prompt(ctx: ContextoPaciente) -> str:
     evitar = (ctx.temas_evitar or "").strip()
     if evitar:
         lineas.append(f"Evitá estos temas: {evitar}.")
+    memoria = (ctx.memoria or "").strip()
+    if memoria:
+        lineas.append(
+            "Esto es lo que ya sabés de la persona de charlas anteriores (repasalo "
+            f"para retomar con naturalidad lo que quedó abierto): {memoria}"
+        )
     return " ".join(lineas)
 
 
