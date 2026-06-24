@@ -300,7 +300,22 @@ async function loadPatients() {
   const grid = $("#patient-grid");
   grid.innerHTML = "";
   let pacientes = [];
-  try { pacientes = await api("/pacientes"); } catch (e) { toast(e.message, true); }
+  try {
+    pacientes = await api("/pacientes");
+  } catch (e) {
+    // No confundir un error de red con "no hay personas": mostramos reintentar.
+    $("#list-subtitle").textContent = "No pudimos cargar tus datos.";
+    const err = document.createElement("div");
+    err.className = "emptystate";
+    err.innerHTML = `
+      <div class="emptystate__icon">📡</div>
+      <h2 class="emptystate__title">No se pudo conectar</h2>
+      <p class="emptystate__text">Revisá tu conexión e intentá de nuevo.</p>
+      <button class="btn btn--primary" id="retry-list">Reintentar</button>`;
+    grid.appendChild(err);
+    $("#retry-list", err).addEventListener("click", loadPatients);
+    return;
+  }
 
   $("#list-subtitle").textContent = pacientes.length
     ? `${pacientes.length} persona${pacientes.length > 1 ? "s" : ""} en seguimiento.`
