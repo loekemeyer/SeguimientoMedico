@@ -72,6 +72,8 @@ body {
 .btn--ghost:hover { background: #fff; color: var(--ink); }
 .btn--block { width: 100%; justify-content: center; padding: 13px; }
 .btn--sm { padding: 8px 12px; font-size: .85rem; }
+.btn--soft { background: #eef3f2; color: var(--ink); border: 1px solid var(--line); }
+.btn--soft:hover { background: #e3ebe9; }
 
 /* ---------- Tarjetas ---------- */
 .card {
@@ -284,6 +286,8 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .pcard__top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .pcard__name { font-family: var(--font-head); font-weight: 700; font-size: 1.18rem; }
 .pcard__tag { font-size: .92rem; color: var(--slate); }
+.pat-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pat-badge { font-size: .8rem; font-weight: 600; color: var(--teal-700); background: var(--teal-50); border: 1px solid #cdeee8; border-radius: 999px; padding: 3px 10px; }
 .pcard__row { display: flex; align-items: center; gap: 8px; color: var(--slate); font-size: .98rem; margin-top: 8px; }
 .pcard__foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 
@@ -379,6 +383,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   box-shadow: 0 -6px 20px -14px rgba(15,42,40,.4);
 }
 .bnav__btn {
+  position: relative;
   border: none; background: transparent; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 9px 0 8px; color: var(--slate-400);
@@ -388,6 +393,7 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
 .bnav__ico { display: grid; place-items: center; width: 26px; height: 26px; }
 .bnav__ico svg { width: 24px; height: 24px; }
 .bnav__btn.is-active { color: var(--teal-700); }
+.bnav__btn.is-active::before { content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; border-radius: 0 0 4px 4px; background: var(--teal-600); }
 .bnav__ico--emoji { font-size: 21px; line-height: 1; }
 .bnav__btn.is-suscripto { color: #a16207; }   /* dorado = plan activo */
 .bnav__btn:active { transform: translateY(1px); }

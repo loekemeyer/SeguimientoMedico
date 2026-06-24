@@ -222,20 +222,22 @@ async function loadPatients() {
     return;
   }
 
+  // El botón verde "＋ Agregar persona" de arriba ya cubre el alta; no repetimos
+  // la tarjeta punteada cuando ya hay personas (evita saturar con la misma acción).
   pacientes.forEach((p) => grid.appendChild(patientCard(p)));
+}
 
-  const add = document.createElement("button");
-  add.className = "pcard pcard--add";
-  add.innerHTML = `<span class="plus">＋</span><span>Agregar persona</span>`;
-  add.addEventListener("click", openModal);
-  grid.appendChild(add);
+function patologiasBadges(arr) {
+  const items = [...new Set((arr || []).map((x) => normalizaPatologia(x)).filter(Boolean))];
+  if (!items.length) return "";
+  return `<div class="pat-badges">${items.map((p) => `<span class="pat-badge">${escapeHtml(p)}</span>`).join("")}</div>`;
 }
 
 function patientCard(p) {
   const el = document.createElement("div");
   el.className = "pcard";
   const inicial = (p.nombre || "?").trim()[0].toUpperCase();
-  const pat = (p.patologias || []).join(", ") || "Seguimiento general";
+  const patHtml = patologiasBadges(p.patologias) || `<div class="pcard__tag">Seguimiento general</div>`;
   const hora = p.programacion?.llamada_hora || "—";
   const estado = p.consentimiento_firmado
     ? `<span class="badge badge--verde">Activo</span>`
@@ -245,7 +247,7 @@ function patientCard(p) {
       <div class="avatar">${inicial}</div>
       <div>
         <div class="pcard__name">${escapeHtml(p.nombre || "Sin nombre")}</div>
-        <div class="pcard__tag">${escapeHtml(pat)}</div>
+        ${patHtml}
       </div>
     </div>
     <div class="pcard__row">🕒 Llamada diaria a las ${hora}</div>
@@ -438,7 +440,7 @@ $("#detail-rutina")?.addEventListener("click", async (e) => {
 function renderDetail(p, contactos, rutina, evos) {
   $("#detail-avatar").textContent = (p.nombre || "?").trim()[0].toUpperCase();
   $("#detail-name").textContent = p.nombre || "—";
-  $("#detail-meta").textContent = (p.patologias || []).join(" · ") || "Seguimiento general";
+  $("#detail-meta").innerHTML = patologiasBadges(p.patologias) || "Seguimiento general";
   $("#detail-codigo").textContent = p.codigo_acceso || "—";
   const st = $("#detail-status");
   if (p.consentimiento_firmado) { st.className = "badge badge--verde"; st.textContent = "Seguimiento activo"; }
@@ -901,7 +903,13 @@ async function enviarCall(texto) {
       body: { mensaje: texto, historial: callHist },
     });
     pintarMensaje("acomp", r.respuesta || "…");
-    callHist.push({ role: "assistant", content: r.respuesta || "" });
+    // Solo acumulamos turnos reales (con texto del usuario) para que el historial
+    // con la IA quede balanceado (user → assistant → ...). El saludo inicial no cuenta.
+    if (texto) callHist.push({ role: "assistant", content: r.respuesta || "" });
+    if (r.configurado === false) {
+      const est = $("#call-estado");
+      if (est) est.textContent = "Pronto vamos a poder hablar 💛";
+    }
   } catch {
     pintarMensaje("acomp", "Perdoná, ahora no puedo. Probá en un ratito 💛");
   }
