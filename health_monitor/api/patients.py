@@ -112,6 +112,7 @@ def _to_out(p: Paciente, cipher: FieldCipher, ultimo_nivel: str | None = None) -
             llamada_zona=p.llamada_zona,
             llamada_dias=p.llamada_dias or [],
             nivel_insistencia=p.nivel_insistencia,
+            resumen_diario_familia=p.resumen_diario_familia,
         ),
         personalidad=PersonalidadAcompanante(
             voz=p.voz,
@@ -131,6 +132,7 @@ def _apply_programacion(p: Paciente, prog: ProgramacionLlamada) -> None:
     p.llamada_zona = prog.llamada_zona
     p.llamada_dias = prog.llamada_dias
     p.nivel_insistencia = prog.nivel_insistencia
+    p.resumen_diario_familia = prog.resumen_diario_familia
 
 
 def _apply_personalidad(p: Paciente, pers: PersonalidadAcompanante) -> None:

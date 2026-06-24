@@ -46,3 +46,25 @@ def test_roja_medica_mantiene_el_mensaje_de_emergencia_medica():
     msg = _whatsapps(registros)[0]["contenido"]
     assert "signo de alarma" in msg.lower()
     assert "135" not in msg
+
+
+# --- Resumen diario cálido a la familia en VERDE (opt-in) ---
+
+def test_verde_sin_optin_no_notifica():
+    result = TriageResult(paciente_id=1, level=AlertLevel.VERDE, reasons=[])
+    registros = supervisor.dispatch_alerts(
+        result, contactos=_contactos(), ficha_resumen="", paciente_nombre="Rosa",
+    )
+    assert _whatsapps(registros) == []  # por defecto, en verde no se manda nada
+
+
+def test_verde_con_optin_manda_resumen_calido():
+    result = TriageResult(paciente_id=1, level=AlertLevel.VERDE, reasons=[])
+    registros = supervisor.dispatch_alerts(
+        result, contactos=_contactos(), ficha_resumen="", paciente_nombre="Rosa",
+        resumen_diario=True, relato="Estaba de buen ánimo y durmió bien.",
+    )
+    msg = _whatsapps(registros)[0]["contenido"]
+    assert "Rosa" in msg
+    assert "durmió bien" in msg
+    assert "💚" in msg

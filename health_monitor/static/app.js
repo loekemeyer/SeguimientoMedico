@@ -835,6 +835,8 @@ function openEditModal() {        // edición del paciente abierto
   $("[name=temas_evitar]", form).value = pers.temas_evitar || "";
   const prog = currentPatient.programacion || {};
   $("[name=llamada_activa]", form).checked = prog.llamada_activa !== false;
+  const _rdf = $("[name=resumen_diario_familia]", form);
+  if (_rdf) _rdf.checked = !!prog.resumen_diario_familia;
   $("[name=llamada_zona]", form).value = prog.llamada_zona || "America/Argentina/Buenos_Aires";
   const dias = prog.llamada_dias || [];
   $$("#patient-days input").forEach((c) => {
@@ -945,6 +947,7 @@ form.addEventListener("submit", async (e) => {
   const programacion = {
     llamada_hora: f.get("llamada_hora") || "10:00",
     nivel_insistencia: nivel,
+    resumen_diario_familia: f.get("resumen_diario_familia") === "on",
     llamada_activa: f.get("llamada_activa") === "on",
     llamada_zona: f.get("llamada_zona") || "America/Argentina/Buenos_Aires",
     llamada_dias: dias.length === 7 ? [] : dias,

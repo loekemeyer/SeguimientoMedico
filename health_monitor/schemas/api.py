@@ -66,6 +66,8 @@ class ProgramacionLlamada(BaseModel):
     llamada_dias: list[int] = Field(default_factory=list)  # 0=lun..6=dom; vacío=todos
     # Insistencia del asistente: 1=pasivo, 2=recordar, 3=insistir amablemente.
     nivel_insistencia: int = 2
+    # Resumen cálido a la familia después de cada llamada, aunque esté todo bien.
+    resumen_diario_familia: bool = False
 
     @field_validator("llamada_hora")
     @classmethod

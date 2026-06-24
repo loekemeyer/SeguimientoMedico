@@ -35,6 +35,7 @@ class CallState:
     rutina_resumen: str = ""  # texto con la rutina del paciente para guiar la charla
     historial_resumen: str = ""  # qué pasó en la última llamada (contexto para el agente)
     memoria: str = ""  # memoria acumulada de continuidad (charlas anteriores)
+    resumen_diario: bool = False  # mandar un resumen cálido a la familia aunque esté todo bien
     nivel_insistencia: int = 2  # 1=pasivo, 2=recordar, 3=insistir (lo fija el admin)
     # Personalización de la voz/estilo del acompañante (lo fija el admin por paciente).
     voz: str = "coral"
@@ -93,6 +94,8 @@ def node_dispatch(state: CallState) -> CallState:
         ficha_resumen=state.ficha_resumen,
         paciente_nombre=state.paciente_nombre,
         riesgo_suicida=(state.readout.riesgo_emocional == EmotionalRisk.RIESGO_SUICIDA),
+        resumen_diario=state.resumen_diario,
+        relato=state.relato,
     )
     state.finished = True
     return state

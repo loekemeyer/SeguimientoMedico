@@ -102,6 +102,8 @@ def dispatch_alerts(
     paciente_nombre: str = "",
     emergencia_webhook: str | None = None,
     riesgo_suicida: bool = False,
+    resumen_diario: bool = False,
+    relato: str = "",
 ) -> list[dict]:
     """Ejecuta el protocolo de notificación y devuelve el registro de cada envío.
 
@@ -170,6 +172,20 @@ def dispatch_alerts(
             })
 
     else:  # VERDE
-        logger.info("Paciente %s estable; sin notificaciones.", result.paciente_id)
+        if resumen_diario and destinatarios:
+            detalle = (relato or "").strip() or "Tuvimos una charla tranquila y está bien."
+            msg = (
+                f"💚 Hoy hablamos con {quien} y está bien. {detalle} "
+                f"Cualquier cosa te avisamos al instante. ¡Un abrazo!"
+            )
+            for c in destinatarios:
+                registros.append({
+                    "canal": "whatsapp", "nivel": nivel,
+                    "destino": c["telefono"], "destino_label": c.get("label", ""),
+                    "contenido": msg,
+                    "enviado": send_whatsapp_message(c["telefono"], msg),
+                })
+        else:
+            logger.info("Paciente %s estable; sin notificaciones.", result.paciente_id)
 
     return registros

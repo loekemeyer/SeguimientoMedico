@@ -94,6 +94,9 @@ class Paciente(Base):
     )
     # Días de la semana a llamar (0=lunes ... 6=domingo). Vacío = todos los días.
     llamada_dias: Mapped[list] = mapped_column(JSON, default=list)
+    # Mandar a la familia un resumen cálido después de cada llamada aunque esté
+    # todo bien (opt-in: por defecto sólo se avisa ante alertas). Cuesta un mensaje.
+    resumen_diario_familia: Mapped[bool] = mapped_column(Boolean, default=False)
     # Última vez que el scheduler disparó una llamada (evita discar dos veces en
     # ventanas contiguas o tras un reinicio del worker).
     ultima_llamada_programada: Mapped[datetime | None] = mapped_column(
