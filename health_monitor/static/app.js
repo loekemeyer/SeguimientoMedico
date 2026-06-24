@@ -1106,22 +1106,38 @@ loadVersion();
 const PAC_TOKEN_KEY = "sm_paciente_token";
 const pacToken = () => localStorage.getItem(PAC_TOKEN_KEY);
 
-$("#ir-paciente-login")?.addEventListener("click", () => show("paciente-login"));
+$("#ir-paciente-login")?.addEventListener("click", () => {
+  show("paciente-login");
+  setTimeout(() => $('#form-paciente-login input[name="codigo"]')?.focus(), 50);
+});
 $("#volver-familia")?.addEventListener("click", () => show("auth"));
+
+// Sólo dígitos en código (6) y clave (2); al completar el código, salto a la clave.
+const pacCodigo = $('#form-paciente-login input[name="codigo"]');
+const pacClave = $('#form-paciente-login input[name="clave"]');
+pacCodigo?.addEventListener("input", () => {
+  pacCodigo.value = pacCodigo.value.replace(/\D/g, "").slice(0, 6);
+  if (pacCodigo.value.length === 6) pacClave?.focus();
+});
+pacClave?.addEventListener("input", () => {
+  pacClave.value = pacClave.value.replace(/\D/g, "").slice(0, 2);
+});
 
 $("#form-paciente-login")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = $("[data-error]", e.target);
   err.textContent = "";
   const f = new FormData(e.target);
-  try {
-    const r = await api("/acompanante/login", {
-      method: "POST", auth: false,
-      body: { codigo_acceso: (f.get("codigo") || "").trim(), clave: (f.get("clave") || "").trim() },
-    });
-    localStorage.setItem(PAC_TOKEN_KEY, r.token);
-    enterAcompanado(r.nombre);
-  } catch (ex) { err.textContent = ex.message || "Código o clave incorrectos"; }
+  await conBotonOcupado(e.target, async () => {
+    try {
+      const r = await api("/acompanante/login", {
+        method: "POST", auth: false,
+        body: { codigo_acceso: (f.get("codigo") || "").trim(), clave: (f.get("clave") || "").trim() },
+      });
+      localStorage.setItem(PAC_TOKEN_KEY, r.token);
+      enterAcompanado(r.nombre);
+    } catch (ex) { err.textContent = ex.message || "Código o clave incorrectos"; }
+  });
 });
 
 async function enterAcompanado(nombrePrecargado) {
