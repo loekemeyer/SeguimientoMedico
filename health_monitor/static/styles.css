@@ -462,6 +462,14 @@ button.avatar { border: none; cursor: pointer; font-family: var(--font-head); }
   font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; letter-spacing: .12em;
   color: #a16207; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 3px 14px;
 }
+/* Preguntas de tratamiento según patologías (post-alta) */
+.cuidado-lista { display: grid; gap: 10px; margin: 14px 0 18px; }
+.cuidado-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff; }
+.cuidado-item__q { font-size: 1rem; color: var(--ink); }
+.cuidado-item__acc { display: flex; gap: 8px; flex: none; }
+.cuidado-item__done { color: var(--teal-700); font-weight: 600; font-size: .95rem; }
+
 .clave-rot__box { display: inline-flex; flex-direction: row; align-items: center; gap: 9px; }
 .clave-rot__seg { font-size: .74rem; color: var(--slate-400); line-height: 1.15; text-align: left; }
 

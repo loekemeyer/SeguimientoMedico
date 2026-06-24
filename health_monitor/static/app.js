@@ -979,10 +979,51 @@ form.addEventListener("submit", async (e) => {
         closeModal();
         toast("Persona agregada ✅");
         await loadPatients();
+        await abrirPreguntasCuidado(p.id);  // preguntas de tratamiento según patologías
       }
     } catch (ex) { err.textContent = ex.message; }
   });
 });
+
+/* ---------- preguntas de tratamiento según patologías (post-alta) ---------- */
+let cuidadoPid = null;
+async function abrirPreguntasCuidado(pid) {
+  cuidadoPid = pid;
+  let preguntas = [];
+  try { preguntas = await api(`/pacientes/${pid}/preguntas-cuidado`); } catch { preguntas = []; }
+  if (!preguntas.length) { await openDetail(pid); return; }
+  const cont = $("#cuidado-lista");
+  cont.innerHTML = preguntas.map((q, i) => `
+    <div class="cuidado-item" data-i="${i}">
+      <div class="cuidado-item__q">${escapeHtml(q.pregunta)}</div>
+      <div class="cuidado-item__acc">
+        <button type="button" class="btn btn--soft btn--sm" data-si="${i}">Sí</button>
+        <button type="button" class="btn btn--ghost btn--sm" data-no="${i}">No</button>
+      </div>
+    </div>`).join("");
+  $$("[data-si]", cont).forEach((b) => b.addEventListener("click", () => responderCuidado(preguntas[+b.dataset.si], b, true)));
+  $$("[data-no]", cont).forEach((b) => b.addEventListener("click", () => responderCuidado(preguntas[+b.dataset.no], b, false)));
+  $("#modal-cuidado").classList.remove("is-hidden");
+}
+async function responderCuidado(q, btn, si) {
+  const row = btn.closest(".cuidado-item");
+  if (si && q.crea) {
+    try {
+      await api(`/pacientes/${cuidadoPid}/rutina`, {
+        method: "POST",
+        body: { tipo: q.crea.tipo, nombre: q.crea.nombre, frecuencia: "1 vez al día",
+                horario: "", dias: [], activa: true, aviso: "mensaje" },
+      });
+    } catch (e) { toast(e.message, true); return; }
+  }
+  if (row) row.innerHTML = `<div class="cuidado-item__done">${si ? "✅ Agregado a la rutina" : "— Listo"}</div>`;
+}
+function cerrarCuidado() {
+  $("#modal-cuidado")?.classList.add("is-hidden");
+  if (cuidadoPid) openDetail(cuidadoPid);
+}
+$("#cuidado-listo")?.addEventListener("click", cerrarCuidado);
+$$("[data-close-cuidado]").forEach((el) => el.addEventListener("click", cerrarCuidado));
 
 /* ---------- util ---------- */
 function escapeHtml(s) {
